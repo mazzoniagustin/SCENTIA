@@ -1,0 +1,7 @@
+.aider*
+
+# dependencies
+node_modules/
+
+# secrets — nunca entrar al historial de git
+.env*

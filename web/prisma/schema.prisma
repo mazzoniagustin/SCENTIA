@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String           @id @default(cuid())
+  email       String           @unique
+  name        String?
+  collections UserCollection[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Perfume {
+  id            String           @id @default(cuid())
+  brand         String
+  name          String
+  gender        String
+  concentration String
+  releaseYear   Int?
+  perfumer      String?
+  description   String?
+  imageUrl      String?
+  
+  duration      Int?             
+  projection    Int?             
+  seasons       String[]         
+  occasions     String[]         
+
+  notes         PerfumeNote[]
+  accords       PerfumeAccord[]
+  collectedBy   UserCollection[]
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([brand])
+  @@index([gender])
+  @@index([concentration])
+}
+
+model Note {
+  id       String        @id @default(cuid())
+  name     String        @unique
+  category String        
+  perfumes PerfumeNote[]
+}
+
+model Accord {
+  id       String          @id @default(cuid())
+  name     String          @unique
+  perfumes PerfumeAccord[]
+}
+
+model PerfumeNote {
+  perfumeId String
+  noteId    String
+  noteType  String 
+
+  perfume   Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  note      Note    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@id([perfumeId, noteId, noteType])
+  @@index([noteId])
+}
+
+model PerfumeAccord {
+  perfumeId String
+  accordId  String
+  intensity Int     
+
+  perfume   Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  accord    Accord  @relation(fields: [accordId], references: [id], onDelete: Cascade)
+
+  @@id([perfumeId, accordId])
+  @@index([accordId])
+}
+
+model UserCollection {
+  userId        String
+  perfumeId     String
+  status        String   
+  rating        Int?     
+  personalNotes String?
+
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perfume       Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, perfumeId])
+  @@index([status])
+}
+
+
+
+
+
+
