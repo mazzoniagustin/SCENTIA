@@ -1,20 +1,25 @@
 :root {
-  --background: #fbf8f4;
-  --foreground: #2b1b22;
-  --muted: #66575e;
-  --surface: #ffffff;
-  --border: #e5d9d2;
+  --background: #0f1011;
+  --foreground: #f2efe9;
+  --muted: #a7a39b;
+  --surface: #151617;
+  --surface-2: #1c1e20;
+  --border: #2a2b2d;
   /* Borde de campos de formulario: 3:1 mínimo contra fondo y superficie (WCAG 1.4.11); --border es decorativo. */
-  --control-border: #857880;
-  --accent: #7b2946;
-  --accent-hover: #5e1f35;
-  --notice: #edf7ef;
-  --notice-text: #245c35;
-  --error: #a52929;
-  --compare-1: #2a78d6;
-  --compare-2: #eb6834;
-  --compare-3: #1baf7a;
-  --compare-4: #4a3aa7;
+  --control-border: #8a8780;
+  --accent: #e6c98a;
+  --accent-hover: #f0d9a6;
+  --accent-contrast: #0f1011;
+  --notice: #16251c;
+  --notice-text: #9fd6b0;
+  --error: #ff9a9a;
+  --error-bg: #2a1517;
+  --compare-1: #6aa8f0;
+  --compare-2: #f08a5d;
+  --compare-3: #3fcf9b;
+  --compare-4: #a597f0;
+  --font-display: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-geist), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 /* ————— Comparación (RF-03) ————— */
@@ -99,7 +104,8 @@
 }
 
 .compare-card-name {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
+  font-weight: 400;
   font-size: 1.5rem;
   line-height: 1.1;
   margin: 0 0 0.5rem;
@@ -209,7 +215,7 @@ body {
   min-height: 100%;
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -253,9 +259,10 @@ a {
 
 h1 {
   max-width: 14ch;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
+  font-weight: 400;
   font-size: clamp(2.75rem, 8vw, 5.5rem);
-  line-height: 0.95;
+  line-height: 1.02;
 }
 
 .lead,
@@ -274,15 +281,27 @@ h1 {
 
 .daily-card {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.75rem;
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   background: var(--surface);
-  padding: 1.25rem;
+  padding: 2rem;
 }
 
 .daily-card .perfume-name {
-  font-size: 1.5rem;
+  font-size: clamp(2.25rem, 6vw, 2.75rem);
+  line-height: 1.12;
+  letter-spacing: 0.005em;
+  margin: 0.25rem 0 0.1rem;
+}
+
+.daily-card .perfume-badges {
+  margin: 0.5rem 0;
+  gap: 0.5rem;
+}
+
+.daily-card .perfume-meta {
+  line-height: 1.5;
 }
 
 .button,
@@ -295,7 +314,7 @@ h1 {
   border: 0;
   border-radius: 0.4rem;
   background: var(--accent);
-  color: white;
+  color: var(--accent-contrast);
   cursor: pointer;
   font: inherit;
   font-weight: 700;
@@ -375,7 +394,7 @@ h1 {
 }
 
 .error-message {
-  background: #fff0f0;
+  background: var(--error-bg);
   color: var(--error) !important;
 }
 
@@ -507,7 +526,8 @@ h1 {
 }
 
 .perfume-name {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
+  font-weight: 400;
   font-size: 1.35rem;
   line-height: 1.15;
 }
@@ -526,9 +546,10 @@ h1 {
 }
 
 .perfume-badges li {
-  background: var(--notice);
+  background: var(--surface-2);
+  border: 1px solid #3a3b3d;
   border-radius: 999px;
-  color: var(--notice-text);
+  color: var(--foreground);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.2rem 0.6rem;
@@ -756,6 +777,7 @@ h1 {
 
 .account-danger button {
   background: var(--error);
+  color: var(--accent-contrast);
 }
 
 /* ————— Accesibilidad ————— */
@@ -801,4 +823,8 @@ textarea,
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+h1 em {
+  color: var(--accent);
 }
