@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CompareCheckbox } from "./CompareCheckbox";
 import { CollectionForm } from "./CollectionForm";
 import { CompareBar } from "./CompareBar";
+import { PerfumeCover } from "./PerfumeCover";
 import { Perfume, PRICE_TIER_LABELS } from "./types";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
@@ -80,6 +81,8 @@ function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume;
 
   return (
     <article className="perfume-card">
+      <PerfumeCover name={perfume.name} accords={perfume.accords} />
+      <div className="perfume-card-body">
       <p className="perfume-brand">{perfume.brand}</p>
       <h2 className="perfume-name">
         <Link href={`/perfumes/${perfume.id}`}>{perfume.name}</Link>
@@ -119,6 +122,7 @@ function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume;
       ) : (
         <Link href="/login" className="text-sm text-gray-500">Iniciá sesión para añadir a tu colección</Link>
       )}
+      </div>
     </article>
   );
 }
