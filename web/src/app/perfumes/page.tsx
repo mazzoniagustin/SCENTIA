@@ -3,7 +3,7 @@ import { CompareCheckbox } from "./CompareCheckbox";
 import { CollectionForm } from "./CollectionForm";
 import { CompareBar } from "./CompareBar";
 import { PerfumeCover } from "./PerfumeCover";
-import { Perfume, PRICE_TIER_LABELS } from "./types";
+import { genderLabel, Perfume, PRICE_TIER_LABELS } from "./types";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
 import { getAccordNames } from "@/lib/accord-stats";
@@ -78,7 +78,7 @@ async function fetchPerfumes(
 
 function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume; collectionEntry?: { status: string; rating?: number | null; personalNotes?: string | null }; isAuthenticated: boolean }) {
   const priceTierLabel = perfume.priceTier ? PRICE_TIER_LABELS[perfume.priceTier] : null;
-  const meta = [perfume.concentration?.toUpperCase(), perfume.releaseYear].filter(Boolean).join(" · ");
+  const meta = [genderLabel(perfume.gender), perfume.concentration?.toUpperCase(), perfume.releaseYear].filter(Boolean).join(" · ");
 
   return (
     <article className="perfume-card">

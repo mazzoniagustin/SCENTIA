@@ -9,15 +9,10 @@ import { createClient } from "@/lib/supabase/server";
 import { CollectionForm } from "../CollectionForm";
 import { CompareCheckbox } from "../CompareCheckbox";
 import { PerfumeCover } from "../PerfumeCover";
-import { PRICE_TIER_LABELS, valueOrNoData } from "../types";
+import { AccordBars, NotePyramid } from "../PerfumeProfile";
+import { genderLabel, PRICE_TIER_LABELS, valueOrNoData } from "../types";
 
 const SIMILAR_LIMIT = 6;
-
-const PHASES = [
-  { type: "top", label: "Salida" },
-  { type: "heart", label: "Corazón" },
-  { type: "base", label: "Fondo" },
-] as const;
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
@@ -66,7 +61,9 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
       <header className="ficha-hero">
         <PerfumeCover name={perfume.name} accords={perfume.accords} />
         <div className="ficha-hero-text">
-        <p className="eyebrow">{perfume.brand}</p>
+        <p className="eyebrow">
+          {perfume.brand} · {genderLabel(perfume.gender)}
+        </p>
         <h1>{perfume.name}</h1>
         {(perfume.priceTier || perfume.seasons.length > 0) && (
           <ul className="perfume-badges" aria-label="Categoría y estaciones">
@@ -94,49 +91,12 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
 
       <section className="ficha-section" aria-labelledby="ficha-acordes">
         <h2 id="ficha-acordes">Acordes</h2>
-        {perfume.accords.length === 0 ? (
-          <p>Sin dato</p>
-        ) : (
-          <ul className="ficha-accords">
-            {perfume.accords.map(({ accord, intensity }) => (
-              <li key={accord.id}>
-                <span>{capitalize(accord.name)}</span>
-                <span className="ficha-bar" role="img" aria-label={`${intensity} de 100`}>
-                  <span style={{ width: `${intensity}%` }} />
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <AccordBars accords={perfume.accords.map((a) => ({ name: a.accord.name, intensity: a.intensity }))} />
       </section>
 
       <section className="ficha-section" aria-labelledby="ficha-notas">
         <h2 id="ficha-notas">Notas</h2>
-        {perfume.notes.length === 0 ? (
-          <p>Sin dato</p>
-        ) : (
-          <div className="ficha-phases">
-            {PHASES.map(({ type, label }) => {
-              const names = perfume.notes.filter((n) => n.noteType === type).map((n) => n.note.name);
-              return (
-                <div key={type}>
-                  <h3>{label}</h3>
-                  {names.length === 0 ? (
-                    <p>Sin dato</p>
-                  ) : (
-                    <ul className="perfume-badges">
-                      {names.map((name) => (
-                        <li key={name} lang="en">
-                          {name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <NotePyramid notes={perfume.notes.map((n) => ({ noteType: n.noteType, name: n.note.name }))} />
       </section>
 
       <section className="ficha-section" aria-labelledby="ficha-acciones">

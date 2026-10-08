@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { getDailyPerfume } from "@/lib/daily/pick";
 import { PerfumeCover } from "@/app/perfumes/PerfumeCover";
+import { AccordBars, NotePyramid } from "@/app/perfumes/PerfumeProfile";
+import { genderLabel } from "@/app/perfumes/types";
 
 const SEASON_LABELS = {
   primavera: "la primavera",
@@ -47,7 +49,7 @@ export default async function Home() {
         <section className="home-daily" aria-labelledby="daily-title">
           <PerfumeCover
             name={daily.name}
-            accords={daily.accords.map((name, i) => ({ intensity: 100 - i, accord: { name } }))}
+            accords={daily.accordBars.map((a) => ({ intensity: a.intensity, accord: { name: a.name } }))}
           />
           <div className="home-daily-body">
             <p className="eyebrow" id="daily-title">
@@ -56,14 +58,15 @@ export default async function Home() {
             <h2 className="perfume-name">
               <Link href={`/perfumes/${daily.perfumeId}`}>{daily.name}</Link>
             </h2>
-            <p className="perfume-brand">{daily.brand}</p>
-            {daily.accords.length > 0 && (
-              <ul className="perfume-badges" aria-label="Acordes principales">
-                {daily.accords.map((accord) => (
-                  <li key={accord}>{accord}</li>
-                ))}
-              </ul>
-            )}
+            <p className="perfume-brand">
+              {daily.brand} · {genderLabel(daily.gender)}
+            </p>
+            <div className="home-daily-profile">
+              <h3>Acordes principales</h3>
+              <AccordBars accords={daily.accordBars} />
+              <h3>Notas</h3>
+              <NotePyramid notes={daily.notes} />
+            </div>
             <p className="perfume-meta">
               {daily.personalized
                 ? `Elegido para vos${

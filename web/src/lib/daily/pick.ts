@@ -22,6 +22,9 @@ export type DailyPerfume = {
   name: string
   gender: string
   accords: string[]
+  /** Todos los acordes con su intensidad, y todas las notas por fase (como en la ficha). */
+  accordBars: Array<{ name: string; intensity: number }>
+  notes: Array<{ noteType: string; name: string }>
   season: Season
   hemisphere: Hemisphere
   day: string
@@ -94,7 +97,8 @@ export async function getDailyPerfume(options: {
       brand: true,
       name: true,
       gender: true,
-      accords: { select: { accord: { select: { name: true } } }, orderBy: { intensity: 'desc' }, take: 3 },
+      accords: { select: { intensity: true, accord: { select: { name: true } } }, orderBy: { intensity: 'desc' } },
+      notes: { select: { noteType: true, note: { select: { name: true } } } },
     },
   })
   if (!perfume) return null
@@ -104,7 +108,9 @@ export async function getDailyPerfume(options: {
     brand: perfume.brand,
     name: perfume.name,
     gender: perfume.gender,
-    accords: perfume.accords.map((a) => a.accord.name),
+    accords: perfume.accords.slice(0, 3).map((a) => a.accord.name),
+    accordBars: perfume.accords.map((a) => ({ name: a.accord.name, intensity: a.intensity })),
+    notes: perfume.notes.map((n) => ({ noteType: n.noteType, name: n.note.name })),
     season,
     hemisphere,
     day,
