@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { getDailyPerfume } from "@/lib/daily/pick";
-import { PerfumeCover } from "@/app/perfumes/PerfumeCover";
+import { PerfumeImage } from "@/app/perfumes/PerfumeImage";
 import { AccordBars, NotePyramid } from "@/app/perfumes/PerfumeProfile";
 import { PerfumeTile } from "@/app/perfumes/PerfumeTile";
 import { StreakCard } from "@/app/StreakCard";
@@ -93,9 +93,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
 
       {daily && (
         <section className="home-daily" aria-labelledby="daily-title">
-          <PerfumeCover
+          <PerfumeImage
             name={daily.name}
+            brand={daily.brand}
+            imageUrl={daily.imageUrl}
             accords={daily.accordBars.map((a) => ({ intensity: a.intensity, accord: { name: a.name } }))}
+            size="hero"
           />
           <div className="home-daily-body">
             <p className="eyebrow" id="daily-title">

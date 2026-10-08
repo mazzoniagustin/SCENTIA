@@ -511,7 +511,7 @@ h1 {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 1 / 1;
   padding: 1.1rem 1.25rem;
   overflow: hidden;
 }
@@ -1020,7 +1020,8 @@ textarea {
   background: var(--surface);
 }
 
-.home-daily .perfume-cover {
+.home-daily .perfume-cover,
+.home-daily .perfume-media {
   aspect-ratio: auto;
   min-height: 16rem;
 }
@@ -1224,9 +1225,11 @@ textarea {
   align-items: end;
 }
 
-.ficha-hero .perfume-cover {
+.ficha-hero .perfume-cover,
+.ficha-hero .perfume-media {
   border-radius: 1rem;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1 / 1;
+  max-width: 15rem;
 }
 
 .ficha-hero .perfume-cover-mark {
@@ -1249,8 +1252,10 @@ textarea {
     grid-template-columns: 15rem 1fr;
   }
 
-  .ficha-hero .perfume-cover {
-    aspect-ratio: 1 / 1;
+  .ficha-hero .perfume-cover,
+  .ficha-hero .perfume-media {
+    aspect-ratio: 3 / 4;
+    max-width: none;
   }
 }
 
@@ -1473,8 +1478,9 @@ textarea {
   grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
 }
 
-.perfume-tile .perfume-cover {
-  aspect-ratio: 4 / 3;
+.perfume-tile .perfume-cover,
+.perfume-tile .perfume-media {
+  aspect-ratio: 1 / 1;
 }
 
 .perfume-tile .perfume-cover-mark {
@@ -1783,4 +1789,53 @@ textarea {
 
 .scroller-viewport {
   max-width: 100%;
+}
+
+/* ————— Foto del frasco (enlazada desde su origen) ————— */
+
+/* Placa clara: las fotos son frascos sobre fondo blanco; "contain" no recorta el frasco. */
+.perfume-media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #f4f2ee;
+}
+
+.perfume-media img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Mezcla el blanco del JPG con la placa para que no se note el borde. */
+  mix-blend-mode: multiply;
+}
+
+.ficha-hero-media {
+  display: grid;
+  gap: 0.5rem;
+  align-self: end;
+}
+
+.image-credit {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.image-credit a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.compare-card-media .perfume-media,
+.compare-card-media .perfume-cover {
+  height: 9rem;
+  aspect-ratio: auto;
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.compare-card-media .perfume-cover-mark {
+  font-size: 2.5rem;
 }

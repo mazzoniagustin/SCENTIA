@@ -9,7 +9,8 @@ import { getSimilarPerfumes } from "@/lib/recommendations/similar";
 import { createClient } from "@/lib/supabase/server";
 import { CollectionForm } from "../CollectionForm";
 import { CompareCheckbox } from "../CompareCheckbox";
-import { PerfumeCover } from "../PerfumeCover";
+import { PerfumeImage } from "../PerfumeImage";
+import { isAllowedImageUrl, isAllowedSourcePageUrl } from "@/lib/images";
 import { CommunityStats } from "../CommunityStats";
 import { RemindsMeSection } from "../RemindsMeSection";
 import { getRemindsMe } from "@/lib/similar/reminds";
@@ -66,7 +67,21 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
       </Link>
 
       <header className="ficha-hero">
-        <PerfumeCover name={perfume.name} accords={perfume.accords} />
+        <div className="ficha-hero-media">
+          <PerfumeImage name={perfume.name} brand={perfume.brand} imageUrl={perfume.imageUrl} accords={perfume.accords} size="hero" priority />
+          {perfume.imageUrl && isAllowedImageUrl(perfume.imageUrl) && perfume.imageSource && (
+            <p className="image-credit">
+              Imagen:{" "}
+              {perfume.imageSourceUrl && isAllowedSourcePageUrl(perfume.imageSourceUrl) ? (
+                <a href={perfume.imageSourceUrl} rel="noopener noreferrer" target="_blank">
+                  {perfume.imageSource}
+                </a>
+              ) : (
+                perfume.imageSource
+              )}
+            </p>
+          )}
+        </div>
         <div className="ficha-hero-text">
         <p className="eyebrow">
           {perfume.brand} · {genderLabel(perfume.gender)}

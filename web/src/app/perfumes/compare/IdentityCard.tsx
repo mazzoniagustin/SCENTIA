@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { seriesColor } from "@/lib/compare/radar";
 import { Perfume, valueOrNoData } from "../types";
+import { PerfumeImage } from "../PerfumeImage";
 
 export function IdentityCard({
   perfume,
@@ -47,6 +48,9 @@ export function IdentityCard({
       >
         ×
       </button>
+      <div className="compare-card-media">
+        <PerfumeImage name={perfume.name} brand={perfume.brand} imageUrl={perfume.imageUrl} accords={perfume.accords} size="thumb" />
+      </div>
       <p className="compare-card-brand">{perfume.brand}</p>
       <h2 className="compare-card-name">{perfume.name}</h2>
       <p className="compare-card-meta">

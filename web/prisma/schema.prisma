@@ -46,6 +46,8 @@ model Perfume {
   status      PublicationStatus @default(PUBLISHED)
   source      String?
   imageSource String?
+  /// Página de origen de la imagen (para el crédito). La imagen se enlaza (hotlink), no se copia.
+  imageSourceUrl String?
 
   // Valoración de la fuente de datos; se usa solo como señal de popularidad, nunca se muestra como rating público.
   ratingValue Float?

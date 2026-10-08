@@ -2,7 +2,7 @@ import { getUserCollection, deleteCollectionEntry } from '@/app/actions/collecti
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { CollectionForm } from '../perfumes/CollectionForm';
-import { PerfumeCover } from '../perfumes/PerfumeCover';
+import { PerfumeImage } from '../perfumes/PerfumeImage';
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from 'next/navigation';
 
@@ -36,7 +36,7 @@ export default async function MyCollectionPage() {
         <ul className="catalog-grid">
           {collection.map((entry) => (
             <li key={entry.perfumeId} className="perfume-card">
-              <PerfumeCover name={entry.perfume.name} accords={entry.perfume.accords} />
+              <PerfumeImage name={entry.perfume.name} brand={entry.perfume.brand} imageUrl={entry.perfume.imageUrl} accords={entry.perfume.accords} />
               <div className="perfume-card-body">
                 <p className="perfume-brand">{entry.perfume.brand}</p>
                 <h2 className="perfume-name">

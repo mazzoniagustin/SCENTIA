@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { PerfumeCover } from "./PerfumeCover";
+import { PerfumeImage } from "./PerfumeImage";
 import { genderLabel } from "./types";
 import type { FeaturedPerfume } from "@/lib/home/featured";
 
@@ -8,7 +8,7 @@ import type { FeaturedPerfume } from "@/lib/home/featured";
 export function PerfumeTile({ perfume }: { perfume: FeaturedPerfume }) {
   return (
     <article className="perfume-card perfume-tile">
-      <PerfumeCover name={perfume.name} accords={perfume.accords} />
+      <PerfumeImage name={perfume.name} brand={perfume.brand} imageUrl={perfume.imageUrl} accords={perfume.accords} size="tile" />
       <div className="perfume-card-body">
         <p className="perfume-brand">{perfume.brand}</p>
         <h3 className="perfume-name">

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { HorizontalScroller } from "@/components/HorizontalScroller";
 import type { RemindsMe } from "@/lib/similar/reminds";
-import { PerfumeCover } from "./PerfumeCover";
+import { PerfumeImage } from "./PerfumeImage";
 import { genderLabel } from "./types";
 
 // Carrusel "Me recuerda a": lo que la comunidad dice que huele parecido, con el porcentaje de acuerdo.
@@ -17,7 +17,7 @@ export function RemindsMeSection({ items }: { items: RemindsMe[] }) {
           {items.map((item) => (
             <li key={item.id} className="scroller-item">
               <article className="perfume-card perfume-tile">
-                <PerfumeCover name={item.name} accords={item.accords} />
+                <PerfumeImage name={item.name} brand={item.brand} imageUrl={item.imageUrl} accords={item.accords} size="tile" />
                 <div className="perfume-card-body">
                   <p className="perfume-brand">{item.brand}</p>
                   <h3 className="perfume-name">

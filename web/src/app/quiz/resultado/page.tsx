@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { saveQuizProfile } from "@/app/actions/account";
-import { PerfumeCover } from "@/app/perfumes/PerfumeCover";
+import { PerfumeImage } from "@/app/perfumes/PerfumeImage";
 import { genderLabel } from "@/app/perfumes/types";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { answersFromSearchParams } from "@/lib/quiz/params";
@@ -113,8 +113,10 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
           <div className="catalog-grid">
             {results.map((result) => (
               <article key={result.perfumeId} className="perfume-card">
-                <PerfumeCover
+                <PerfumeImage
                   name={result.name}
+                  brand={result.brand}
+                  imageUrl={result.imageUrl}
                   accords={result.matchedAccords.map((name, i) => ({ intensity: 100 - i, accord: { name } }))}
                 />
                 <div className="perfume-card-body">

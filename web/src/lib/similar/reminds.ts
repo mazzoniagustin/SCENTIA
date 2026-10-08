@@ -7,6 +7,7 @@ export type RemindsMe = {
   brand: string
   name: string
   gender: string
+  imageUrl: string | null
   upVotes: number
   downVotes: number
   /** Porcentaje (0-100) de votos a favor sobre el total. */
@@ -28,6 +29,7 @@ export async function getRemindsMe(perfumeId: string, limit = 14): Promise<Remin
           brand: true,
           name: true,
           gender: true,
+          imageUrl: true,
           accords: { select: { intensity: true, accord: { select: { name: true } } }, orderBy: { intensity: 'desc' }, take: 3 },
         },
       },

@@ -30,6 +30,7 @@ export type FeaturedPerfume = {
   brand: string
   name: string
   gender: string
+  imageUrl: string | null
   accords: Array<{ intensity: number; accord: { name: string } }>
 }
 
@@ -51,6 +52,7 @@ export function getSeasonalFeatured(season: Season, limit = 8, excludeIds: strin
         brand: true,
         name: true,
         gender: true,
+        imageUrl: true,
         accords: { select: { intensity: true, accord: { select: { name: true } } }, orderBy: { intensity: 'desc' } },
       },
       orderBy: [{ ratingCount: 'desc' }, { id: 'asc' }],
