@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getUserCollection } from "@/app/actions/collection";
+import { LONGEVITY_LABELS, scaleLabel } from "@/lib/community";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { prisma } from "@/lib/prisma";
 import { getSimilarPerfumes } from "@/lib/recommendations/similar";
@@ -50,7 +51,8 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
     ["Concentración", valueOrNoData(perfume.concentration, (c) => c.toUpperCase())],
     ["Año", valueOrNoData(perfume.releaseYear, String)],
     ["Perfumista", valueOrNoData(perfume.perfumer, String)],
-    ["Duración", valueOrNoData(perfume.duration, (d) => `${d} h`)],
+    // Horas si es un dato curado; si no, la duración votada por la comunidad.
+    ["Duración", perfume.duration !== null ? `${perfume.duration} h` : perfume.longevity !== null ? scaleLabel(perfume.longevity, LONGEVITY_LABELS) : "Sin dato"],
   ];
 
   return (
