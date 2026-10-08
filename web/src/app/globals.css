@@ -636,3 +636,92 @@ h1 {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+/* ————— Ficha de perfume y paginación del catálogo ————— */
+
+.ficha {
+  max-width: 56rem;
+}
+
+.ficha-section {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.ficha-section h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.ficha-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.ficha-details dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.ficha-details dd {
+  font-weight: 700;
+  margin: 0;
+}
+
+.ficha-accords {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ficha-accords li {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ficha-bar {
+  display: block;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.ficha-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.ficha-phases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.ficha-phases h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
+}
+
+.catalog-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.catalog-pagination [aria-disabled="true"] {
+  color: var(--muted);
+}

@@ -78,3 +78,24 @@ export function parseConcentration(nameSlug: string): string | null {
   if (/-(extrait-de-parfum|extrait)-/.test(s)) return 'parfum';
   return null;
 }
+
+// Partículas de apellidos que van en minúscula salvo al inicio ("Jean de la Fontaine").
+const PERSON_PARTICLES = new Set(['de', 'da', 'di', 'do', 'dos', 'del', 'della', 'du', 'des', 'van', 'von', 'der', 'den', 'la', 'le', 'y'])
+
+// Capitaliza cada parte separada por guion o apóstrofe: "pierre-constantin" → "Pierre-Constantin".
+const capitalizeParts = (word: string) =>
+  word.replace(/(^|[-'’])(\p{L})/gu, (_, sep: string, letter: string) => sep + letter.toUpperCase())
+
+/** "jean françois latty" → "Jean François Latty" (el CSV trae los nombres en minúscula). */
+export function humanizePerson(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word, i) => (i > 0 && PERSON_PARTICLES.has(word) ? word : capitalizeParts(word)))
+    .join(' ')
+}
+
+/** "sophie labbé, véronica casanova" → "Sophie Labbé, Véronica Casanova". */
+export const humanizePerfumers = (list: string) =>
+  list.split(',').map(humanizePerson).filter(Boolean).join(', ')

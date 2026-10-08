@@ -7,7 +7,14 @@ type PerfumeWhere = Prisma.PerfumeWhereInput
 
 // Resultado del parseo de query params: null = params inválidos
 type FilterResult =
-  | { ok: true; where: PerfumeWhere; orderBy: Prisma.PerfumeOrderByWithRelationInput[]; ids: string[] }
+  | {
+      ok: true
+      where: PerfumeWhere
+      orderBy: Prisma.PerfumeOrderByWithRelationInput[]
+      ids: string[]
+      page: number
+      pageSize: number
+    }
   | { ok: false; error: string }
 
 // Valores de orden aceptados. 'relevance' es placeholder del orden editorial
@@ -31,6 +38,27 @@ function parseSort(value: string | null): SortValue | null {
   return SORT_VALUES.includes(value as SortValue) ? (value as SortValue) : null
 }
 
+// Paginación: el catálogo tiene decenas de miles de perfumes, así que el listado nunca es completo.
+const DEFAULT_PAGE_SIZE = 24
+const MAX_PAGE_SIZE = 100
+// Búsqueda y filtros por lista: límites para acotar el costo de la consulta.
+const MAX_SEARCH_TOKENS = 5
+const MAX_TOKEN_LENGTH = 50
+const MAX_LIST_FILTERS = 3
+// Un acorde "cuenta" para el filtro cuando tiene al menos esta intensidad en el perfume.
+const ACCORD_FILTER_MIN_INTENSITY = 40
+
+function parseBoundedInt(value: string | null, fallback: number, min: number, max: number): number | null {
+  if (value === null || value === '') return fallback
+  if (!/^\d+$/.test(value)) return null
+  const parsed = Number.parseInt(value, 10)
+  return parsed >= min && parsed <= max ? parsed : null
+}
+
+function parseCsv(value: string): string[] {
+  return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
 function parsePositiveInt(value: string, paramName: string): number | null {
   const parsed = Number.parseInt(value, 10)
   if (Number.isNaN(parsed) || parsed < 0) {
@@ -41,6 +69,56 @@ function parsePositiveInt(value: string, paramName: string): number | null {
 
 function buildFilters(searchParams: URLSearchParams): FilterResult {
   const where: PerfumeWhere = {}
+  const and: PerfumeWhere[] = []
+
+  // Búsqueda por nombre y marca: cada palabra debe aparecer en la marca o en el nombre.
+  const q = searchParams.get('q')
+  if (q) {
+    const tokens = q.trim().split(/\s+/).filter(Boolean)
+    if (tokens.length > MAX_SEARCH_TOKENS || tokens.some((token) => token.length > MAX_TOKEN_LENGTH)) {
+      return {
+        ok: false,
+        error: `q admite hasta ${MAX_SEARCH_TOKENS} palabras de ${MAX_TOKEN_LENGTH} caracteres`,
+      }
+    }
+    for (const token of tokens) {
+      and.push({
+        OR: [
+          { brand: { contains: token, mode: 'insensitive' } },
+          { name: { contains: token, mode: 'insensitive' } },
+        ],
+      })
+    }
+  }
+
+  // Acordes (en español, separados por coma): el perfume debe tener todos con intensidad suficiente.
+  const accord = searchParams.get('accord')
+  if (accord) {
+    const accords = parseCsv(accord)
+    if (accords.length === 0 || accords.length > MAX_LIST_FILTERS) {
+      return { ok: false, error: `accord admite entre 1 y ${MAX_LIST_FILTERS} acordes separados por coma` }
+    }
+    for (const name of accords) {
+      and.push({
+        accords: {
+          some: { accord: { name: { equals: name, mode: 'insensitive' } }, intensity: { gte: ACCORD_FILTER_MIN_INTENSITY } },
+        },
+      })
+    }
+  }
+
+  // Notas (nombre exacto en inglés, separadas por coma): el perfume debe tenerlas todas.
+  const note = searchParams.get('note')
+  if (note) {
+    const notes = parseCsv(note)
+    if (notes.length === 0 || notes.length > MAX_LIST_FILTERS) {
+      return { ok: false, error: `note admite entre 1 y ${MAX_LIST_FILTERS} notas separadas por coma` }
+    }
+    for (const name of notes) {
+      and.push({ notes: { some: { note: { name: { equals: name, mode: 'insensitive' } } } } })
+    }
+  }
+  if (and.length > 0) where.AND = and
 
   const brand = searchParams.get('brand')
   if (brand) {
@@ -125,7 +203,16 @@ function buildFilters(searchParams: URLSearchParams): FilterResult {
     }
   }
 
-  return { ok: true, where, orderBy: SORT_ORDER[sort], ids: requestedIds }
+  const page = parseBoundedInt(searchParams.get('page'), 1, 1, 1_000_000)
+  if (page === null) {
+    return { ok: false, error: 'page debe ser un entero >= 1' }
+  }
+  const pageSize = parseBoundedInt(searchParams.get('pageSize'), DEFAULT_PAGE_SIZE, 1, MAX_PAGE_SIZE)
+  if (pageSize === null) {
+    return { ok: false, error: `pageSize debe ser un entero entre 1 y ${MAX_PAGE_SIZE}` }
+  }
+
+  return { ok: true, where, orderBy: SORT_ORDER[sort], ids: requestedIds, page, pageSize }
 }
 
 export async function GET(request: NextRequest) {
@@ -137,19 +224,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: filters.error }, { status: 400 })
     }
 
-    const perfumes = await prisma.perfume.findMany({
-      where: filters.where,
-      include: {
-        notes: { include: { note: true } },
-        accords: { include: { accord: true } },
-      },
-      orderBy: filters.orderBy,
-    })
+    // Con ids (comparador): hasta 4 perfumes con todas sus notas y acordes. Sin ids (listado):
+    // una página, solo con acordes, más el total para poder paginar.
+    const isCompare = filters.ids.length >= 2
+    const [perfumes, total] = await Promise.all([
+      prisma.perfume.findMany({
+        where: filters.where,
+        include: isCompare
+          ? { notes: { include: { note: true } }, accords: { include: { accord: true } } }
+          : { accords: { include: { accord: true } } },
+        orderBy: filters.orderBy,
+        ...(isCompare ? {} : { skip: (filters.page - 1) * filters.pageSize, take: filters.pageSize }),
+      }),
+      isCompare ? Promise.resolve(0) : prisma.perfume.count({ where: filters.where }),
+    ])
 
     // Con ids: el orden de data es el orden del param (el color de cada serie en
     // el comparador sigue esa posición) y sort se ignora — findMany no garantiza
     // el orden de un `in`, por eso se reordena en JS.
-    if (filters.ids.length >= 2) {
+    if (isCompare) {
       const byId = new Map(perfumes.map((perfume) => [perfume.id, perfume]))
       const ordered = filters.ids
         .map((id) => byId.get(id))
@@ -161,7 +254,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ data: perfumes, count: perfumes.length }, { status: 200 })
+    return NextResponse.json(
+      {
+        data: perfumes,
+        count: perfumes.length,
+        total,
+        page: filters.page,
+        pageSize: filters.pageSize,
+        totalPages: Math.ceil(total / filters.pageSize),
+      },
+      { status: 200 },
+    )
   } catch (error) {
     // Tipado estricto del error sin usar any
     if (error instanceof Error) {

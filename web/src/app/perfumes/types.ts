@@ -27,6 +27,12 @@ export type Perfume = {
   accords?: PerfumeAccord[];
 };
 
+export const PRICE_TIER_LABELS = {
+  ARABIC: "Árabe",
+  DESIGNER: "Diseñador",
+  NICHE: "Nicho",
+} as const;
+
 export const NO_DATA = "Sin dato";
 
 export function valueOrNoData<T>(value: T | null | undefined, format: (v: T) => string): string {

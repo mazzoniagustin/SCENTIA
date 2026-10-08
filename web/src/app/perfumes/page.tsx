@@ -3,13 +3,16 @@ import { headers } from "next/headers";
 import { CompareCheckbox } from "./CompareCheckbox";
 import { CollectionForm } from "./CollectionForm";
 import { CompareBar } from "./CompareBar";
-import { Perfume } from "./types";
+import { Perfume, PRICE_TIER_LABELS } from "./types";
+import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { getUserCollection } from "@/app/actions/collection";
 
 type PerfumesResponse =
-  | { data: Perfume[]; count: number }
+  | { data: Perfume[]; count: number; total: number; page: number; totalPages: number }
   | { error: string };
+
+type Pagination = { total: number; page: number; totalPages: number };
 
 const SEASONS = ["primavera", "verano", "otoño", "invierno"] as const;
 const OCCASIONS = [
@@ -29,11 +32,27 @@ function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+// Enlace a otra página conservando los filtros activos.
+function pageHref(params: Record<string, string | string[] | undefined>, page: number): string {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    const single = first(value);
+    if (single && key !== "page") query.set(key, single);
+  }
+  if (page > 1) query.set("page", String(page));
+  const qs = query.toString();
+  return qs ? `/perfumes?${qs}` : "/perfumes";
+}
+
 async function fetchPerfumes(
   searchParams: Record<string, string | string[] | undefined>,
-): Promise<{ perfumes: Perfume[]; error?: string }> {
+): Promise<{ perfumes: Perfume[]; pagination?: Pagination; error?: string }> {
   const query = new URLSearchParams();
   for (const key of [
+    "q",
+    "accord",
+    "priceTier",
+    "page",
     "brand",
     "concentration",
     "gender",
@@ -61,24 +80,24 @@ async function fetchPerfumes(
       const message = "error" in body ? body.error : `Error ${response.status}`;
       return { perfumes: [], error: message };
     }
-    return { perfumes: body.data };
+    return {
+      perfumes: body.data,
+      pagination: { total: body.total, page: body.page, totalPages: body.totalPages },
+    };
   } catch {
     return { perfumes: [], error: "No se pudo cargar el catálogo." };
   }
 }
 
 function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume; collectionEntry?: any; isAuthenticated: boolean }) {
-  const PRICE_TIER_LABELS = {
-    ARABIC: 'Árabe',
-    DESIGNER: 'Diseñador',
-    NICHE: 'Nicho'
-  } as const;
   const priceTierLabel = perfume.priceTier ? PRICE_TIER_LABELS[perfume.priceTier] : null;
 
   return (
     <article className="perfume-card">
       <p className="perfume-brand">{perfume.brand}</p>
-      <h2 className="perfume-name">{perfume.name}</h2>
+      <h2 className="perfume-name">
+        <Link href={`/perfumes/${perfume.id}`}>{perfume.name}</Link>
+      </h2>
       <p className="perfume-meta">
         {[perfume.concentration?.toUpperCase(), perfume.releaseYear]
           .filter(Boolean)
@@ -124,7 +143,10 @@ export default async function PerfumesPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const { perfumes, error } = await fetchPerfumes(params);
+  const [{ perfumes, pagination, error }, accordOptions] = await Promise.all([
+    fetchPerfumes(params),
+    prisma.accord.findMany({ select: { name: true }, orderBy: { name: "asc" } }),
+  ]);
 
   // Check auth
   const supabase = await createClient();
@@ -141,6 +163,9 @@ export default async function PerfumesPage({
   }
 
   const selected = {
+    q: first(params.q) ?? "",
+    accord: first(params.accord) ?? "",
+    priceTier: first(params.priceTier) ?? "",
     brand: first(params.brand) ?? "",
     concentration: first(params.concentration) ?? "",
     gender: first(params.gender) ?? "",
@@ -166,8 +191,23 @@ export default async function PerfumesPage({
 
       {/* Filtros */}
       <form className="catalog-filters" action="/perfumes" method="GET">
+        <input
+          type="search"
+          name="q"
+          placeholder="Buscar por nombre o marca"
+          aria-label="Buscar por nombre o marca"
+          defaultValue={selected.q}
+        />
         <input type="text" name="brand" placeholder="Marca" defaultValue={selected.brand} />
-        <select name="priceTier" defaultValue={first(params.priceTier) ?? ""}>
+        <select name="accord" defaultValue={selected.accord} aria-label="Acorde">
+          <option value="">Acorde</option>
+          {accordOptions.map((a) => (
+            <option key={a.name} value={a.name}>
+              {a.name.charAt(0).toUpperCase() + a.name.slice(1)}
+            </option>
+          ))}
+        </select>
+        <select name="priceTier" defaultValue={selected.priceTier}>
           <option value="">Todas las categorías</option>
           <option value="ARABIC">Árabe</option>
           <option value="DESIGNER">Diseñador</option>
@@ -225,8 +265,11 @@ export default async function PerfumesPage({
           )}
         </div>
       ) : (
-        <section aria-label={`Catálogo de perfumes, ${perfumes.length} resultados`}>
-          <p className="catalog-count">{perfumes.length} perfumes</p>
+        <section aria-label={`Catálogo de perfumes, ${pagination?.total ?? perfumes.length} resultados`}>
+          <p className="catalog-count">
+            {(pagination?.total ?? perfumes.length).toLocaleString("es-AR")} perfumes
+            {pagination && pagination.totalPages > 1 && ` · página ${pagination.page} de ${pagination.totalPages}`}
+          </p>
           <ul className="catalog-grid">
             {perfumes.map((perfume) => {
               const entry = collection.find(c => c.perfumeId === perfume.id);
@@ -237,6 +280,27 @@ export default async function PerfumesPage({
               );
             })}
           </ul>
+          {pagination && pagination.totalPages > 1 && (
+            <nav className="catalog-pagination" aria-label="Paginación">
+              {pagination.page > 1 ? (
+                <Link href={pageHref(params, pagination.page - 1)} rel="prev">
+                  ← Anterior
+                </Link>
+              ) : (
+                <span aria-disabled="true">← Anterior</span>
+              )}
+              <span>
+                Página {pagination.page} de {pagination.totalPages}
+              </span>
+              {pagination.page < pagination.totalPages ? (
+                <Link href={pageHref(params, pagination.page + 1)} rel="next">
+                  Siguiente →
+                </Link>
+              ) : (
+                <span aria-disabled="true">Siguiente →</span>
+              )}
+            </nav>
+          )}
         </section>
       )}
     </main>

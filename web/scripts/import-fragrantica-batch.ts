@@ -2,6 +2,7 @@
 //   npx tsx scripts/import-fragrantica-batch.ts --limit 500 [--offset 0] [--batch 500]
 //   npx tsx scripts/import-fragrantica-batch.ts --all        (importación completa; requiere aprobación)
 // Idempotente: upsert lógico por (brand, name) y relaciones reescritas. Nunca toca priceTier.
+// El CSV se decodifica como Windows-1252 y los perfumistas se humanizan (ver humanize.ts).
 import { config } from 'dotenv'
 import path from 'path'
 config({ path: path.resolve(process.cwd(), '.env.local'), quiet: true })
@@ -11,7 +12,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { parse } from 'csv-parse/sync'
 import fs from 'fs'
 import { ACCORD_TRANSLATIONS } from './accord-translations'
-import { humanize, humanizeBrand, parseConcentration } from './humanize'
+import { humanize, humanizeBrand, humanizePerfumers, parseConcentration } from './humanize'
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL as string) })
 
@@ -81,7 +82,7 @@ function prepare(row: CsvRow): Prepared | null {
     gender: GENDER_MAP[clean(row.Gender).toLowerCase()] ?? 'unisex',
     concentration: parseConcentration(nameSlug),
     releaseYear: Number.isFinite(year) ? year : null,
-    perfumer: perfumer || null,
+    perfumer: perfumer ? humanizePerfumers(perfumer) : null,
     notes,
     accords,
   }
@@ -139,7 +140,9 @@ async function importBatch(batch: Prepared[], noteIds: Map<string, string>, acco
       UPDATE "Perfume" AS pf SET
         concentration = COALESCE(pf.concentration, v.concentration),
         "releaseYear" = COALESCE(pf."releaseYear", v.year),
-        perfumer = COALESCE(pf.perfumer, v.perfumer),
+        -- Filas curadas (con priceTier) solo completan lo vacío; el resto toma el valor del CSV.
+        perfumer = CASE WHEN pf."priceTier" IS NULL THEN COALESCE(v.perfumer, pf.perfumer)
+                        ELSE COALESCE(pf.perfumer, v.perfumer) END,
         "updatedAt" = now()
       FROM unnest(${col((p) => ids.get(key(p.brand, p.name))!)}::text[],
                   ${col((p) => p.concentration)}::text[],
@@ -172,7 +175,9 @@ async function run() {
   const offset = parseInt(arg('--offset') ?? '0', 10)
   const batchSize = parseInt(arg('--batch') ?? '500', 10)
 
-  const rows = parse(fs.readFileSync(path.resolve('data/fra_cleaned.csv'), 'utf8'), {
+  // El CSV está en Windows-1252 (no UTF-8): leerlo como UTF-8 corrompe los acentos en "�".
+  const csv = new TextDecoder('windows-1252').decode(fs.readFileSync(path.resolve('data/fra_cleaned.csv')))
+  const rows = parse(csv, {
     delimiter: ';', columns: true, skip_empty_lines: true,
   }) as CsvRow[]
 

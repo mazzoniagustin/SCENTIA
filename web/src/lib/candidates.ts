@@ -1,50 +1,80 @@
-import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { getAccordStats } from '@/lib/accord-stats'
 import type { PerfumeWithRelations } from '@/lib/similarity'
 
-// Candidato a recomendación: un perfume con relaciones de acordes/notas
-// cargadas (para poder puntuarlo) y los campos editoriales mínimos para la
-// respuesta.
-export type Candidate = PerfumeWithRelations & {
-  brand: string
-  name: string
-}
+// Cantidad de acordes de la referencia (los más característicos) que acotan los candidatos.
+const SEED_ACCORDS = 3
+// Intensidad mínima del acorde en el candidato para entrar al conjunto.
+const CANDIDATE_MIN_INTENSITY = 40
+// Cuántos de esos acordes característicos debe compartir un candidato como mínimo.
+const MIN_SHARED_SEEDS = 2
 
-// Recupera solo los perfumes que comparten al menos un acorde o una nota con
-// la referencia. El filtro anidado `some` se traduce a subconsultas indexadas
-// (índices sobre PerfumeAccord.accordId y PerfumeNote.noteId), de modo que el
-// volumen traído es proporcional a la coincidencia, nunca al catálogo completo.
-export async function fetchCandidates(referenceId: string): Promise<Candidate[]> {
-  const reference = await prisma.perfume.findUnique({
-    where: { id: referenceId },
-    select: {
-      accords: { select: { accordId: true } },
-      notes: { select: { noteId: true } },
-    },
-  })
-  if (!reference) return []
+// Recupera los perfumes que comparten con la referencia al menos MIN_SHARED_SEEDS de sus
+// acordes más característicos. "Característico" = intensidad × rareza: un acorde presente en
+// medio catálogo (amaderado) no acota nada, así que se priorizan los distintivos. Con decenas
+// de miles de perfumes, traer todo lo que comparta *algún* acorde o nota trae miles de filas
+// que casi nunca llegan al ranking. El puntaje sigue usando todos los acordes y notas.
+//
+// Dos consultas en paralelo (acordes y notas de los candidatos) con la misma subconsulta de
+// ids, en vez del `select` anidado de Prisma, que hace una ida y vuelta por lote de miles de ids.
+// La marca y el nombre los pide quien llama, solo para el top.
+export async function fetchCandidates(reference: {
+  id: string
+  accords: ReadonlyArray<{ accordId: string; intensity: number }>
+}): Promise<PerfumeWithRelations[]> {
+  // Referencia sin acordes: no hay base para acotar candidatos.
+  if (reference.accords.length === 0) return []
 
-  const accordIds = reference.accords.map((accord) => accord.accordId)
-  const noteIds = reference.notes.map((note) => note.noteId)
+  const { total, dfById } = await getAccordStats()
+  const seedAccordIds = reference.accords
+    .map((a) => ({
+      accordId: a.accordId,
+      weight: a.intensity * Math.log(total / Math.max(dfById.get(a.accordId) ?? 1, 1)),
+    }))
+    .sort((a, b) => b.weight - a.weight || a.accordId.localeCompare(b.accordId))
+    .slice(0, SEED_ACCORDS)
+    .map((a) => a.accordId)
+  const minShared = Math.min(MIN_SHARED_SEEDS, seedAccordIds.length)
 
-  const or: Prisma.PerfumeWhereInput[] = []
-  if (accordIds.length > 0) {
-    or.push({ accords: { some: { accordId: { in: accordIds } } } })
+  const [accords, notes] = await Promise.all([
+    prisma.$queryRaw<Array<{ perfumeId: string; accordId: string; intensity: number }>>`
+      SELECT "perfumeId", "accordId", intensity::int AS intensity FROM "PerfumeAccord"
+      WHERE "perfumeId" IN (
+        SELECT c."perfumeId" FROM "PerfumeAccord" c
+        WHERE c."accordId" = ANY(${seedAccordIds}::text[])
+          AND c.intensity >= ${CANDIDATE_MIN_INTENSITY}
+          AND c."perfumeId" <> ${reference.id}
+        GROUP BY c."perfumeId"
+        HAVING COUNT(*) >= ${minShared}
+      )`,
+    prisma.$queryRaw<Array<{ perfumeId: string; noteId: string; noteType: string }>>`
+      SELECT "perfumeId", "noteId", "noteType" FROM "PerfumeNote"
+      WHERE "perfumeId" IN (
+        SELECT c."perfumeId" FROM "PerfumeAccord" c
+        WHERE c."accordId" = ANY(${seedAccordIds}::text[])
+          AND c.intensity >= ${CANDIDATE_MIN_INTENSITY}
+          AND c."perfumeId" <> ${reference.id}
+        GROUP BY c."perfumeId"
+        HAVING COUNT(*) >= ${minShared}
+      )`,
+  ])
+
+  const byId = new Map<
+    string,
+    {
+      id: string
+      accords: Array<{ accordId: string; intensity: number }>
+      notes: Array<{ noteId: string; noteType: string }>
+    }
+  >()
+  for (const row of accords) {
+    const entry = byId.get(row.perfumeId) ?? { id: row.perfumeId, accords: [], notes: [] }
+    entry.accords.push({ accordId: row.accordId, intensity: row.intensity })
+    byId.set(row.perfumeId, entry)
   }
-  if (noteIds.length > 0) {
-    or.push({ notes: { some: { noteId: { in: noteIds } } } })
+  for (const row of notes) {
+    // Todo candidato aparece en `accords` (la subconsulta parte de PerfumeAccord).
+    byId.get(row.perfumeId)?.notes.push({ noteId: row.noteId, noteType: row.noteType })
   }
-  // Referencia sin acordes ni notas: no hay base para recomendar nada.
-  if (or.length === 0) return []
-
-  return prisma.perfume.findMany({
-    where: { id: { not: referenceId }, OR: or },
-    select: {
-      id: true,
-      brand: true,
-      name: true,
-      accords: { select: { accordId: true, intensity: true } },
-      notes: { select: { noteId: true, noteType: true } },
-    },
-  })
+  return [...byId.values()]
 }

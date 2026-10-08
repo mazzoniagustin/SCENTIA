@@ -5,6 +5,7 @@ import "server-only";
 
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { getAccordStats } from '@/lib/accord-stats'
 import { getUserCollectionEntries } from '@/lib/exclusions'
 import { buildProfile } from './profile'
 import type { QuizAnswers } from './questions'
@@ -17,9 +18,6 @@ export type QuizGender = (typeof QUIZ_GENDERS)[number]
 const PREFILTER_ACCORDS = 4
 /** Intensidad mínima del acorde en el perfume para entrar al pre-filtro. */
 const PREFILTER_MIN_INTENSITY = 40
-/** El conteo de perfumes por acorde cambia solo con importaciones: se cachea. */
-const IDF_TTL_MS = 60 * 60 * 1000
-
 export type QuizResult = {
   perfumeId: string
   brand: string
@@ -30,29 +28,13 @@ export type QuizResult = {
   reasons: QuizReason[]
 }
 
-let idfCache: { at: number; idf: (name: string) => number } | null = null
-
-async function getIdf(): Promise<(name: string) => number> {
-  if (idfCache && Date.now() - idfCache.at < IDF_TTL_MS) return idfCache.idf
-
-  const [rows, total] = await Promise.all([
-    prisma.$queryRaw<Array<{ name: string; df: number }>>`
-      SELECT a.name, COUNT(*)::int AS df
-      FROM "PerfumeAccord" pa JOIN "Accord" a ON a.id = pa."accordId"
-      GROUP BY a.name`,
-    prisma.perfume.count(),
-  ])
-  const idf = buildIdf(new Map(rows.map((r) => [r.name, r.df])), total)
-  idfCache = { at: Date.now(), idf }
-  return idf
-}
-
 export async function recommendFromAnswers(
   answers: QuizAnswers,
   options: { gender?: QuizGender; limit?: number; userId?: string | null } = {},
 ): Promise<QuizResult[]> {
   const profile = buildProfile(answers)
-  const idf = await getIdf()
+  const stats = await getAccordStats()
+  const idf = buildIdf(stats.dfByName, stats.total)
 
   // Los acordes más característicos del perfil (peso × rareza) acotan los candidatos.
   const topAccords = Object.entries(profile.weights)
