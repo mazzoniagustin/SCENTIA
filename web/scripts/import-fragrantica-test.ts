@@ -21,7 +21,7 @@ const GENDER_MAP: Record<string, string> = {
 async function run() {
   const filePath = path.resolve('data/fra_cleaned.csv');
   const fileContent = fs.readFileSync(filePath, 'utf8');
-  const records = parse(fileContent, { delimiter: ';', columns: true, skip_empty_lines: true });
+  const records = parse(fileContent, { delimiter: ';', columns: true, skip_empty_lines: true }) as Record<string, string>[];
 
   let imported = 0;
   let genderFallbackCount = 0;

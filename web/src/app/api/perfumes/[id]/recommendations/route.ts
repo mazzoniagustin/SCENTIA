@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getSessionDbUserId } from '@/lib/auth/db-user'
+import { limitRequest } from '@/lib/api-guard'
+import { logServerError } from '@/lib/log'
 import { DEFAULT_LIMIT, MAX_LIMIT, getSimilarPerfumes } from '@/lib/recommendations/similar'
 
 // Contrato de respuesta de GET /api/perfumes/[id]/recommendations:
@@ -22,6 +24,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const limited = limitRequest(request, 'similares', 60)
+  if (limited) return limited
+
   try {
     const { id } = await params
     const { searchParams } = request.nextUrl
@@ -45,7 +50,8 @@ export async function GET(
     }
 
     return NextResponse.json({ data, count: data.length }, { status: 200 })
-  } catch {
+  } catch (error) {
+    logServerError('api/perfumes/[id]/recommendations', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

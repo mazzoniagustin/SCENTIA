@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getSessionDbUserId } from '@/lib/auth/db-user'
+import { limitRequest } from '@/lib/api-guard'
+import { logServerError } from '@/lib/log'
 import { validateAnswers } from '@/lib/quiz/profile'
 import { QUIZ_GENDERS, recommendFromAnswers, type QuizGender } from '@/lib/quiz/recommend'
 
@@ -14,6 +16,9 @@ const MAX_LIMIT = 50
 const badRequest = (error: string) => NextResponse.json({ error }, { status: 400 })
 
 export async function POST(request: NextRequest) {
+  const limited = limitRequest(request, 'quiz', 30)
+  if (limited) return limited
+
   try {
     let body: unknown
     try {
@@ -44,7 +49,8 @@ export async function POST(request: NextRequest) {
       userId: await getSessionDbUserId(),
     })
     return NextResponse.json({ data, count: data.length }, { status: 200 })
-  } catch {
+  } catch (error) {
+    logServerError('api/quiz/recommendations', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

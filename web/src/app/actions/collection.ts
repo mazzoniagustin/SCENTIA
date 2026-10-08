@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth/require-user'
+import { isValidPerfumeId, validateCollectionEntry, type CollectionEntryInput } from '@/lib/collection/validation'
 
 const getAuthenticatedUser = requireUser
 
@@ -14,16 +15,11 @@ export async function getUserCollection() {
   })
 }
 
-export async function upsertCollectionEntry(data: {
-  perfumeId: string
-  status: 'OWNED' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
-  rating?: number
-  personalNotes?: string
-}) {
-  // Validación mínima de rating
-  if (data.rating !== undefined && (data.rating < 1 || data.rating > 5)) {
-    throw new Error('Rating debe estar entre 1 y 5')
-  }
+export async function upsertCollectionEntry(input: CollectionEntryInput) {
+  // Las Server Actions son endpoints públicos: los tipos no se validan en ejecución.
+  const validated = validateCollectionEntry(input)
+  if (!validated.ok) throw new Error(validated.error)
+  const data = validated.value
 
   const user = await getAuthenticatedUser()
 
@@ -50,6 +46,7 @@ export async function upsertCollectionEntry(data: {
 }
 
 export async function deleteCollectionEntry(perfumeId: string) {
+  if (!isValidPerfumeId(perfumeId)) throw new Error('perfumeId inválido')
   const user = await getAuthenticatedUser()
 
   return await prisma.userCollection.delete({

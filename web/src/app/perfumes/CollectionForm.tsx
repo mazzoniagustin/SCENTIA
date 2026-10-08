@@ -1,7 +1,7 @@
 import { upsertCollectionEntry } from '@/app/actions/collection';
 import { revalidatePath } from 'next/cache';
 
-export function CollectionForm({ perfumeId, initialData }: { perfumeId: string, initialData?: any }) {
+export function CollectionForm({ perfumeId, initialData }: { perfumeId: string, initialData?: { status: string; rating?: number | null; personalNotes?: string | null } }) {
   async function action(formData: FormData) {
     'use server';
     const status = formData.get('status') as 'OWNED' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED';
@@ -26,8 +26,8 @@ export function CollectionForm({ perfumeId, initialData }: { perfumeId: string, 
         <option value="WISHLIST">Wishlist</option>
         <option value="DISLIKED">Disliked</option>
       </select>
-      <input type="number" name="rating" min="1" max="5" defaultValue={initialData?.rating} placeholder="Rating (1-5)" />
-      <textarea name="personalNotes" defaultValue={initialData?.personalNotes} placeholder="Notas personales" />
+      <input type="number" name="rating" min="1" max="5" defaultValue={initialData?.rating ?? undefined} placeholder="Rating (1-5)" />
+      <textarea name="personalNotes" maxLength={2000} defaultValue={initialData?.personalNotes ?? undefined} placeholder="Notas personales" />
       <button type="submit">Guardar</button>
     </form>
   );

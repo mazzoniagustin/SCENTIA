@@ -17,8 +17,11 @@ export async function requestMagicLink(formData: FormData) {
     redirect(getLoginUrl({ error: "email" }));
   }
 
+  // En producción el destino del enlace sale de SITE_URL: el header Origin lo controla quien hace la
+  // solicitud y permitiría emitir enlaces de acceso hacia otro dominio. Solo en desarrollo se usa Origin.
   const requestHeaders = await headers();
-  const origin = requestHeaders.get("origin");
+  const origin =
+    process.env.SITE_URL ?? (process.env.NODE_ENV === "production" ? null : requestHeaders.get("origin"));
 
   if (!origin) {
     redirect(getLoginUrl({ error: "request" }));

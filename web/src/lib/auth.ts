@@ -1,10 +1,16 @@
 import { prisma } from './prisma';
 
+// Forma mínima del error de Prisma que se inspecciona (código y restricción violada).
+type PrismaErrorLike = {
+  code?: string
+  meta?: { target?: unknown; driverAdapterError?: { cause?: { constraint?: { index?: string } } } }
+}
+
 export async function getOrCreateUser(supabaseSession: { user: { id: string; email: string } }) {
   const { id: supabaseId, email } = supabaseSession.user;
 
   // 1. Intento directo y optimista por supabaseId
-  let user = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { supabaseId }
   });
   if (user) return user;
@@ -14,7 +20,8 @@ export async function getOrCreateUser(supabaseSession: { user: { id: string; ema
     return await prisma.user.create({
       data: { email, supabaseId }
     });
-  } catch (error: any) {
+  } catch (caught: unknown) {
+    const error = caught as PrismaErrorLike
     // Verificamos si es un error de violación de restricción única (P2002)
     const constraint = error.meta?.target || error.meta?.driverAdapterError?.cause?.constraint?.index;
 

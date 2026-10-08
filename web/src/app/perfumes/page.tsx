@@ -1,16 +1,13 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { CompareCheckbox } from "./CompareCheckbox";
 import { CollectionForm } from "./CollectionForm";
 import { CompareBar } from "./CompareBar";
 import { Perfume, PRICE_TIER_LABELS } from "./types";
+import { logServerError } from "@/lib/log";
+import { listPerfumes } from "@/lib/perfumes/list";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { getUserCollection } from "@/app/actions/collection";
-
-type PerfumesResponse =
-  | { data: Perfume[]; count: number; total: number; page: number; totalPages: number }
-  | { error: string };
 
 type Pagination = { total: number; page: number; totalPages: number };
 
@@ -25,8 +22,6 @@ const OCCASIONS = [
 ] as const;
 const CONCENTRATIONS = ["parfum", "edp", "edt", "edc"] as const;
 const GENDERS = ["femenino", "masculino", "unisex"] as const;
-
-const DURATION_STEPS = [4, 6, 8, 10, 12] as const;
 
 function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -66,30 +61,21 @@ async function fetchPerfumes(
     if (value) query.set(key, value);
   }
 
-  const headerList = await headers();
-  const host = headerList.get("host");
-  const protocol = headerList.get("x-forwarded-proto") ?? "http";
-  const apiUrl = new URL(`/api/perfumes?${query.toString()}`, `${protocol}://${host ?? "localhost:3000"}`);
-
   try {
-    const response = await fetch(apiUrl, {
-      cache: "no-store",
-    });
-    const body = (await response.json()) as PerfumesResponse;
-    if (!response.ok || !("data" in body)) {
-      const message = "error" in body ? body.error : `Error ${response.status}`;
-      return { perfumes: [], error: message };
-    }
+    const result = await listPerfumes(query);
+    if (!result.ok) return { perfumes: [], error: result.error };
+    const body = result.body as { data: Perfume[]; total: number; page: number; totalPages: number };
     return {
       perfumes: body.data,
       pagination: { total: body.total, page: body.page, totalPages: body.totalPages },
     };
-  } catch {
+  } catch (error) {
+    logServerError("perfumes/page", error);
     return { perfumes: [], error: "No se pudo cargar el catálogo." };
   }
 }
 
-function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume; collectionEntry?: any; isAuthenticated: boolean }) {
+function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume; collectionEntry?: { status: string; rating?: number | null; personalNotes?: string | null }; isAuthenticated: boolean }) {
   const priceTierLabel = perfume.priceTier ? PRICE_TIER_LABELS[perfume.priceTier] : null;
 
   return (
@@ -153,7 +139,7 @@ export default async function PerfumesPage({
   const { data } = await supabase.auth.getUser();
   const isAuthenticated = !!data.user;
 
-  let collection: any[] = [];
+  let collection: Awaited<ReturnType<typeof getUserCollection>> = [];
   if (isAuthenticated) {
     try {
       collection = await getUserCollection();

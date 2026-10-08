@@ -30,7 +30,7 @@ async function getOrCreateAccord(name: string) {
 
 async function run() {
   const fileContent = fs.readFileSync(path.resolve(process.cwd(), 'data/fra_cleaned.csv'), 'utf8');
-  const records = parse(fileContent, { delimiter: ';', columns: true, skip_empty_lines: true });
+  const records = parse(fileContent, { delimiter: ';', columns: true, skip_empty_lines: true }) as Record<string, string>[];
 
   let imported = 0;
   let skipped = 0;

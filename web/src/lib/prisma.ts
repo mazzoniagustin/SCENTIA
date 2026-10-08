@@ -7,7 +7,11 @@ let prismaInstance: PrismaClient | undefined;
 export const getPrisma = () => {
   if (prismaInstance) return prismaInstance;
 
-  const adapter = new PrismaPg(process.env.DATABASE_URL as string);
+  // Pool chico: en serverless cada instancia abre su propio pool y el pooler de Supabase tiene un tope de conexiones.
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL as string,
+    max: Number(process.env.DATABASE_POOL_MAX) || 5,
+  });
 
   prismaInstance = new PrismaClient({
     adapter,

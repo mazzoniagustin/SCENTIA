@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { IdentityCard } from "./IdentityCard";
 import { NO_DATA, Perfume } from "../types";
 
@@ -11,10 +10,8 @@ import {
   radarValues,
   seriesColor,
 } from "@/lib/compare/radar";
-
-type CompareResponse =
-  | { data: Perfume[]; count: number; missing?: string[] }
-  | { error: string };
+import { logServerError } from "@/lib/log";
+import { listPerfumes } from "@/lib/perfumes/list";
 
 // Radio y centro del radar dentro del viewBox; el anillo exterior lleva las
 // etiquetas de eje (r = R + 22) — todo derivado de la misma geometría.
@@ -33,30 +30,13 @@ async function fetchCompare(ids: string): Promise<{
   missing: string[];
   error?: string;
 }> {
-  // El fetch server-side necesita URL absoluta: se arma desde el host de la
-  // petición entrante, sin depender de una env var extra (patrón del catálogo).
-  const headerList = await headers();
-  const host = headerList.get("host");
-  const protocol = headerList.get("x-forwarded-proto") ?? "http";
-  const apiUrl = new URL(
-    `/api/perfumes?ids=${encodeURIComponent(ids)}`,
-    `${protocol}://${host ?? "localhost:3000"}`,
-  );
-
   try {
-    const response = await fetch(apiUrl, {
-      // Los ids viven en la URL: el resultado depende de ella.
-      cache: "no-store",
-    });
-    const body = (await response.json()) as CompareResponse;
-    // El union se estrecha con "data" in body: response.ok no le dice nada a TS
-    // sobre la forma del cuerpo.
-    if (!response.ok || !("data" in body)) {
-      const message = "error" in body ? body.error : `Error ${response.status}`;
-      return { perfumes: [], missing: [], error: message };
-    }
+    const result = await listPerfumes(new URLSearchParams({ ids }));
+    if (!result.ok) return { perfumes: [], missing: [], error: result.error };
+    const body = result.body as { data: Perfume[]; missing?: string[] };
     return { perfumes: body.data, missing: body.missing ?? [] };
-  } catch {
+  } catch (error) {
+    logServerError("perfumes/compare", error);
     return { perfumes: [], missing: [], error: "No se pudo cargar la comparación." };
   }
 }
@@ -152,10 +132,6 @@ function RadarChart({ perfumes }: { perfumes: Perfume[] }) {
       )}
     </div>
   );
-}
-
-function perfumerOf(perfume: Perfume): string | null | undefined {
-  return perfume.perfumer;
 }
 
 /** Notas de un perfume agrupadas por fase, en orden fijo top → heart → base. */
