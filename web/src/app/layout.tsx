@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Instrument_Serif } from "next/font/google";
 
+import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a className="skip-link" href="#contenido">
           Saltar al contenido
         </a>
+        <SiteHeader />
         {children}
       </body>
     </html>

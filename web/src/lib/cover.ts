@@ -44,3 +44,21 @@ export function coverColors(accords: Accord[] | undefined): { background: string
     accord,
   };
 }
+
+// Monograma: primera letra de las dos primeras palabras significativas (se saltan conectores: "Bleu de Chanel" → "BC").
+const CONNECTORS = new Set(["de", "del", "la", "le", "les", "el", "los", "y", "and", "of", "the", "in", "by", "no", "for"]);
+
+export function initialsOf(name: string): string {
+  const words = name
+    .split(/[\s'’\-]+/)
+    .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter(Boolean);
+  // Solo palabras que empiezan con letra (los números como "18" o "2020" no dan iniciales) y sin conectores.
+  const letters = words.filter((w) => /^\p{L}/u.test(w));
+  const significant = letters.filter((w) => !CONNECTORS.has(w.toLowerCase()));
+  const pool = significant.length > 0 ? significant : letters.length > 0 ? letters : words;
+  return pool
+    .slice(0, 2)
+    .map((w) => Array.from(w)[0].toUpperCase())
+    .join("");
+}

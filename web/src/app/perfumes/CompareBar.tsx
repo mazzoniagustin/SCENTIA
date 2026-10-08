@@ -19,7 +19,7 @@ export function CompareBar() {
         background: "var(--surface)",
         padding: "12px 20px",
         borderRadius: "8px",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
         display: "flex",
         alignItems: "center",
         gap: "16px",
@@ -33,7 +33,7 @@ export function CompareBar() {
         className="button"
         style={{
           background: "var(--accent)",
-          color: "white",
+          color: "var(--accent-contrast)",
           padding: "8px 16px",
           borderRadius: "4px",
           textDecoration: "none",

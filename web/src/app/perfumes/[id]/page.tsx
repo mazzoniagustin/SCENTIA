@@ -8,6 +8,7 @@ import { getSimilarPerfumes } from "@/lib/recommendations/similar";
 import { createClient } from "@/lib/supabase/server";
 import { CollectionForm } from "../CollectionForm";
 import { CompareCheckbox } from "../CompareCheckbox";
+import { PerfumeCover } from "../PerfumeCover";
 import { PRICE_TIER_LABELS, valueOrNoData } from "../types";
 
 const SIMILAR_LIMIT = 6;
@@ -62,7 +63,9 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
         ← Catálogo
       </Link>
 
-      <header className="catalog-header">
+      <header className="ficha-hero">
+        <PerfumeCover name={perfume.name} accords={perfume.accords} />
+        <div className="ficha-hero-text">
         <p className="eyebrow">{perfume.brand}</p>
         <h1>{perfume.name}</h1>
         {(perfume.priceTier || perfume.seasons.length > 0) && (
@@ -73,6 +76,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
             ))}
           </ul>
         )}
+        </div>
       </header>
 
       <section className="ficha-section" aria-labelledby="ficha-datos">
@@ -155,6 +159,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
           <ul className="catalog-grid">
             {similar.map((item) => (
               <li key={item.perfumeId} className="perfume-card">
+                <div className="perfume-card-body">
                 <p className="perfume-brand">{item.brand}</p>
                 <h3 className="perfume-name">
                   <Link href={`/perfumes/${item.perfumeId}`}>{item.name}</Link>
@@ -165,6 +170,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
                     .map((reason) => (reason === "shared_accords" ? "acordes en común" : "notas en común"))
                     .join(" y ")}
                 </p>
+                </div>
               </li>
             ))}
           </ul>
