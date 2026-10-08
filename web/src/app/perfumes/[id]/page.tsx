@@ -22,8 +22,8 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const perfume = await prisma.perfume.findUnique({ where: { id }, select: { brand: true, name: true } });
-  return { title: perfume ? `${perfume.name} — ${perfume.brand}` : "Perfume no encontrado" };
+  const perfume = await prisma.perfume.findUnique({ where: { id }, select: { brand: true, name: true, status: true } });
+  return { title: perfume?.status === "PUBLISHED" ? `${perfume.name} — ${perfume.brand}` : "Perfume no encontrado" };
 }
 
 export default async function PerfumePage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,7 +36,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
       accords: { include: { accord: true }, orderBy: { intensity: "desc" } },
     },
   });
-  if (!perfume) notFound();
+  if (!perfume || perfume.status !== "PUBLISHED") notFound();
 
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();

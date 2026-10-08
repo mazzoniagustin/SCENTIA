@@ -41,6 +41,7 @@ export async function fetchCandidates(reference: {
       SELECT "perfumeId", "accordId", intensity::int AS intensity FROM "PerfumeAccord"
       WHERE "perfumeId" IN (
         SELECT c."perfumeId" FROM "PerfumeAccord" c
+        JOIN "Perfume" p ON p.id = c."perfumeId" AND p.status = 'PUBLISHED'
         WHERE c."accordId" = ANY(${seedAccordIds}::text[])
           AND c.intensity >= ${CANDIDATE_MIN_INTENSITY}
           AND c."perfumeId" <> ${reference.id}
@@ -51,6 +52,7 @@ export async function fetchCandidates(reference: {
       SELECT "perfumeId", "noteId", "noteType" FROM "PerfumeNote"
       WHERE "perfumeId" IN (
         SELECT c."perfumeId" FROM "PerfumeAccord" c
+        JOIN "Perfume" p ON p.id = c."perfumeId" AND p.status = 'PUBLISHED'
         WHERE c."accordId" = ANY(${seedAccordIds}::text[])
           AND c.intensity >= ${CANDIDATE_MIN_INTENSITY}
           AND c."perfumeId" <> ${reference.id}

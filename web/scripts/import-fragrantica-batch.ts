@@ -18,6 +18,8 @@ const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL
 
 const GENDER_MAP: Record<string, string> = { women: 'femenino', men: 'masculino', unisex: 'unisex' }
 const INTENSITY = [100, 80, 60, 40, 20]
+// Procedencia de los datos importados (RF-06).
+const SOURCE = 'fragrantica-csv'
 
 type CsvRow = Record<string, string>
 type NoteType = 'top' | 'heart' | 'base'
@@ -28,6 +30,8 @@ interface Prepared {
   concentration: string | null
   releaseYear: number | null
   perfumer: string | null
+  ratingValue: number | null
+  ratingCount: number | null
   notes: Array<{ name: string; type: NoteType }>
   accords: Array<{ name: string; intensity: number }>
 }
@@ -76,6 +80,10 @@ function prepare(row: CsvRow): Prepared | null {
     accords.push({ name: es, intensity: INTENSITY[j - 1] })
   }
 
+  // "Rating Value" viene con coma decimal ("1,42"); fuera de 0-5 o ilegible → sin dato.
+  const ratingValue = parseFloat(clean(row['Rating Value']).replace(',', '.'))
+  const ratingCount = parseInt(clean(row['Rating Count']), 10)
+
   return {
     brand: humanizeBrand(brandSlug),
     name: humanize(nameSlug),
@@ -83,6 +91,8 @@ function prepare(row: CsvRow): Prepared | null {
     concentration: parseConcentration(nameSlug),
     releaseYear: Number.isFinite(year) ? year : null,
     perfumer: perfumer ? humanizePerfumers(perfumer) : null,
+    ratingValue: Number.isFinite(ratingValue) && ratingValue >= 0 && ratingValue <= 5 ? ratingValue : null,
+    ratingCount: Number.isFinite(ratingCount) && ratingCount >= 0 ? ratingCount : null,
     notes,
     accords,
   }
@@ -120,6 +130,9 @@ async function importBatch(batch: Prepared[], noteIds: Map<string, string>, acco
     concentration: p.concentration,
     releaseYear: p.releaseYear,
     perfumer: p.perfumer,
+    ratingValue: p.ratingValue,
+    ratingCount: p.ratingCount,
+    source: SOURCE,
   })
   if (fresh.length) {
     await prisma.perfume.createMany({
@@ -143,11 +156,16 @@ async function importBatch(batch: Prepared[], noteIds: Map<string, string>, acco
         -- Filas curadas (con priceTier) solo completan lo vacío; el resto toma el valor del CSV.
         perfumer = CASE WHEN pf."priceTier" IS NULL THEN COALESCE(v.perfumer, pf.perfumer)
                         ELSE COALESCE(pf.perfumer, v.perfumer) END,
+        "ratingValue" = COALESCE(v.rating_value, pf."ratingValue"),
+        "ratingCount" = COALESCE(v.rating_count, pf."ratingCount"),
+        source = COALESCE(pf.source, ${SOURCE}),
         "updatedAt" = now()
       FROM unnest(${col((p) => ids.get(key(p.brand, p.name))!)}::text[],
                   ${col((p) => p.concentration)}::text[],
                   ${col((p) => p.releaseYear)}::int[],
-                  ${col((p) => p.perfumer)}::text[]) AS v(id, concentration, year, perfumer)
+                  ${col((p) => p.perfumer)}::text[],
+                  ${col((p) => p.ratingValue)}::float8[],
+                  ${col((p) => p.ratingCount)}::int[]) AS v(id, concentration, year, perfumer, rating_value, rating_count)
       WHERE pf.id = v.id`
   }
 

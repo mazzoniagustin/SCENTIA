@@ -19,6 +19,8 @@ export type CandidateAccord = { name: string; intensity: number }
 export type QuizCandidate = {
   id: string
   accords: ReadonlyArray<CandidateAccord>
+  /** Popularidad 0-1 (cantidad de valoraciones, en escala logarítmica). Sin dato = 0. */
+  popularity?: number
 }
 
 export type QuizReason = 'matched_accords' | 'avoids_rejected'
@@ -83,6 +85,15 @@ export function scoreCandidate(
 }
 
 /**
+ * Mezcla el puntaje con la popularidad: `score × (1 − w + w·popularidad)`. Con w = 0 no cambia nada.
+ * Evita que, a igualdad de gusto, ganen siempre perfumes casi desconocidos (el IDF premia lo raro).
+ */
+export function applyPopularity(score: number, popularity: number | undefined, weight: number): number {
+  const p = Math.min(Math.max(popularity ?? 0, 0), 1)
+  return score * (1 - weight + weight * p)
+}
+
+/**
  * Ordena candidatos por afinidad. Descarta los de puntaje 0 y los de la colección con
  * estado excluyente (OWNED/DISLIKED, sin distinguir mayúsculas). Desempate: puntaje,
  * cantidad de acordes coincidentes, id.
@@ -91,7 +102,7 @@ export function rankCandidates(
   profile: OlfactoryProfile,
   candidates: ReadonlyArray<QuizCandidate>,
   idf: (name: string) => number,
-  options: { collection?: ReadonlyArray<UserCollectionEntry>; limit?: number } = {},
+  options: { collection?: ReadonlyArray<UserCollectionEntry>; limit?: number; popularityWeight?: number } = {},
 ): QuizRecommendation[] {
   const excludedIds = new Set(
     (options.collection ?? [])
@@ -101,7 +112,13 @@ export function rankCandidates(
 
   const ranked = candidates
     .filter((candidate) => !excludedIds.has(candidate.id))
-    .map((candidate) => ({ candidate, result: scoreCandidate(profile, candidate, idf) }))
+    .map((candidate) => {
+      const result = scoreCandidate(profile, candidate, idf)
+      return {
+        candidate,
+        result: { ...result, score: applyPopularity(result.score, candidate.popularity, options.popularityWeight ?? 0) },
+      }
+    })
     .filter(({ result }) => result.score > 0)
     .sort(
       (a, b) =>

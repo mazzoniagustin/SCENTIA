@@ -6,6 +6,8 @@ import { prisma } from '@/lib/prisma'
 
 export type AccordStats = {
   total: number
+  /** Mayor cantidad de valoraciones de un perfume; normaliza la popularidad (0-1). */
+  maxRatingCount: number
   dfById: ReadonlyMap<string, number>
   dfByName: ReadonlyMap<string, number>
 }
@@ -17,15 +19,17 @@ let cache: { at: number; stats: AccordStats } | null = null
 export async function getAccordStats(): Promise<AccordStats> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.stats
 
-  const [rows, total] = await Promise.all([
+  const [rows, total, ratings] = await Promise.all([
     prisma.$queryRaw<Array<{ id: string; name: string; df: number }>>`
       SELECT a.id, a.name, COUNT(*)::int AS df
       FROM "PerfumeAccord" pa JOIN "Accord" a ON a.id = pa."accordId"
       GROUP BY a.id, a.name`,
     prisma.perfume.count(),
+    prisma.perfume.aggregate({ _max: { ratingCount: true } }),
   ])
   const stats: AccordStats = {
     total,
+    maxRatingCount: ratings._max.ratingCount ?? 0,
     dfById: new Map(rows.map((r) => [r.id, r.df])),
     dfByName: new Map(rows.map((r) => [r.name, r.df])),
   }

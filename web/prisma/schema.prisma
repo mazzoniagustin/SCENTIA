@@ -12,12 +12,13 @@ model User {
   email       String           @unique
   name        String?
   collections UserCollection[]
+  profile     UserProfile?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 }
 
 model Perfume {
-  id            String           @id @default(cuid())
+  id            String  @id @default(cuid())
   brand         String
   name          String
   gender        String
@@ -26,29 +27,39 @@ model Perfume {
   perfumer      String?
   description   String?
   imageUrl      String?
-  
-  duration      Int?             
-  projection    Int?             
-  seasons       String[]         
-  occasions     String[]         
 
-  notes         PerfumeNote[]
-  accords       PerfumeAccord[]
-  collectedBy   UserCollection[]
-  priceTier     PriceTier?
+  duration   Int?
+  projection Int?
+  seasons    String[]
+  occasions  String[]
 
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  notes       PerfumeNote[]
+  accords     PerfumeAccord[]
+  collectedBy UserCollection[]
+  priceTier   PriceTier?
+
+  // Publicación y procedencia (RF-06): el catálogo público solo muestra PUBLISHED.
+  status      PublicationStatus @default(PUBLISHED)
+  source      String?
+  imageSource String?
+
+  // Valoración de la fuente de datos; se usa solo como señal de popularidad, nunca se muestra como rating público.
+  ratingValue Float?
+  ratingCount Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([brand, name], name: "brand_name")
   @@index([gender])
   @@index([concentration])
+  @@index([status])
 }
 
 model Note {
   id       String        @id @default(cuid())
   name     String        @unique
-  category String        
+  category String
   perfumes PerfumeNote[]
 }
 
@@ -61,10 +72,10 @@ model Accord {
 model PerfumeNote {
   perfumeId String
   noteId    String
-  noteType  String 
+  noteType  String
 
-  perfume   Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
-  note      Note    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  perfume Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  note    Note    @relation(fields: [noteId], references: [id], onDelete: Cascade)
 
   @@id([perfumeId, noteId, noteType])
   @@index([noteId])
@@ -73,10 +84,10 @@ model PerfumeNote {
 model PerfumeAccord {
   perfumeId String
   accordId  String
-  intensity Int     
+  intensity Int
 
-  perfume   Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
-  accord    Accord  @relation(fields: [accordId], references: [id], onDelete: Cascade)
+  perfume Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  accord  Accord  @relation(fields: [accordId], references: [id], onDelete: Cascade)
 
   @@id([perfumeId, accordId])
   @@index([accordId])
@@ -87,6 +98,11 @@ enum CollectionStatus {
   SAMPLED
   WISHLIST
   DISLIKED
+}
+
+enum PublicationStatus {
+  DRAFT
+  PUBLISHED
 }
 
 enum PriceTier {
@@ -102,15 +118,23 @@ model UserCollection {
   rating        Int?
   personalNotes String?
 
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  perfume       Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perfume Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
 
   @@id([userId, perfumeId])
   @@index([status])
 }
 
+// Perfil de la persona: respuestas del quiz (no el vector, para poder recalcular si cambia
+// QUIZ_VERSION) y preferencias de idioma, país y moneda (RF-08). Se elimina con la cuenta.
+model UserProfile {
+  userId      String   @id
+  quizAnswers Json?
+  quizVersion Int?
+  locale      String   @default("es")
+  country     String?
+  currency    String?
+  updatedAt   DateTime @updatedAt
 
-
-
-
-
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

@@ -6,6 +6,7 @@ import { QUESTIONS, QUIZ_VERSION, referencedAccordNames, type QuizAnswers } from
 import { answersFromSearchParams } from './params.ts'
 import { buildProfile, validateAnswers } from './profile.ts'
 import {
+  applyPopularity,
   AVOID_THRESHOLD,
   buildIdf,
   rankCandidates,
@@ -219,5 +220,28 @@ describe('answersFromSearchParams', () => {
   it('los parámetros ausentes se omiten y la validación los rechaza', () => {
     assert.deepEqual(answersFromSearchParams({}), {})
     assert.equal(validateAnswers(answersFromSearchParams({ ambiente: 'mar' })).ok, false)
+  })
+})
+
+describe('popularidad', () => {
+  it('applyPopularity: peso 0 no cambia el puntaje; peso w escala entre (1 − w) y 1', () => {
+    assert.equal(applyPopularity(0.5, 0.1, 0), 0.5)
+    assertClose(applyPopularity(0.5, 1, 0.3), 0.5)
+    assertClose(applyPopularity(0.5, 0, 0.3), 0.5 * 0.7)
+    assertClose(applyPopularity(0.5, undefined, 0.3), 0.5 * 0.7)
+    assertClose(applyPopularity(0.5, 2, 0.3), 0.5) // se acota a [0, 1]
+  })
+
+  it('con peso > 0 un perfume popular supera a uno desconocido de igual afinidad; con 0 decide el id', () => {
+    const profile = { weights: { amaderado: 80 }, avoid: [] as string[] }
+    const mk = (id: string, popularity: number): QuizCandidate => ({
+      id, popularity, accords: [{ name: 'amaderado', intensity: 80 }],
+    })
+    const input = [mk('a-raro', 0.1), mk('b-popular', 0.9)]
+    assert.deepEqual(rankCandidates(profile, input, flat).map((r) => r.perfumeId), ['a-raro', 'b-popular'])
+    assert.deepEqual(
+      rankCandidates(profile, input, flat, { popularityWeight: 0.3 }).map((r) => r.perfumeId),
+      ['b-popular', 'a-raro'],
+    )
   })
 })

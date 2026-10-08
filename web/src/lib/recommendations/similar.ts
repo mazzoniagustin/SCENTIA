@@ -52,11 +52,12 @@ export async function getSimilarPerfumes(
     where: { id: referenceId },
     select: {
       id: true,
+      status: true,
       accords: { select: { accordId: true, intensity: true } },
       notes: { select: { noteId: true, noteType: true } },
     },
   })
-  if (!reference) return null
+  if (!reference || reference.status !== 'PUBLISHED') return null
 
   const [candidates, collection] = await Promise.all([
     fetchCandidates(reference),

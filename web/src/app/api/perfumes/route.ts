@@ -68,7 +68,8 @@ function parsePositiveInt(value: string, paramName: string): number | null {
 }
 
 function buildFilters(searchParams: URLSearchParams): FilterResult {
-  const where: PerfumeWhere = {}
+  // El catálogo público nunca muestra borradores (RF-01).
+  const where: PerfumeWhere = { status: 'PUBLISHED' }
   const and: PerfumeWhere[] = []
 
   // Búsqueda por nombre y marca: cada palabra debe aparecer en la marca o en el nombre.
