@@ -193,10 +193,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
           <Link href={user ? "/mi-coleccion" : "/login"}>{user ? "Ir a mi colección →" : "Ingresar →"}</Link>
         </article>
       </section>
-
-      <footer className="home-footer">
-        <p>Scentia es un proyecto personal de aprendizaje.</p>
-      </footer>
     </main>
   );
 }

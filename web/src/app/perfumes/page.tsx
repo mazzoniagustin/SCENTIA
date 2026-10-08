@@ -54,6 +54,7 @@ async function fetchPerfumes(
     "occasion",
     "minDuration",
     "maxDuration",
+    "minLongevity",
     "sort",
   ]) {
     const value = first(searchParams[key]);
@@ -111,6 +112,7 @@ export default async function PerfumesPage({
     season: first(params.season) ?? "",
     occasion: first(params.occasion) ?? "",
     minDuration: first(params.minDuration) ?? "",
+    minLongevity: first(params.minLongevity) ?? "",
     maxDuration: first(params.maxDuration) ?? "",
     sort: first(params.sort) ?? "",
   };
@@ -198,14 +200,14 @@ export default async function PerfumesPage({
               <option value="">Ordenar por</option>
               <option value="relevance">Relevancia</option>
               <option value="newest">Más nuevos</option>
-              <option value="duration-desc">Mayor duración</option>
-              <option value="duration-asc">Menor duración</option>
+              <option value="longevity-desc">Mayor duración</option>
             </select>
-            <fieldset className="duration-fieldset">
-              <legend>Duración (h)</legend>
-              <input type="number" name="minDuration" placeholder="Mín" aria-label="Duración mínima (horas)" defaultValue={selected.minDuration} />
-              <input type="number" name="maxDuration" placeholder="Máx" aria-label="Duración máxima (horas)" defaultValue={selected.maxDuration} />
-            </fieldset>
+            <select name="minLongevity" aria-label="Duración mínima" defaultValue={selected.minLongevity}>
+              <option value="">Duración</option>
+              <option value="3">Moderada o más</option>
+              <option value="3.5">Larga o más</option>
+              <option value="4">Muy larga</option>
+            </select>
           </div>
           <div className="catalog-filters-actions">
             <button type="submit">Aplicar filtros</button>

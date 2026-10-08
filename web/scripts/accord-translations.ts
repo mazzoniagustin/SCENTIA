@@ -82,5 +82,17 @@ export const ACCORD_TRANSLATIONS: Record<string, string> = {
   "white floral": "floral blanco",
   "wine": "vino",
   "woody": "amaderado",
-  "yellow floral": "floral amarillo"
+  "yellow floral": "floral amarillo",
+  // Acordes que aparecen en el dataset de Kaggle (2026) y no en el CSV original.
+  "pear": "pera",
+  "spice": "especiado",
+  "foresty": "boscoso",
+  "bbq": "barbacoa",
+  "bacon": "panceta",
+  "tennis ball": "pelota de tenis",
+  "milky": "lácteo",
+  "wet plaster": "yeso húmedo",
+  "sake": "sake",
+  "meat": "carne",
+  "varnish": "barniz"
 };

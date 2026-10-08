@@ -6,10 +6,10 @@ type Accord = { intensity: number; accord: { name: string } };
 // Familias olfativas → tono (0-360). Los acordes sin familia conocida caen en un tono neutro.
 const FAMILIES: Array<{ hue: number; words: string[] }> = [
   { hue: 210, words: ["acuático", "marino", "ozónico", "salado", "mineral", "metálico", "fresco"] },
-  { hue: 150, words: ["verde", "herbal", "aromático", "conífera", "lavanda", "musgoso", "terroso", "terpénico"] },
-  { hue: 95, words: ["cítrico", "tropical", "afrutado", "cereza", "coco", "ácido", "amargo"] },
+  { hue: 150, words: ["verde", "boscoso", "herbal", "aromático", "conífera", "lavanda", "musgoso", "terroso", "terpénico"] },
+  { hue: 95, words: ["cítrico", "tropical", "afrutado", "pera", "cereza", "coco", "ácido", "amargo"] },
   { hue: 340, words: ["floral", "rosa", "floral blanco", "floral amarillo", "violeta", "iris", "nardo", "empolvado", "jabonoso"] },
-  { hue: 30, words: ["dulce", "vainilla", "caramelo", "miel", "gourmand", "chocolate", "cacao", "café", "cremoso", "lactónico", "almendra", "frutos secos", "ron", "whisky", "vino", "champán", "vodka"] },
+  { hue: 30, words: ["dulce", "vainilla", "caramelo", "miel", "gourmand", "chocolate", "cacao", "café", "cremoso", "lactónico", "lácteo", "almendra", "frutos secos", "ron", "whisky", "vino", "champán", "vodka"] },
   { hue: 18, words: ["especiado", "especiado cálido", "especiado suave", "especiado fresco", "canela", "anís", "ámbar", "oriental", "balsámico"] },
   { hue: 38, words: ["amaderado", "cuero", "tabaco", "oud", "pachuli", "ahumado", "animalicio", "almizclado", "arena", "arcilla"] },
 ];

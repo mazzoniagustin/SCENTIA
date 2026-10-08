@@ -1600,3 +1600,89 @@ textarea {
   display: grid;
   gap: 0.6rem;
 }
+
+/* ————— Pie del sitio y créditos ————— */
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
+  margin: 3rem auto 0;
+  max-width: 76rem;
+  border-top: 1px solid var(--border);
+  padding: 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.site-footer a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.credits-list {
+  display: grid;
+  gap: 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.ficha-section p a,
+.community-source a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* ————— Votos de la comunidad ————— */
+
+.community-bars {
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.community-bars li {
+  display: grid;
+  grid-template-columns: 6rem 1fr 7.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.community-bars small {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.community-split {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.community-split h3 {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+}
+
+.community-relation,
+.community-source {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 40rem) {
+  .community-split {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+}
