@@ -13,7 +13,7 @@ export type Perfume = {
   brand: string;
   name: string;
   gender: string;
-  concentration: string;
+  concentration: string | null;
   releaseYear?: number | null;
   perfumer?: string | null;
   description?: string | null;

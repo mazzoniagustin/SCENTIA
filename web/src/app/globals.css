@@ -9,7 +9,189 @@
   --notice: #edf7ef;
   --notice-text: #245c35;
   --error: #a52929;
+  --compare-1: #2a78d6;
+  --compare-2: #eb6834;
+  --compare-3: #1baf7a;
+  --compare-4: #4a3aa7;
 }
+
+/* ————— Comparación (RF-03) ————— */
+
+.compare {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 1.25rem;
+}
+
+.compare-header h1 {
+  font-size: clamp(2.25rem, 6vw, 3.5rem);
+  max-width: none;
+}
+
+.compare-radar {
+  margin: 20px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.compare-radar-grid {
+  stroke: var(--border);
+}
+
+.compare-radar-series {
+  fill-opacity: 0.15;
+  stroke-width: 2px;
+}
+
+.compare-radar-labels {
+  fill: var(--foreground);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.compare-radar-truncated,
+.compare-radar-absent {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 1rem;
+}
+
+.compare-cards {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.compare-card {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  position: relative;
+  background: var(--surface);
+}
+
+.compare-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--series-color);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.compare-card-brand {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 700;
+  margin: 0.5rem 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.compare-card-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  margin: 0 0 0.5rem;
+}
+
+.compare-card-meta {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.compare-card dl {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.compare-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.25rem;
+}
+
+.compare-card dt {
+  color: var(--muted);
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.compare-table caption {
+  text-align: left;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.compare-table td,
+.compare-table th {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.compare-table th {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.compare-legend {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.compare-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.compare-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.compare-empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 0.75rem;
+}
+
+.compare-empty-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
 
 html {
   height: 100%;
@@ -200,5 +382,206 @@ h1 {
   .account-actions {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+/* ————— Catálogo público (RF-01) ————— */
+
+.catalog {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 1.25rem;
+}
+
+.catalog-header h1 {
+  font-size: clamp(2.25rem, 6vw, 3.5rem);
+  max-width: none;
+}
+
+/* Filtros: una columna en mobile, grid fluido desde tablet */
+
+.catalog-filters {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.catalog-filters label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.catalog-filters input,
+.catalog-filters select {
+  min-height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 400;
+  padding: 0.6rem 0.75rem;
+}
+
+.duration-fieldset {
+  display: grid;
+  gap: 0.75rem;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.duration-fieldset legend {
+  font-weight: 700;
+  padding: 0;
+}
+
+.catalog-filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filters-clear {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.filters-clear:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+/* Grid de resultados: 1 col mobile → 2 tablet → 3-4 desktop */
+
+.catalog-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  list-style: none;
+}
+
+.catalog-count {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.perfume-card {
+  display: grid;
+  gap: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.perfume-brand {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.perfume-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.perfume-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.perfume-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin-top: 0.25rem;
+}
+
+.perfume-badges li {
+  background: var(--notice);
+  border-radius: 999px;
+  color: var(--notice-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  text-transform: capitalize;
+}
+
+/* Estaciones y ocasiones se distinguen por forma en un vistazo */
+.perfume-badges[aria-label="Ocasiones"] li {
+  border-radius: 0.3rem;
+}
+
+.catalog-empty {
+  border: 1px dashed var(--border);
+  border-radius: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.catalog-empty-title {
+  font-weight: 700;
+}
+
+.catalog-empty a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .catalog-filters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .duration-fieldset {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .catalog-filters-actions {
+    grid-column: 1 / -1;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .catalog-filters {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .duration-fieldset {
+    grid-template-columns: repeat(2, minmax(0, 14rem));
+    grid-column: auto;
+  }
+
+  .catalog-filters-actions {
+    grid-column: auto;
+    align-self: end;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .catalog-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }

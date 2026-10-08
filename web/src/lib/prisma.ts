@@ -1,23 +1,24 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
-// Prisma 7 ya no toma la URL del datasource del schema; se inyecta mediante
-// un driver adapter. PrismaPg acepta un connection string directo.
-const adapter = new PrismaPg(process.env.DATABASE_URL as string)
+// Hacer la inicialización perezosa para asegurar que las variables de entorno están cargadas
+let prismaInstance: PrismaClient | undefined;
 
-// Evita agotar conexiones en desarrollo: con hot reload, cada recarga
-// crearía una nueva instancia de PrismaClient si no se reutiliza la global.
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+export const getPrisma = () => {
+  if (prismaInstance) return prismaInstance;
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+  const adapter = new PrismaPg(process.env.DATABASE_URL as string);
+
+  prismaInstance = new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
-  })
+  });
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
-}
+  return prismaInstance;
+};
+
+export const prisma = new Proxy({} as PrismaClient, {
+  get: (target, prop, receiver) => {
+    return Reflect.get(getPrisma(), prop, receiver);
+  },
+});

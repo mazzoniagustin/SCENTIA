@@ -79,8 +79,9 @@ function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume;
       <p className="perfume-brand">{perfume.brand}</p>
       <h2 className="perfume-name">{perfume.name}</h2>
       <p className="perfume-meta">
-        {perfume.concentration.toUpperCase()}
-        {perfume.releaseYear ? ` · ${perfume.releaseYear}` : ""}
+        {[perfume.concentration?.toUpperCase(), perfume.releaseYear]
+          .filter(Boolean)
+          .join(" · ")}
       </p>
       {priceTierLabel && (
         <ul className="perfume-badges" aria-label="Categoría">

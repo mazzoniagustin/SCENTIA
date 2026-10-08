@@ -8,6 +8,7 @@ datasource db {
 
 model User {
   id          String           @id @default(cuid())
+  supabaseId  String?          @unique
   email       String           @unique
   name        String?
   collections UserCollection[]
@@ -20,7 +21,7 @@ model Perfume {
   brand         String
   name          String
   gender        String
-  concentration String
+  concentration String?
   releaseYear   Int?
   perfumer      String?
   description   String?
@@ -34,11 +35,12 @@ model Perfume {
   notes         PerfumeNote[]
   accords       PerfumeAccord[]
   collectedBy   UserCollection[]
+  priceTier     PriceTier?
 
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
-  @@index([brand])
+  @@unique([brand, name], name: "brand_name")
   @@index([gender])
   @@index([concentration])
 }
@@ -80,11 +82,24 @@ model PerfumeAccord {
   @@index([accordId])
 }
 
+enum CollectionStatus {
+  OWNED
+  SAMPLED
+  WISHLIST
+  DISLIKED
+}
+
+enum PriceTier {
+  ARABIC
+  DESIGNER
+  NICHE
+}
+
 model UserCollection {
   userId        String
   perfumeId     String
-  status        String   
-  rating        Int?     
+  status        CollectionStatus
+  rating        Int?
   personalNotes String?
 
   user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)

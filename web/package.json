@@ -13,11 +13,13 @@
     "@prisma/client": "^7.10.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.114.0",
+    "csv-parse": "^7.0.2",
     "dotenv": "^17.4.2",
     "next": "16.3.4",
     "pg": "^8.23.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",
