@@ -1315,3 +1315,210 @@ textarea {
 .account-danger .catalog-filters-actions button {
   background: var(--error);
 }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ————— Portada: números, racha, destacados y acordes ————— */
+
+.home-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--border);
+}
+
+.home-stats > div {
+  display: grid;
+  gap: 0.25rem;
+  background: var(--surface);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.home-stats dt {
+  order: 2;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.home-stats dd {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1;
+}
+
+.streak-card {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.streak-card h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0.4rem 0;
+}
+
+.streak-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0.25rem 0;
+}
+
+.streak-count > span:first-child {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 10vw, 6rem);
+  line-height: 0.9;
+}
+
+.streak-count small {
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.streak-lead {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.streak-lead a,
+.streak-done strong {
+  color: var(--accent);
+}
+
+.streak-today {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.streak-done span {
+  color: var(--muted);
+}
+
+.streak-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.streak-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.streak-form button {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0 1.5rem;
+}
+
+.home-section {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.home-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.home-section-head h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 400;
+}
+
+.home-section-head a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.home-tiles {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.perfume-tile .perfume-cover {
+  aspect-ratio: 4 / 3;
+}
+
+.perfume-tile .perfume-cover-mark {
+  font-size: 3rem;
+}
+
+.home-accords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  list-style: none;
+}
+
+.home-accords a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  padding: 0.4rem 1rem 0.4rem 0.9rem;
+}
+
+.home-accords a:hover {
+  border-color: var(--accent);
+}
+
+.home-accords small {
+  color: var(--muted);
+}
+
+.home-accord-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+}
+
+@media (min-width: 52rem) {
+  .home-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .streak-card {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+}
