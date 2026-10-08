@@ -6,3 +6,7 @@ node_modules/
 # secrets — nunca entrar al historial de git
 .env*
 web/data/
+
+# logs y configuración local
+*.log
+.claude/settings.local.json

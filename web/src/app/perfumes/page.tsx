@@ -68,11 +68,12 @@ async function fetchPerfumes(
 }
 
 function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume; collectionEntry?: any; isAuthenticated: boolean }) {
-  const priceTierLabel = {
+  const PRICE_TIER_LABELS = {
     ARABIC: 'Árabe',
     DESIGNER: 'Diseñador',
     NICHE: 'Nicho'
-  }[perfume.priceTier || ''];
+  } as const;
+  const priceTierLabel = perfume.priceTier ? PRICE_TIER_LABELS[perfume.priceTier] : null;
 
   return (
     <article className="perfume-card">

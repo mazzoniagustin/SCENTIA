@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import type { Prisma } from '@prisma/client'
+import type { Prisma, PriceTier } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 // Tipado estricto del where: solo los filtros que aplicamos
@@ -86,7 +86,7 @@ function buildFilters(searchParams: URLSearchParams): FilterResult {
     if (!['ARABIC', 'DESIGNER', 'NICHE'].includes(priceTier)) {
       return { ok: false, error: 'priceTier inválido' }
     }
-    where.priceTier = { equals: priceTier as Prisma.PriceTier }
+    where.priceTier = { equals: priceTier as PriceTier }
   }
 
   const minDurationParam = searchParams.get('minDuration')
