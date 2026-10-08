@@ -5,7 +5,13 @@ import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { getDailyPerfume } from "@/lib/daily/pick";
 import { PerfumeCover } from "@/app/perfumes/PerfumeCover";
 import { AccordBars, NotePyramid } from "@/app/perfumes/PerfumeProfile";
+import { PerfumeTile } from "@/app/perfumes/PerfumeTile";
+import { StreakCard } from "@/app/StreakCard";
 import { genderLabel } from "@/app/perfumes/types";
+import { hueForAccord } from "@/lib/cover";
+import { seasonFor, DEFAULT_HEMISPHERE } from "@/lib/daily/daily";
+import { getCatalogStats, getSeasonalFeatured, getTopAccords } from "@/lib/home/featured";
+import { getWearOptions, getWearSummary } from "@/lib/wear/data";
 
 const SEASON_LABELS = {
   primavera: "la primavera",
@@ -14,10 +20,27 @@ const SEASON_LABELS = {
   invierno: "el invierno",
 } as const;
 
-export default async function Home() {
+const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+// Cada bloque falla por separado: un dato que no carga no debe tumbar la portada.
+const safe = <T,>(promise: Promise<T>, fallback: T) => promise.catch(() => fallback);
+
+export default async function Home({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = await searchParams;
   const user = await getCurrentUser();
-  // El perfume del día no debe tumbar la portada si la base no responde.
-  const daily = await getDailyPerfume({ userId: await getSessionDbUserId() }).catch(() => null);
+  const dbUserId = await getSessionDbUserId();
+
+  const daily = await safe(getDailyPerfume({ userId: dbUserId }), null);
+  const season = daily?.season ?? seasonFor(new Date(), DEFAULT_HEMISPHERE);
+  const [stats, featured, topAccords, wear, wearOptions] = await Promise.all([
+    safe(getCatalogStats(), null),
+    safe(getSeasonalFeatured(season, 8, daily ? [daily.perfumeId] : []), []),
+    safe(getTopAccords(14), []),
+    dbUserId ? safe(getWearSummary(dbUserId), null) : Promise.resolve(null),
+    dbUserId ? safe(getWearOptions(dbUserId), []) : Promise.resolve([]),
+  ]);
+  const racha = first(params.racha);
+  const notice = racha === "ok" || racha === "error" ? racha : undefined;
 
   return (
     <main id="contenido" className="home">
@@ -44,6 +67,29 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      {stats && (
+        <dl className="home-stats" aria-label="El catálogo en números">
+          <div>
+            <dt>Perfumes</dt>
+            <dd>{stats.perfumes.toLocaleString("es-AR")}</dd>
+          </div>
+          <div>
+            <dt>Marcas</dt>
+            <dd>{stats.brands.toLocaleString("es-AR")}</dd>
+          </div>
+          <div>
+            <dt>Notas</dt>
+            <dd>{stats.notes.toLocaleString("es-AR")}</dd>
+          </div>
+          <div>
+            <dt>Acordes</dt>
+            <dd>{stats.accords.toLocaleString("es-AR")}</dd>
+          </div>
+        </dl>
+      )}
+
+      <StreakCard summary={user ? wear : null} options={wearOptions} notice={notice} />
 
       {daily && (
         <section className="home-daily" aria-labelledby="daily-title">
@@ -78,6 +124,46 @@ export default async function Home() {
               Ver la ficha →
             </Link>
           </div>
+        </section>
+      )}
+
+      {featured.length > 0 && (
+        <section className="home-section" aria-labelledby="featured-title">
+          <div className="home-section-head">
+            <h2 id="featured-title">
+              Para {SEASON_LABELS[season]}
+            </h2>
+            <Link href={`/perfumes?season=${season}`}>Ver todos →</Link>
+          </div>
+          <div className="home-tiles">
+            {featured.map((perfume) => (
+              <PerfumeTile key={perfume.id} perfume={perfume} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {topAccords.length > 0 && (
+        <section className="home-section" aria-labelledby="accords-title">
+          <div className="home-section-head">
+            <h2 id="accords-title">Explorá por acorde</h2>
+            <Link href="/perfumes">Ver el catálogo →</Link>
+          </div>
+          <ul className="home-accords">
+            {topAccords.map((accord) => (
+              <li key={accord.name}>
+                <Link href={`/perfumes?accord=${encodeURIComponent(accord.name)}`}>
+                  <span
+                    className="home-accord-dot"
+                    style={{ background: `hsl(${hueForAccord(accord.name).hue} 45% 62%)` }}
+                    aria-hidden="true"
+                  />
+                  {accord.name.charAt(0).toUpperCase() + accord.name.slice(1)}
+                  <small>{accord.count.toLocaleString("es-AR")}</small>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
