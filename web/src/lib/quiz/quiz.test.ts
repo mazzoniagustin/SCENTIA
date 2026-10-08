@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { ACCORD_TRANSLATIONS } from '../../../scripts/accord-translations.ts'
 import { QUESTIONS, QUIZ_VERSION, referencedAccordNames, type QuizAnswers } from './questions.ts'
-import { answersFromSearchParams } from './params.ts'
+import { answersFromFormData, answersFromSearchParams, answersToSearchParams } from './params.ts'
 import { buildProfile, validateAnswers } from './profile.ts'
 import {
   applyPopularity,
@@ -243,5 +243,30 @@ describe('popularidad', () => {
       rankCandidates(profile, input, flat, { popularityWeight: 0.3 }).map((r) => r.perfumeId),
       ['b-popular', 'a-raro'],
     )
+  })
+})
+
+describe('FormData y query string', () => {
+  it('answersFromFormData lee campos repetidos y se valida igual que la URL', () => {
+    const form = new FormData()
+    for (const [key, value] of Object.entries(answers)) {
+      for (const v of Array.isArray(value) ? value : [value]) form.append(key, v)
+    }
+    form.append('gender', 'masculino') // campo ajeno al quiz: se ignora
+    const raw = answersFromFormData(form)
+    assert.deepEqual(raw, answers)
+    assert.equal(validateAnswers(raw).ok, true)
+  })
+
+  it('answersToSearchParams es el inverso de answersFromSearchParams', () => {
+    const query = answersToSearchParams(answers, { guardado: '1' })
+    const params: Record<string, string | string[]> = {}
+    for (const key of new Set(query.keys())) {
+      const all = query.getAll(key)
+      params[key] = all.length > 1 ? all : all[0]
+    }
+    assert.equal(query.get('guardado'), '1')
+    const result = validateAnswers(answersFromSearchParams(params))
+    assert.deepEqual(result.ok && result.answers, answers)
   })
 })

@@ -725,3 +725,17 @@ h1 {
 .catalog-pagination [aria-disabled="true"] {
   color: var(--muted);
 }
+
+/* ————— Cuenta (RF-05 / RF-08) ————— */
+
+.account-page {
+  max-width: 44rem;
+}
+
+.account-danger {
+  border-color: var(--error);
+}
+
+.account-danger button {
+  background: var(--error);
+}

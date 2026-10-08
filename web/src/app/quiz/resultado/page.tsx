@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { saveQuizProfile } from "@/app/actions/account";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { answersFromSearchParams } from "@/lib/quiz/params";
 import { validateAnswers } from "@/lib/quiz/profile";
@@ -38,11 +39,8 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
     ? (genderParam as QuizGender)
     : undefined;
 
-  const results = await recommendFromAnswers(validated.answers, {
-    gender,
-    limit: RESULT_LIMIT,
-    userId: await getSessionDbUserId(),
-  });
+  const userId = await getSessionDbUserId();
+  const results = await recommendFromAnswers(validated.answers, { gender, limit: RESULT_LIMIT, userId });
 
   // Para el filtro de género se reenvían las mismas respuestas como campos ocultos.
   const hiddenFields = QUESTIONS.flatMap((question) => {
@@ -59,6 +57,12 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
         <p className="eyebrow">Quiz</p>
         <h1>Tus recomendaciones</h1>
       </header>
+
+      {first(params.guardado) === "1" && (
+        <p className="notice" role="status">
+          Perfil guardado. La próxima vez que entres vas a encontrarlo en el quiz.
+        </p>
+      )}
 
       <form className="catalog-filters quiz-gender" action="/quiz/resultado" method="GET">
         {hiddenFields.map((field, i) => (
@@ -79,6 +83,22 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
           <button type="submit">Aplicar</button>
         </div>
       </form>
+
+      {userId ? (
+        <form action={saveQuizProfile}>
+          {hiddenFields.map((field, i) => (
+            <input key={i} type="hidden" name={field.name} value={field.value} />
+          ))}
+          {gender && <input type="hidden" name="gender" value={gender} />}
+          <button className="button" type="submit">
+            Guardar este perfil
+          </button>
+        </form>
+      ) : (
+        <p>
+          <Link href="/login">Iniciá sesión</Link> para guardar tu perfil.
+        </p>
+      )}
 
       {results.length === 0 ? (
         <section className="catalog-empty">

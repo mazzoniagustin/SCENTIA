@@ -1,24 +1,9 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { getOrCreateUser } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
+import { requireUser } from '@/lib/auth/require-user'
 
-async function getAuthenticatedUser() {
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.getUser()
-
-  if (error || !data.user || !data.user.email) {
-    throw new Error('No autenticado')
-  }
-
-  return await getOrCreateUser({
-    user: {
-      id: data.user.id,
-      email: data.user.email,
-    },
-  })
-}
+const getAuthenticatedUser = requireUser
 
 export async function getUserCollection() {
   const user = await getAuthenticatedUser()
