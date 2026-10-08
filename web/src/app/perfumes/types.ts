@@ -38,3 +38,10 @@ export const NO_DATA = "Sin dato";
 export function valueOrNoData<T>(value: T | null | undefined, format: (v: T) => string): string {
   return value === null || value === undefined ? NO_DATA : format(value);
 }
+
+// Como en Fragrantica ("for women / for men"): el mismo nombre existe a veces en versiones distintas.
+const GENDER_LABELS: Record<string, string> = { femenino: "Para mujeres", masculino: "Para hombres", unisex: "Unisex" };
+
+export function genderLabel(gender: string): string {
+  return GENDER_LABELS[gender] ?? gender;
+}

@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import { Geist, Newsreader } from "next/font/google";
 
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
-const instrumentSerif = Instrument_Serif({
+const newsreader = Newsreader({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-instrument-serif",
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
 });
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${instrumentSerif.variable} ${geist.variable}`}>
+    <html lang="es" className={`${newsreader.variable} ${geist.variable}`}>
       <body>
         <a className="skip-link" href="#contenido">
           Saltar al contenido
