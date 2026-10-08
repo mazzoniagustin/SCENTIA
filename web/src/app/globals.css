@@ -510,11 +510,36 @@ h1 {
 
 .perfume-card {
   display: grid;
-  gap: 0.4rem;
+  align-content: start;
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   background: var(--surface);
-  padding: 1rem;
+  overflow: hidden;
+}
+
+.perfume-card-body {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.perfume-cover {
+  display: flex;
+  align-items: flex-end;
+  aspect-ratio: 4 / 3;
+  padding: 1.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  line-height: 1.05;
+  overflow: hidden;
+}
+
+.perfume-cover span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .perfume-brand {
@@ -827,4 +852,32 @@ textarea,
 
 h1 em {
   color: var(--accent);
+}
+
+/* Portada (dirección "Noche"): hero centrado, tarjeta del día alineada a la izquierda. */
+.landing-content {
+  width: min(100%, 52rem);
+  justify-items: center;
+  text-align: center;
+  gap: 2rem;
+}
+
+.landing-content h1 {
+  max-width: 16ch;
+  font-size: clamp(3rem, 9vw, 6rem);
+}
+
+.landing-content .lead {
+  max-width: 36rem;
+}
+
+.landing-actions {
+  justify-content: center;
+}
+
+.landing-content .daily-card {
+  width: 100%;
+  margin-top: 1.5rem;
+  justify-items: start;
+  text-align: left;
 }
