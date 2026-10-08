@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { saveQuizProfile } from "@/app/actions/account";
+import { PerfumeCover } from "@/app/perfumes/PerfumeCover";
+import { genderLabel } from "@/app/perfumes/types";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { answersFromSearchParams } from "@/lib/quiz/params";
 import { validateAnswers } from "@/lib/quiz/profile";
@@ -64,7 +66,7 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
         </p>
       )}
 
-      <form className="catalog-filters quiz-gender" action="/quiz/resultado" method="GET">
+      <form className="catalog-filter-bar quiz-gender" action="/quiz/resultado" method="GET">
         {hiddenFields.map((field, i) => (
           <input key={i} type="hidden" name={field.name} value={field.value} />
         ))}
@@ -111,22 +113,29 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
           <div className="catalog-grid">
             {results.map((result) => (
               <article key={result.perfumeId} className="perfume-card">
-                <p className="perfume-brand">{result.brand}</p>
-                <h2 className="perfume-name">{result.name}</h2>
-                <p className="perfume-meta">
-                  {result.gender.charAt(0).toUpperCase() + result.gender.slice(1)} · afinidad{" "}
-                  {Math.round(result.score * 100)}%
-                </p>
-                {result.matchedAccords.length > 0 && (
-                  <ul className="perfume-badges" aria-label="Acordes en común con tu perfil">
-                    {result.matchedAccords.map((accord) => (
-                      <li key={accord}>{accord}</li>
-                    ))}
-                  </ul>
-                )}
-                {result.reasons.includes("avoids_rejected") && (
-                  <p className="quiz-reason">Evita lo que marcaste como rechazo.</p>
-                )}
+                <PerfumeCover
+                  name={result.name}
+                  accords={result.matchedAccords.map((name, i) => ({ intensity: 100 - i, accord: { name } }))}
+                />
+                <div className="perfume-card-body">
+                  <p className="perfume-brand">{result.brand}</p>
+                  <h2 className="perfume-name">
+                    <Link href={`/perfumes/${result.perfumeId}`}>{result.name}</Link>
+                  </h2>
+                  <p className="perfume-meta">
+                    {genderLabel(result.gender)} · afinidad {Math.round(result.score * 100)}%
+                  </p>
+                  {result.matchedAccords.length > 0 && (
+                    <ul className="perfume-badges" aria-label="Acordes en común con tu perfil">
+                      {result.matchedAccords.map((accord) => (
+                        <li key={accord}>{accord}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {result.reasons.includes("avoids_rejected") && (
+                    <p className="quiz-reason">Evita lo que marcaste como rechazo.</p>
+                  )}
+                </div>
               </article>
             ))}
           </div>
