@@ -11,6 +11,8 @@ import { CollectionForm } from "../CollectionForm";
 import { CompareCheckbox } from "../CompareCheckbox";
 import { PerfumeCover } from "../PerfumeCover";
 import { CommunityStats } from "../CommunityStats";
+import { RemindsMeSection } from "../RemindsMeSection";
+import { getRemindsMe } from "@/lib/similar/reminds";
 import { AccordBars, NotePyramid } from "../PerfumeProfile";
 import { genderLabel, PRICE_TIER_LABELS, valueOrNoData } from "../types";
 
@@ -40,9 +42,11 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
   const { data } = await supabase.auth.getUser();
   const isAuthenticated = !!data.user;
 
-  const [similar, collection] = await Promise.all([
+  const [similar, collection, remindsMe] = await Promise.all([
     getSimilarPerfumes(id, { limit: SIMILAR_LIMIT, userId: await getSessionDbUserId() }),
     isAuthenticated ? getUserCollection().catch(() => []) : Promise.resolve([]),
+    // Un fallo aquí no debe tumbar la ficha.
+    getRemindsMe(id).catch(() => []),
   ]);
   const collectionEntry = collection.find((entry) => entry.perfumeId === id);
 
@@ -115,6 +119,8 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
           </p>
         )}
       </section>
+
+      <RemindsMeSection items={remindsMe} />
 
       <section className="ficha-section" aria-labelledby="ficha-similares">
         <h2 id="ficha-similares">Perfumes similares</h2>
