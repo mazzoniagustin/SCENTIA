@@ -57,13 +57,16 @@ async function linkExisting(): Promise<Map<string, Existing>> {
   const csv = new TextDecoder('windows-1252').decode(fs.readFileSync(path.resolve('data/fra_cleaned.csv')))
   const rows = parseSync(csv, { delimiter: ';', columns: true, skip_empty_lines: true }) as RawRow[]
   const toLink: Array<{ id: string; sourceId: string }> = []
+  // Dos filas del CSV original pueden haber terminado en el mismo perfume (nombres iguales tras humanizar): solo la primera se enlaza.
+  const claimed = new Set(all.filter((p) => p.sourceId).map((p) => p.id))
   for (const row of rows) {
     const m = /-(\d+)\.html/.exec(row.url ?? '')
     const brandSlug = clean(row.Brand)
     const nameSlug = clean(row.Perfume)
     if (!m || !brandSlug || !nameSlug) continue
     const perfume = byKey.get(key(humanizeBrand(brandSlug), humanize(nameSlug)))
-    if (!perfume || bySource.has(m[1]) || all.find((p) => p.id === perfume.id)?.sourceId) continue
+    if (!perfume || bySource.has(m[1]) || claimed.has(perfume.id)) continue
+    claimed.add(perfume.id)
     toLink.push({ id: perfume.id, sourceId: m[1] })
     bySource.set(m[1], perfume)
   }
@@ -182,11 +185,14 @@ async function main() {
     // Perfumes existentes: un UPDATE con jsonb_to_recordset (los campos del dataset reemplazan lo calculado).
     const toUpdate = resolved.filter((r) => r.existing && !fresh.includes(r))
     if (toUpdate.length) {
-      const payload = toUpdate.map(({ p, existing, brand, name }) => ({
+      const payload = toUpdate.map(({ p, existing, brand, name, curated }) => ({
         id: existing!.id, brand, name, year: p.releaseYear, perfumer: p.perfumer,
         rating_value: p.ratingValue, rating_count: p.ratingCount,
         longevity: p.longevity, sillage: p.sillage, projection: p.projection,
-        seasons: finalSeasons(p, existing!.seasons), occasions: p.occasions ?? existing!.occasions, stats: p.stats,
+        // Las filas curadas (con priceTier) conservan sus estaciones y ocasiones.
+        seasons: curated && existing!.seasons.length > 0 ? existing!.seasons : finalSeasons(p, existing!.seasons),
+        occasions: curated && existing!.occasions.length > 0 ? existing!.occasions : (p.occasions ?? existing!.occasions),
+        stats: p.stats,
       }))
       await prisma.$executeRaw`
         UPDATE "Perfume" AS pf SET
@@ -209,8 +215,9 @@ async function main() {
     for (const r of resolved) keyOwner.set(key(r.brand, r.name), r.existing!.id)
 
     // Relaciones: se reemplazan solo cuando el dataset trae datos (si no, se conservan las anteriores).
-    const withAccords = resolved.filter((r) => r.p.accords.length > 0)
-    const withNotes = resolved.filter((r) => r.p.notes.length > 0)
+    // Las filas curadas conservan también sus acordes y notas.
+    const withAccords = resolved.filter((r) => !r.curated && r.p.accords.length > 0)
+    const withNotes = resolved.filter((r) => !r.curated && r.p.notes.length > 0)
     await prisma.$transaction([
       prisma.perfumeAccord.deleteMany({ where: { perfumeId: { in: withAccords.map((r) => r.existing!.id) } } }),
       prisma.perfumeNote.deleteMany({ where: { perfumeId: { in: withNotes.map((r) => r.existing!.id) } } }),
