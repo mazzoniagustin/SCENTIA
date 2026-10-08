@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { CollectionForm } from "./CollectionForm";
 import { CompareCheckbox } from "./CompareCheckbox";
-import { PerfumeCover } from "./PerfumeCover";
+import { PerfumeImage } from "./PerfumeImage";
 import { genderLabel, type Perfume, PRICE_TIER_LABELS } from "./types";
 
 export function PerfumeCard({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume; collectionEntry?: { status: string; rating?: number | null; personalNotes?: string | null }; isAuthenticated: boolean }) {
@@ -11,7 +11,7 @@ export function PerfumeCard({ perfume, collectionEntry, isAuthenticated }: { per
 
   return (
     <article className="perfume-card">
-      <PerfumeCover name={perfume.name} accords={perfume.accords} />
+      <PerfumeImage name={perfume.name} brand={perfume.brand} imageUrl={perfume.imageUrl} accords={perfume.accords} />
       <div className="perfume-card-body">
         <p className="perfume-brand">{perfume.brand}</p>
         <h2 className="perfume-name">

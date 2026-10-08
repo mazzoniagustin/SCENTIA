@@ -21,6 +21,7 @@ export type DailyPerfume = {
   brand: string
   name: string
   gender: string
+  imageUrl: string | null
   accords: string[]
   /** Todos los acordes con su intensidad, y todas las notas por fase (como en la ficha). */
   accordBars: Array<{ name: string; intensity: number }>
@@ -97,6 +98,7 @@ export async function getDailyPerfume(options: {
       brand: true,
       name: true,
       gender: true,
+      imageUrl: true,
       accords: { select: { intensity: true, accord: { select: { name: true } } }, orderBy: { intensity: 'desc' } },
       notes: { select: { noteType: true, note: { select: { name: true } } } },
     },
@@ -108,6 +110,7 @@ export async function getDailyPerfume(options: {
     brand: perfume.brand,
     name: perfume.name,
     gender: perfume.gender,
+    imageUrl: perfume.imageUrl,
     accords: perfume.accords.slice(0, 3).map((a) => a.accord.name),
     accordBars: perfume.accords.map((a) => ({ name: a.accord.name, intensity: a.intensity })),
     notes: perfume.notes.map((n) => ({ noteType: n.noteType, name: n.note.name })),

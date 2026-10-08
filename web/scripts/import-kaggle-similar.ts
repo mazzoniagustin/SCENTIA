@@ -8,8 +8,7 @@ config({ path: path.resolve(process.cwd(), '.env.local'), quiet: true })
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
-import fs from 'fs'
-import readline from 'readline'
+import { readLines } from '../src/lib/import/lines'
 import { pickSimilar } from '../src/lib/import/similar'
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL as string) })
@@ -24,13 +23,12 @@ async function main() {
   console.log(`Perfumes del catálogo con id de Fragrantica: ${idBySource.size}`)
 
   const rows: Array<{ perfumeId: string; similarId: string; upVotes: number; downVotes: number; net: number }> = []
-  const stats = { lines: 0, inCatalog: 0, withAny: 0, candidates: 0, targetMissing: 0 }
-  const rl = readline.createInterface({ input: fs.createReadStream(path.resolve('data/perfumes.jsonl'), { encoding: 'utf8' }), crlfDelay: Infinity })
-  for await (const line of rl) {
-    if (!line.trim()) continue
+  const stats = { lines: 0, invalid: 0, inCatalog: 0, withAny: 0, candidates: 0, targetMissing: 0 }
+  // readLines corta solo en "\n": readline también corta en U+2028/U+2029 y rompía ~80 registros.
+  for await (const line of readLines(path.resolve('data/perfumes.jsonl'))) {
     stats.lines++
     let record: { id?: number | string; similar?: { reminds_me_of?: unknown } }
-    try { record = JSON.parse(line) } catch { continue }
+    try { record = JSON.parse(line) } catch { stats.invalid++; continue }
     const perfumeId = idBySource.get(String(record.id))
     if (!perfumeId) continue
     stats.inCatalog++

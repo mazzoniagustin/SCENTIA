@@ -29,6 +29,7 @@ export type QuizResult = {
   brand: string
   name: string
   gender: string
+  imageUrl: string | null
   score: number
   matchedAccords: string[]
   reasons: QuizReason[]
@@ -98,7 +99,7 @@ export async function recommendFromAnswers(
     (
       await prisma.perfume.findMany({
         where: { id: { in: ranked.map((rec) => rec.perfumeId) } },
-        select: { id: true, brand: true, name: true, gender: true },
+        select: { id: true, brand: true, name: true, gender: true, imageUrl: true },
       })
     ).map((p) => [p.id, p]),
   )
@@ -110,6 +111,7 @@ export async function recommendFromAnswers(
       brand: row.brand,
       name: row.name,
       gender: row.gender,
+      imageUrl: row.imageUrl,
       // Redondeo a 2 decimales en la capa de API; el puntaje interno es pleno.
       score: Math.round(rec.score * 100) / 100,
       matchedAccords: rec.matchedAccords,

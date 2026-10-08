@@ -1,5 +1,8 @@
 export const metadata = { title: "Créditos" };
 
+// Correo para pedir el retiro de una imagen: viene de la configuración (no hay uno por defecto) y se ignora si no parece un correo.
+const CONTACT_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "") ? process.env.NEXT_PUBLIC_CONTACT_EMAIL : null;
+
 const DATASET_URL = "https://www.kaggle.com/datasets/ledecanteur/fragrantica-perfumes";
 const LICENSE_URL = "https://creativecommons.org/licenses/by-nc-sa/4.0/";
 
@@ -35,8 +38,23 @@ export default function CreditsPage() {
           <li>Traducimos los nombres de los acordes al español y mantuvimos las notas en inglés.</li>
           <li>Normalizamos nombres y marcas, y descartamos perfumes con muy pocos votos.</li>
           <li>Derivamos las estaciones y el momento del día a partir de los votos de la comunidad.</li>
-          <li>Las portadas de los perfumes se generan automáticamente a partir de su acorde dominante: no son fotografías.</li>
+          <li>Cuando un perfume no tiene foto, o la foto no carga, mostramos una portada generada a partir de su acorde dominante.</li>
         </ul>
+      </section>
+
+      <section className="ficha-section" aria-labelledby="cr-imagenes">
+        <h2 id="cr-imagenes">Imágenes de los perfumes</h2>
+        <p>
+          Las fotos de los frascos se muestran <strong>enlazadas desde su origen</strong> (Fragrantica): Scentia no las descarga ni las
+          aloja. Pertenecen a sus titulares —las marcas, los fotógrafos y la fuente—, y cada ficha indica de dónde viene la imagen.
+          Si una foto no carga o se retira, se muestra una portada generada.
+        </p>
+        {CONTACT_EMAIL && (
+          <p>
+            Si sos titular de los derechos y querés que retiremos una imagen, escribinos a{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> y la ocultamos.
+          </p>
+        )}
       </section>
 
       <section className="ficha-section" aria-labelledby="cr-uso">
