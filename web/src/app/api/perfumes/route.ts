@@ -12,7 +12,11 @@ export async function GET(request: NextRequest) {
   try {
     const result = await listPerfumes(request.nextUrl.searchParams)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
-    return NextResponse.json(result.body, { status: 200 })
+    // El listado es público (no depende de la sesión): el CDN lo puede servir 60 s y renovarlo en segundo plano.
+    return NextResponse.json(result.body, {
+      status: 200,
+      headers: { 'Cache-Control': 'public, max-age=0, s-maxage=60, stale-while-revalidate=300' },
+    })
   } catch (error) {
     // El detalle (puede incluir consultas o nombres internos) va al log, no al cliente.
     logServerError('api/perfumes', error)

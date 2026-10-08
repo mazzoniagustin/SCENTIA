@@ -151,15 +151,20 @@ function notesByPhase(perfume: Perfume): string[] {
 function DiffRow({
   label,
   values,
+  lang,
 }: {
   label: string;
   values: Array<string | null>;
+  /** Idioma del contenido de las celdas si no es el de la página (ej. las notas están en inglés). */
+  lang?: string;
 }) {
   return (
     <tr>
       <th scope="row">{label}</th>
       {values.map((value, i) => (
-        <td key={i}>{value ?? NO_DATA}</td>
+        <td key={i} lang={value === null ? undefined : lang}>
+          {value ?? NO_DATA}
+        </td>
       ))}
     </tr>
   );
@@ -206,6 +211,7 @@ function DifferencesTable({ perfumes }: { perfumes: Perfume[] }) {
         />
         <DiffRow
           label="Notas (top → base)"
+          lang="en"
           values={perfumes.map((p) => {
             const phases = notesByPhase(p);
             return phases.length > 0 ? phases.join(" · ") : null;
@@ -253,6 +259,8 @@ function AccordsTable({ perfumes }: { perfumes: Perfume[] }) {
   );
 }
 
+export const metadata = { title: "Comparador" };
+
 export default async function ComparePage({
   searchParams,
 }: {
@@ -266,7 +274,7 @@ export default async function ComparePage({
     .filter(Boolean);
 
   return (
-    <main className="compare">
+    <main id="contenido" className="compare">
       <Link className="back-link" href="/perfumes">
         ← Catálogo
       </Link>

@@ -49,7 +49,8 @@ export async function GET(
       return NextResponse.json({ error: 'perfume no encontrado' }, { status: 404 })
     }
 
-    return NextResponse.json({ data, count: data.length }, { status: 200 })
+    // Depende de la sesión (descuenta lo que la persona tiene): nunca en una caché compartida.
+    return NextResponse.json({ data, count: data.length }, { status: 200, headers: { 'Cache-Control': 'private, no-store' } })
   } catch (error) {
     logServerError('api/perfumes/[id]/recommendations', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

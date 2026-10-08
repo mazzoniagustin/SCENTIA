@@ -5,6 +5,8 @@ import { CollectionForm } from '../perfumes/CollectionForm';
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from 'next/navigation';
 
+export const metadata = { title: "Mi colección" };
+
 export default async function MyCollectionPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
@@ -15,7 +17,7 @@ export default async function MyCollectionPage() {
   const collection = await getUserCollection();
 
   return (
-    <main className="catalog">
+    <main id="contenido" className="catalog">
       <header className="catalog-header">
         <h1>Mi Colección</h1>
         <Link href="/perfumes">← Volver al catálogo</Link>

@@ -26,7 +26,7 @@ export default async function AccountPage({
   const preferences = profile?.preferences ?? { locale: "es", country: null, currency: null };
 
   return (
-    <main className="catalog account-page">
+    <main id="contenido" className="catalog account-page">
       <Link className="back-link" href="/">
         ← Inicio
       </Link>

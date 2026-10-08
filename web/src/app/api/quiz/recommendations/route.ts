@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       limit: limit as number,
       userId: await getSessionDbUserId(),
     })
-    return NextResponse.json({ data, count: data.length }, { status: 200 })
+    return NextResponse.json({ data, count: data.length }, { status: 200, headers: { 'Cache-Control': 'private, no-store' } })
   } catch (error) {
     logServerError('api/quiz/recommendations', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

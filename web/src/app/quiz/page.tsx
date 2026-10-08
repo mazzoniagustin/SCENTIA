@@ -15,7 +15,7 @@ export default async function QuizPage() {
   const saved = user ? (await getUserProfile(user.id))?.answers ?? null : null;
 
   return (
-    <main className="catalog">
+    <main id="contenido" className="catalog">
       <Link className="back-link" href="/">
         ← Inicio
       </Link>

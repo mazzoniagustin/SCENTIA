@@ -4,6 +4,8 @@
   --muted: #66575e;
   --surface: #ffffff;
   --border: #e5d9d2;
+  /* Borde de campos de formulario: 3:1 mínimo contra fondo y superficie (WCAG 1.4.11); --border es decorativo. */
+  --control-border: #857880;
   --accent: #7b2946;
   --accent-hover: #5e1f35;
   --notice: #edf7ef;
@@ -354,7 +356,7 @@ h1 {
 
 .auth-form input {
   min-height: 2.75rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 0.4rem;
   color: var(--foreground);
   font: inherit;
@@ -436,7 +438,7 @@ h1 {
 .catalog-filters input,
 .catalog-filters select {
   min-height: 2.75rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 0.4rem;
   color: var(--foreground);
   font: inherit;
@@ -754,4 +756,49 @@ h1 {
 
 .account-danger button {
   background: var(--error);
+}
+
+/* ————— Accesibilidad ————— */
+
+/* Foco visible y consistente en todo elemento interactivo (los estilos específicos de arriba siguen valiendo). */
+:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+textarea,
+.collection-form select,
+.collection-form input {
+  border: 1px solid var(--control-border);
+  border-radius: 0.4rem;
+  font: inherit;
+  padding: 0.5rem 0.65rem;
+}
+
+/* Enlace para saltar la navegación: oculto hasta recibir el foco con el teclado. */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-120%);
+  border-radius: 0 0 0.4rem 0.4rem;
+  background: var(--foreground);
+  color: var(--surface);
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -15,6 +15,8 @@ const errors: Record<string, string> = {
   unavailable: "No pudimos enviar el enlace. Volvé a intentarlo más tarde.",
 };
 
+export const metadata = { title: "Ingresar" };
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const user = await getCurrentUser();
 
@@ -25,7 +27,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error, sent } = await searchParams;
 
   return (
-    <main className="auth-shell">
+    <main id="contenido" className="auth-shell">
       <Link className="back-link" href="/">
         ← Volver al inicio
       </Link>

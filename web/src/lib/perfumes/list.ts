@@ -1,5 +1,6 @@
 import type { Prisma, PriceTier } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { createTtlCache } from '@/lib/ttl-cache'
 
 // Tipado estricto del where: solo los filtros que aplicamos
 type PerfumeWhere = Prisma.PerfumeWhereInput
@@ -215,6 +216,9 @@ function buildFilters(searchParams: URLSearchParams): FilterResult {
   return { ok: true, where, orderBy: SORT_ORDER[sort], ids: requestedIds, page, pageSize }
 }
 
+// El total depende solo de los filtros y cambia al importar o publicar: se guarda 5 minutos por combinación de filtros.
+const countCache = createTtlCache<number>({ ttlMs: 5 * 60 * 1000, maxEntries: 500 })
+
 export type ListResult =
   | { ok: true; body: Record<string, unknown> }
   | { ok: false; error: string }
@@ -239,7 +243,9 @@ export async function listPerfumes(searchParams: URLSearchParams): Promise<ListR
       orderBy: filters.orderBy,
       ...(isCompare ? {} : { skip: (filters.page - 1) * filters.pageSize, take: filters.pageSize }),
     }),
-    isCompare ? Promise.resolve(0) : prisma.perfume.count({ where: filters.where }),
+    isCompare
+      ? Promise.resolve(0)
+      : countCache.getOrCompute(JSON.stringify(filters.where), () => prisma.perfume.count({ where: filters.where })),
   ])
 
   // Con ids: el orden de data es el orden del param (el color de cada serie en

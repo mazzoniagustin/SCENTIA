@@ -17,7 +17,7 @@ export default async function Home() {
   const daily = await getDailyPerfume({ userId: await getSessionDbUserId() }).catch(() => null);
 
   return (
-    <main className="landing">
+    <main id="contenido" className="landing">
       <div className="landing-content">
         <p className="eyebrow">Catálogo editorial de perfumes</p>
         <h1>Elegí un perfume con más contexto.</h1>

@@ -14,7 +14,8 @@ export async function GET(request: Request) {
   try {
     const data = await getDailyPerfume({ userId: await getSessionDbUserId() })
     if (!data) return NextResponse.json({ error: 'no hay un perfume del día disponible' }, { status: 404 })
-    return NextResponse.json({ data }, { status: 200 })
+    // Se personaliza con la sesión: nunca en una caché compartida.
+    return NextResponse.json({ data }, { status: 200, headers: { 'Cache-Control': 'private, no-store' } })
   } catch (error) {
     logServerError('api/perfume-del-dia', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

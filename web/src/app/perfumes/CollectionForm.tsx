@@ -20,14 +20,14 @@ export function CollectionForm({ perfumeId, initialData }: { perfumeId: string, 
 
   return (
     <form action={action} className="collection-form">
-      <select name="status" defaultValue={initialData?.status || 'WISHLIST'}>
-        <option value="OWNED">Owned</option>
-        <option value="SAMPLED">Sampled</option>
-        <option value="WISHLIST">Wishlist</option>
-        <option value="DISLIKED">Disliked</option>
+      <select name="status" aria-label="Estado en tu colección" defaultValue={initialData?.status || 'WISHLIST'}>
+        <option value="OWNED">Lo tengo</option>
+        <option value="SAMPLED">Probé una muestra</option>
+        <option value="WISHLIST">Lo quiero</option>
+        <option value="DISLIKED">No me gustó</option>
       </select>
-      <input type="number" name="rating" min="1" max="5" defaultValue={initialData?.rating ?? undefined} placeholder="Rating (1-5)" />
-      <textarea name="personalNotes" maxLength={2000} defaultValue={initialData?.personalNotes ?? undefined} placeholder="Notas personales" />
+      <input type="number" name="rating" min="1" max="5" aria-label="Puntuación de 1 a 5" defaultValue={initialData?.rating ?? undefined} placeholder="Rating (1-5)" />
+      <textarea name="personalNotes" aria-label="Notas personales" maxLength={2000} defaultValue={initialData?.personalNotes ?? undefined} placeholder="Notas personales" />
       <button type="submit">Guardar</button>
     </form>
   );

@@ -57,7 +57,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
   ];
 
   return (
-    <main className="catalog ficha">
+    <main id="contenido" className="catalog ficha">
       <Link className="back-link" href="/perfumes">
         ← Catálogo
       </Link>
@@ -122,7 +122,9 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
                   ) : (
                     <ul className="perfume-badges">
                       {names.map((name) => (
-                        <li key={name}>{name}</li>
+                        <li key={name} lang="en">
+                          {name}
+                        </li>
                       ))}
                     </ul>
                   )}

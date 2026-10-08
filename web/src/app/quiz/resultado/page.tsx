@@ -23,7 +23,7 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
 
   if (!validated.ok) {
     return (
-      <main className="catalog">
+      <main id="contenido" className="catalog">
         <Link className="back-link" href="/quiz">
           ← Volver al quiz
         </Link>
@@ -49,7 +49,7 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
   });
 
   return (
-    <main className="catalog">
+    <main id="contenido" className="catalog">
       <Link className="back-link" href="/quiz">
         ← Rehacer el quiz
       </Link>

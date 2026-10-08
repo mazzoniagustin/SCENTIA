@@ -5,7 +5,7 @@ import { CompareBar } from "./CompareBar";
 import { Perfume, PRICE_TIER_LABELS } from "./types";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
-import { prisma } from "@/lib/prisma";
+import { getAccordNames } from "@/lib/accord-stats";
 import { createClient } from "@/lib/supabase/server";
 import { getUserCollection } from "@/app/actions/collection";
 
@@ -123,6 +123,8 @@ function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume;
   );
 }
 
+export const metadata = { title: "Catálogo" };
+
 export default async function PerfumesPage({
   searchParams,
 }: {
@@ -131,7 +133,7 @@ export default async function PerfumesPage({
   const params = await searchParams;
   const [{ perfumes, pagination, error }, accordOptions] = await Promise.all([
     fetchPerfumes(params),
-    prisma.accord.findMany({ select: { name: true }, orderBy: { name: "asc" } }),
+    getAccordNames(),
   ]);
 
   // Check auth
@@ -165,7 +167,7 @@ export default async function PerfumesPage({
   const filtersActive = Object.values(selected).some(Boolean);
 
   return (
-    <main className="catalog">
+    <main id="contenido" className="catalog">
       <CompareBar />
       <Link className="back-link" href="/">
         ← Inicio
@@ -184,43 +186,43 @@ export default async function PerfumesPage({
           aria-label="Buscar por nombre o marca"
           defaultValue={selected.q}
         />
-        <input type="text" name="brand" placeholder="Marca" defaultValue={selected.brand} />
+        <input type="text" name="brand" placeholder="Marca" aria-label="Marca" defaultValue={selected.brand} />
         <select name="accord" defaultValue={selected.accord} aria-label="Acorde">
           <option value="">Acorde</option>
-          {accordOptions.map((a) => (
-            <option key={a.name} value={a.name}>
-              {a.name.charAt(0).toUpperCase() + a.name.slice(1)}
+          {accordOptions.map((name) => (
+            <option key={name} value={name}>
+              {name.charAt(0).toUpperCase() + name.slice(1)}
             </option>
           ))}
         </select>
-        <select name="priceTier" defaultValue={selected.priceTier}>
+        <select name="priceTier" aria-label="Categoría" defaultValue={selected.priceTier}>
           <option value="">Todas las categorías</option>
           <option value="ARABIC">Árabe</option>
           <option value="DESIGNER">Diseñador</option>
           <option value="NICHE">Nicho</option>
         </select>
-        <select name="concentration" defaultValue={selected.concentration}>
+        <select name="concentration" aria-label="Concentración" defaultValue={selected.concentration}>
           <option value="">Concentración</option>
           {CONCENTRATIONS.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
         </select>
-        <select name="gender" defaultValue={selected.gender}>
+        <select name="gender" aria-label="Género" defaultValue={selected.gender}>
           <option value="">Género</option>
           {GENDERS.map(g => <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>)}
         </select>
-        <select name="season" defaultValue={selected.season}>
+        <select name="season" aria-label="Estación" defaultValue={selected.season}>
           <option value="">Estación</option>
           {SEASONS.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
         </select>
-        <select name="occasion" defaultValue={selected.occasion}>
+        <select name="occasion" aria-label="Ocasión" defaultValue={selected.occasion}>
           <option value="">Ocasión</option>
           {OCCASIONS.map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
         </select>
         <fieldset className="duration-fieldset">
           <legend>Duración</legend>
-          <input type="number" name="minDuration" placeholder="Min" defaultValue={selected.minDuration} />
-          <input type="number" name="maxDuration" placeholder="Max" defaultValue={selected.maxDuration} />
+          <input type="number" name="minDuration" placeholder="Min" aria-label="Duración mínima (horas)" defaultValue={selected.minDuration} />
+          <input type="number" name="maxDuration" placeholder="Max" aria-label="Duración máxima (horas)" defaultValue={selected.maxDuration} />
         </fieldset>
-        <select name="sort" defaultValue={selected.sort}>
+        <select name="sort" aria-label="Ordenar por" defaultValue={selected.sort}>
           <option value="">Ordenar por</option>
           <option value="relevance">Relevancia</option>
           <option value="newest">Más nuevos</option>

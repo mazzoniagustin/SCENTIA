@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { createTtlCache } from '@/lib/ttl-cache'
 
 // Cuántos perfumes tienen cada acorde (frecuencia de documento) y cuántos perfumes hay.
 // Sirve para ponderar por rareza (IDF) en el quiz y en los candidatos de "similares".
@@ -35,4 +36,14 @@ export async function getAccordStats(): Promise<AccordStats> {
   }
   cache = { at: Date.now(), stats }
   return stats
+}
+
+// Los nombres de acorde solo cambian al reimportar el catálogo.
+const accordNamesCache = createTtlCache<string[]>({ ttlMs: TTL_MS })
+
+/** Nombres de todos los acordes, ordenados (opciones del filtro del catálogo). */
+export function getAccordNames(): Promise<string[]> {
+  return accordNamesCache.getOrCompute('all', async () =>
+    (await prisma.accord.findMany({ select: { name: true }, orderBy: { name: 'asc' } })).map((a) => a.name),
+  )
 }
