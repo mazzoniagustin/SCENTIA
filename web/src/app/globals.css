@@ -1686,3 +1686,101 @@ textarea {
     gap: 2.5rem;
   }
 }
+
+/* ————— Carrusel horizontal ————— */
+
+.scroller {
+  position: relative;
+  margin-top: 1rem;
+}
+
+@media (hover: hover) and (min-width: 40rem) {
+  /* Espacio a los lados para los botones, que no tapen las tarjetas. */
+  .scroller {
+    padding-inline: 1.6rem;
+  }
+}
+
+.scroller-viewport {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+  padding-bottom: 0.75rem;
+}
+
+.scroller-track {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: max-content;
+}
+
+.scroller-item {
+  flex: 0 0 13.5rem;
+  scroll-snap-align: start;
+}
+
+.scroller-item .perfume-card {
+  height: 100%;
+}
+
+.scroller-button {
+  position: absolute;
+  top: 5.5rem;
+  z-index: 2;
+  display: none;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--control-border);
+  border-radius: 50%;
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.scroller-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.scroller-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.scroller-prev {
+  left: -0.6rem;
+}
+
+.scroller-next {
+  right: -0.6rem;
+}
+
+@media (hover: hover) and (min-width: 40rem) {
+  .scroller-button {
+    display: grid;
+  }
+}
+
+.scroller-viewport:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 4px;
+}
+
+/* Los hijos de una grilla no se achican por debajo de su contenido: sin esto el carrusel crecía hasta el ancho de todos sus ítems. */
+.catalog > *,
+.scroller,
+.scroller-viewport {
+  min-width: 0;
+}
+
+.scroller-viewport {
+  max-width: 100%;
+}

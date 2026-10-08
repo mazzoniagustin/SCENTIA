@@ -16,7 +16,7 @@ function readStats(raw: unknown): Stats | null {
   const seasons = (s.seasons ?? {}) as Record<string, unknown>;
   const daypart = (s.daypart ?? {}) as Record<string, unknown>;
   return {
-    people: num(s.people), have: num(s.have), had: num(s.had), want: num(s.want),
+    people: num(s.people), have: 0, had: 0, want: 0,
     priceValue: typeof s.priceValue === "number" ? s.priceValue : null,
     histograms: { rating: [], longevity: [], sillage: [], priceValue: [] },
     communityGender: { female: 0, femaleLeaning: 0, unisex: 0, maleLeaning: 0, male: 0 },
@@ -74,11 +74,6 @@ export function CommunityStats({ longevity, sillage, stats: rawStats }: Props) {
         </div>
       )}
 
-      {stats && stats.have + stats.had + stats.want > 0 && (
-        <p className="community-relation">
-          {stats.have.toLocaleString("es-AR")} lo tienen · {stats.had.toLocaleString("es-AR")} lo tuvieron · {stats.want.toLocaleString("es-AR")} lo quieren
-        </p>
-      )}
       <p className="community-source">
         Votos de la comunidad de Fragrantica, tomados de un dataset de Kaggle (CC BY-NC-SA 4.0). <Link href="/creditos">Ver créditos</Link>.
       </p>

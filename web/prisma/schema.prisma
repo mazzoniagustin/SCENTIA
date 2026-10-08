@@ -38,6 +38,8 @@ model Perfume {
   accords     PerfumeAccord[]
   collectedBy UserCollection[]
   wearLogs    WearLog[]
+  remindsOf   PerfumeSimilar[] @relation("SimilarFrom")
+  remindedBy  PerfumeSimilar[] @relation("SimilarTo")
   priceTier   PriceTier?
 
   // Publicación y procedencia (RF-06): el catálogo público solo muestra PUBLISHED.
@@ -164,4 +166,21 @@ model WearLog {
 
   @@id([userId, day])
   @@index([perfumeId])
+}
+
+// "Me recuerda a": perfumes que la comunidad de la fuente dice que huelen parecido (votos a favor y en contra).
+// Dataset de Kaggle (CC BY-NC-SA 4.0). `net` = upVotes - downVotes, para ordenar.
+model PerfumeSimilar {
+  perfumeId String
+  similarId String
+  upVotes   Int
+  downVotes Int
+  net       Int
+
+  perfume Perfume @relation("SimilarFrom", fields: [perfumeId], references: [id], onDelete: Cascade)
+  similar Perfume @relation("SimilarTo", fields: [similarId], references: [id], onDelete: Cascade)
+
+  @@id([perfumeId, similarId])
+  @@index([perfumeId, net])
+  @@index([similarId])
 }
