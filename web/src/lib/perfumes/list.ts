@@ -19,7 +19,7 @@ type FilterResult =
 
 // Valores de orden aceptados. 'relevance' es placeholder del orden editorial
 // (brand/name asc) hasta que exista scoring de relevancia real.
-const SORT_VALUES = ['relevance', 'newest', 'duration-desc', 'duration-asc'] as const
+const SORT_VALUES = ['relevance', 'newest', 'duration-desc', 'duration-asc', 'longevity-desc'] as const
 type SortValue = (typeof SORT_VALUES)[number]
 
 // Tie-break determinista: brand/name asc detrás del criterio principal.
@@ -28,6 +28,8 @@ const SORT_ORDER: Record<SortValue, Prisma.PerfumeOrderByWithRelationInput[]> = 
   newest: [{ releaseYear: { sort: 'desc', nulls: 'last' } }, { brand: 'asc' }, { name: 'asc' }],
   'duration-desc': [{ duration: { sort: 'desc', nulls: 'last' } }, { brand: 'asc' }, { name: 'asc' }],
   'duration-asc': [{ duration: { sort: 'asc', nulls: 'last' } }, { brand: 'asc' }, { name: 'asc' }],
+  // Duración votada por la comunidad (1-5), la que traen los perfumes importados del dataset de Kaggle.
+  'longevity-desc': [{ longevity: { sort: 'desc', nulls: 'last' } }, { ratingCount: { sort: 'desc', nulls: 'last' } }, { id: 'asc' }],
 }
 
 function parseSort(value: string | null): SortValue | null {
@@ -166,6 +168,16 @@ function buildFilters(searchParams: URLSearchParams): FilterResult {
       return { ok: false, error: 'priceTier inválido' }
     }
     where.priceTier = { equals: priceTier as PriceTier }
+  }
+
+  // Duración mínima votada (1-5, promedio de la comunidad).
+  const minLongevityParam = searchParams.get('minLongevity')
+  if (minLongevityParam !== null && minLongevityParam !== '') {
+    const minLongevity = Number(minLongevityParam)
+    if (!Number.isFinite(minLongevity) || minLongevity < 1 || minLongevity > 5) {
+      return { ok: false, error: 'minLongevity debe ser un número entre 1 y 5' }
+    }
+    where.longevity = { gte: minLongevity }
   }
 
   const minDurationParam = searchParams.get('minDuration')

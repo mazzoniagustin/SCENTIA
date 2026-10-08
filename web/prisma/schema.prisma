@@ -49,6 +49,13 @@ model Perfume {
   ratingValue Float?
   ratingCount Int?
 
+  // Datos de la comunidad de la fuente (dataset de Kaggle, CC BY-NC-SA 4.0): id en Fragrantica para enlazar re-importaciones,
+  // duración (1-5) y estela (1-4) promedio, y el resto de las votaciones como JSON (solo para mostrar).
+  sourceId  String? @unique
+  longevity Float?
+  sillage   Float?
+  stats     Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -75,6 +82,8 @@ model PerfumeNote {
   perfumeId String
   noteId    String
   noteType  String
+  /// Peso de la nota votado por la comunidad (0-100); null en los datos anteriores.
+  weight    Int?
 
   perfume Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
   note    Note    @relation(fields: [noteId], references: [id], onDelete: Cascade)

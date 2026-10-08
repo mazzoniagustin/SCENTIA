@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CollectionForm } from "../CollectionForm";
 import { CompareCheckbox } from "../CompareCheckbox";
 import { PerfumeCover } from "../PerfumeCover";
+import { CommunityStats } from "../CommunityStats";
 import { AccordBars, NotePyramid } from "../PerfumeProfile";
 import { genderLabel, PRICE_TIER_LABELS, valueOrNoData } from "../types";
 
@@ -28,7 +29,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
   const perfume = await prisma.perfume.findUnique({
     where: { id },
     include: {
-      notes: { include: { note: true } },
+      notes: { include: { note: true }, orderBy: [{ weight: { sort: "desc", nulls: "last" } }, { noteId: "asc" }] },
       accords: { include: { accord: true }, orderBy: { intensity: "desc" } },
     },
   });
@@ -98,6 +99,8 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
         <h2 id="ficha-notas">Notas</h2>
         <NotePyramid notes={perfume.notes.map((n) => ({ noteType: n.noteType, name: n.note.name }))} />
       </section>
+
+      <CommunityStats longevity={perfume.longevity} sillage={perfume.sillage} stats={perfume.stats} />
 
       <section className="ficha-section" aria-labelledby="ficha-acciones">
         <h2 id="ficha-acciones">Tu colección</h2>
