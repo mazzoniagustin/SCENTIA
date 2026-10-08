@@ -18,6 +18,9 @@ export default async function Home() {
           <Link className="button" href={user ? "/account" : "/login"}>
             {user ? "Ver mi cuenta" : "Ingresar"}
           </Link>
+          <Link className="button" href="/quiz">
+            Descubrí tu perfil olfativo
+          </Link>
         </div>
       </div>
     </main>

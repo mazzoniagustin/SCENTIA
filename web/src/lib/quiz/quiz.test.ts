@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import { ACCORD_TRANSLATIONS } from '../../../scripts/accord-translations.ts'
 import { QUESTIONS, QUIZ_VERSION, referencedAccordNames, type QuizAnswers } from './questions.ts'
+import { answersFromSearchParams } from './params.ts'
 import { buildProfile, validateAnswers } from './profile.ts'
 import {
   AVOID_THRESHOLD,
@@ -199,5 +200,24 @@ describe('rankCandidates', () => {
   it('es determinista', () => {
     const input = [mk('c', 50), mk('a', 50), mk('b', 70)]
     assert.deepEqual(rankCandidates(profile, input, flat), rankCandidates(profile, [...input].reverse(), flat))
+  })
+})
+
+describe('answersFromSearchParams', () => {
+  it('single toma el primer valor y multi acepta un valor suelto o repetido', () => {
+    const raw = answersFromSearchParams({
+      ambiente: ['mar', 'bosque'], estacion: 'verano', ocasion: 'diario', dulzor: 'algo', estilo: 'suave',
+      familias: 'floral', evitar: ['oud', 'cuero'], ruido: 'x',
+    })
+    assert.deepEqual(raw, {
+      ambiente: 'mar', estacion: 'verano', ocasion: 'diario', dulzor: 'algo', estilo: 'suave',
+      familias: ['floral'], evitar: ['oud', 'cuero'],
+    })
+    assert.equal(validateAnswers(raw).ok, true)
+  })
+
+  it('los parámetros ausentes se omiten y la validación los rechaza', () => {
+    assert.deepEqual(answersFromSearchParams({}), {})
+    assert.equal(validateAnswers(answersFromSearchParams({ ambiente: 'mar' })).ok, false)
   })
 })

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { fetchCandidates } from '@/lib/candidates'
 import { getUserCollectionEntries } from '@/lib/exclusions'
 import { calculateSimilarityScore } from '@/lib/similarity'
-import { getCurrentUser } from '@/lib/auth/session'
+import { getSessionDbUserId } from '@/lib/auth/db-user'
 
 // Contrato de respuesta de GET /api/perfumes/[id]/recommendations.
 // `reasons` explica de forma legible por qué el candidato está en el ranking:
@@ -90,16 +90,8 @@ export async function GET(
     const candidates = await fetchCandidates(id)
 
     // Exclusiones: solo si hay sesión y no se pidió includeOwned.
-    // getCurrentUser() devuelve el UUID de Supabase; UserCollection.userId es el cuid
-    // de la tabla User, así que se resuelve (solo lectura: un GET no crea usuarios).
-    const sessionUser = includeOwned ? null : await getCurrentUser()
-    const dbUser = sessionUser
-      ? await prisma.user.findUnique({
-          where: { supabaseId: sessionUser.id },
-          select: { id: true },
-        })
-      : null
-    const collection = await getUserCollectionEntries(dbUser?.id)
+    const userId = includeOwned ? null : await getSessionDbUserId()
+    const collection = await getUserCollectionEntries(userId)
 
     const referenceAccordIds = new Set(reference.accords.map((a) => a.accordId))
     const referenceNoteIds = new Set(reference.notes.map((n) => n.noteId))
