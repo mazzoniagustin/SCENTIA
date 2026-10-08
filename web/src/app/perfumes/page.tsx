@@ -78,50 +78,42 @@ async function fetchPerfumes(
 
 function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume; collectionEntry?: { status: string; rating?: number | null; personalNotes?: string | null }; isAuthenticated: boolean }) {
   const priceTierLabel = perfume.priceTier ? PRICE_TIER_LABELS[perfume.priceTier] : null;
+  const meta = [perfume.concentration?.toUpperCase(), perfume.releaseYear].filter(Boolean).join(" · ");
 
   return (
     <article className="perfume-card">
       <PerfumeCover name={perfume.name} accords={perfume.accords} />
       <div className="perfume-card-body">
-      <p className="perfume-brand">{perfume.brand}</p>
-      <h2 className="perfume-name">
-        <Link href={`/perfumes/${perfume.id}`}>{perfume.name}</Link>
-      </h2>
-      <p className="perfume-meta">
-        {[perfume.concentration?.toUpperCase(), perfume.releaseYear]
-          .filter(Boolean)
-          .join(" · ")}
-      </p>
-      {priceTierLabel && (
-        <ul className="perfume-badges" aria-label="Categoría">
-          <li>{priceTierLabel}</li>
-        </ul>
-      )}
-      {perfume.seasons.length > 0 && (
-        <ul className="perfume-badges" aria-label="Estaciones">
-          {perfume.seasons.map((season) => (
-            <li key={season}>{season}</li>
-          ))}
-        </ul>
-      )}
-      {perfume.occasions.length > 0 && (
-        <ul className="perfume-badges" aria-label="Ocasiones">
-          {perfume.occasions.map((occasion) => (
-            <li key={occasion}>{occasion}</li>
-          ))}
-        </ul>
-      )}
-      <CompareCheckbox perfumeId={perfume.id} perfumeName={perfume.name} />
+        <p className="perfume-brand">{perfume.brand}</p>
+        <h2 className="perfume-name">
+          <Link href={`/perfumes/${perfume.id}`}>{perfume.name}</Link>
+        </h2>
+        {meta && <p className="perfume-meta">{meta}</p>}
+        {(priceTierLabel || perfume.seasons.length > 0) && (
+          <ul className="perfume-badges" aria-label="Categoría y estaciones">
+            {priceTierLabel && <li>{priceTierLabel}</li>}
+            {perfume.seasons.map((season) => (
+              <li key={season}>{season}</li>
+            ))}
+          </ul>
+        )}
+        {perfume.occasions.length > 0 && (
+          <ul className="perfume-badges" aria-label="Ocasiones">
+            {perfume.occasions.map((occasion) => (
+              <li key={occasion}>{occasion}</li>
+            ))}
+          </ul>
+        )}
 
-      {isAuthenticated ? (
-        collectionEntry ? (
-          <CollectionForm perfumeId={perfume.id} initialData={collectionEntry} />
-        ) : (
-          <CollectionForm perfumeId={perfume.id} />
-        )
-      ) : (
-        <Link href="/login" className="text-sm text-gray-500">Iniciá sesión para añadir a tu colección</Link>
-      )}
+        <div className="perfume-card-footer">
+          <CompareCheckbox perfumeId={perfume.id} perfumeName={perfume.name} />
+          {isAuthenticated && (
+            <details>
+              <summary>{collectionEntry ? "En tu colección" : "Guardar en mi colección"}</summary>
+              <CollectionForm perfumeId={perfume.id} initialData={collectionEntry} />
+            </details>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -169,74 +161,102 @@ export default async function PerfumesPage({
   };
 
   const filtersActive = Object.values(selected).some(Boolean);
+  // "Más filtros" arranca abierto si hay algún filtro aparte de la búsqueda.
+  const moreActive = Object.entries(selected).some(([key, value]) => key !== "q" && Boolean(value));
 
   return (
     <main id="contenido" className="catalog">
       <CompareBar />
-      <Link className="back-link" href="/">
-        ← Inicio
-      </Link>
       <header className="catalog-header">
         <p className="eyebrow">Catálogo</p>
         <h1>Perfumes</h1>
+        {!isAuthenticated && (
+          <p className="catalog-hint">
+            <Link href="/login">Iniciá sesión</Link> para guardar perfumes en tu colección.
+          </p>
+        )}
       </header>
 
       {/* Filtros */}
-      <form className="catalog-filters" action="/perfumes" method="GET">
-        <input
-          type="search"
-          name="q"
-          placeholder="Buscar por nombre o marca"
-          aria-label="Buscar por nombre o marca"
-          defaultValue={selected.q}
-        />
-        <input type="text" name="brand" placeholder="Marca" aria-label="Marca" defaultValue={selected.brand} />
-        <select name="accord" defaultValue={selected.accord} aria-label="Acorde">
-          <option value="">Acorde</option>
-          {accordOptions.map((name) => (
-            <option key={name} value={name}>
-              {name.charAt(0).toUpperCase() + name.slice(1)}
-            </option>
-          ))}
-        </select>
-        <select name="priceTier" aria-label="Categoría" defaultValue={selected.priceTier}>
-          <option value="">Todas las categorías</option>
-          <option value="ARABIC">Árabe</option>
-          <option value="DESIGNER">Diseñador</option>
-          <option value="NICHE">Nicho</option>
-        </select>
-        <select name="concentration" aria-label="Concentración" defaultValue={selected.concentration}>
-          <option value="">Concentración</option>
-          {CONCENTRATIONS.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
-        </select>
-        <select name="gender" aria-label="Género" defaultValue={selected.gender}>
-          <option value="">Género</option>
-          {GENDERS.map(g => <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>)}
-        </select>
-        <select name="season" aria-label="Estación" defaultValue={selected.season}>
-          <option value="">Estación</option>
-          {SEASONS.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-        </select>
-        <select name="occasion" aria-label="Ocasión" defaultValue={selected.occasion}>
-          <option value="">Ocasión</option>
-          {OCCASIONS.map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
-        </select>
-        <fieldset className="duration-fieldset">
-          <legend>Duración</legend>
-          <input type="number" name="minDuration" placeholder="Min" aria-label="Duración mínima (horas)" defaultValue={selected.minDuration} />
-          <input type="number" name="maxDuration" placeholder="Max" aria-label="Duración máxima (horas)" defaultValue={selected.maxDuration} />
-        </fieldset>
-        <select name="sort" aria-label="Ordenar por" defaultValue={selected.sort}>
-          <option value="">Ordenar por</option>
-          <option value="relevance">Relevancia</option>
-          <option value="newest">Más nuevos</option>
-          <option value="duration-desc">Mayor duración</option>
-          <option value="duration-asc">Menor duración</option>
-        </select>
-        <div className="catalog-filters-actions">
-          <button type="submit">Filtrar</button>
-          {filtersActive && <Link href="/perfumes">Limpiar</Link>}
+      <form className="catalog-filter-bar" action="/perfumes" method="GET">
+        <div className="catalog-search">
+          <input
+            type="search"
+            name="q"
+            placeholder="Buscar por nombre o marca"
+            aria-label="Buscar por nombre o marca"
+            defaultValue={selected.q}
+          />
+          <button type="submit">Buscar</button>
         </div>
+        <details className="catalog-more" open={moreActive}>
+          <summary>Más filtros</summary>
+          <div className="catalog-filter-grid">
+            <input type="text" name="brand" placeholder="Marca" aria-label="Marca" defaultValue={selected.brand} />
+            <select name="accord" defaultValue={selected.accord} aria-label="Acorde">
+              <option value="">Acorde</option>
+              {accordOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
+                </option>
+              ))}
+            </select>
+            <select name="priceTier" aria-label="Categoría" defaultValue={selected.priceTier}>
+              <option value="">Todas las categorías</option>
+              <option value="ARABIC">Árabe</option>
+              <option value="DESIGNER">Diseñador</option>
+              <option value="NICHE">Nicho</option>
+            </select>
+            <select name="concentration" aria-label="Concentración" defaultValue={selected.concentration}>
+              <option value="">Concentración</option>
+              {CONCENTRATIONS.map((c) => (
+                <option key={c} value={c}>
+                  {c.toUpperCase()}
+                </option>
+              ))}
+            </select>
+            <select name="gender" aria-label="Género" defaultValue={selected.gender}>
+              <option value="">Género</option>
+              {GENDERS.map((g) => (
+                <option key={g} value={g}>
+                  {g.charAt(0).toUpperCase() + g.slice(1)}
+                </option>
+              ))}
+            </select>
+            <select name="season" aria-label="Estación" defaultValue={selected.season}>
+              <option value="">Estación</option>
+              {SEASONS.map((s) => (
+                <option key={s} value={s}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </option>
+              ))}
+            </select>
+            <select name="occasion" aria-label="Ocasión" defaultValue={selected.occasion}>
+              <option value="">Ocasión</option>
+              {OCCASIONS.map((o) => (
+                <option key={o} value={o}>
+                  {o.charAt(0).toUpperCase() + o.slice(1)}
+                </option>
+              ))}
+            </select>
+            <select name="sort" aria-label="Ordenar por" defaultValue={selected.sort}>
+              <option value="">Ordenar por</option>
+              <option value="relevance">Relevancia</option>
+              <option value="newest">Más nuevos</option>
+              <option value="duration-desc">Mayor duración</option>
+              <option value="duration-asc">Menor duración</option>
+            </select>
+            <fieldset className="duration-fieldset">
+              <legend>Duración (h)</legend>
+              <input type="number" name="minDuration" placeholder="Mín" aria-label="Duración mínima (horas)" defaultValue={selected.minDuration} />
+              <input type="number" name="maxDuration" placeholder="Máx" aria-label="Duración máxima (horas)" defaultValue={selected.maxDuration} />
+            </fieldset>
+          </div>
+          <div className="catalog-filters-actions">
+            <button type="submit">Aplicar filtros</button>
+            {filtersActive && <Link href="/perfumes">Limpiar</Link>}
+          </div>
+        </details>
       </form>
 
       {error && (

@@ -437,68 +437,11 @@ h1 {
   max-width: none;
 }
 
-/* Filtros: una columna en mobile, grid fluido desde tablet */
-
-.catalog-filters {
-  display: grid;
-  gap: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  background: var(--surface);
-  padding: 1rem;
-}
-
-.catalog-filters label {
-  display: grid;
-  gap: 0.35rem;
-  font-weight: 700;
-}
-
-.catalog-filters input,
-.catalog-filters select {
-  min-height: 2.75rem;
-  border: 1px solid var(--control-border);
-  border-radius: 0.4rem;
-  color: var(--foreground);
-  font: inherit;
-  font-weight: 400;
-  padding: 0.6rem 0.75rem;
-}
-
-.duration-fieldset {
-  display: grid;
-  gap: 0.75rem;
-  border: 0;
-  margin: 0;
-  padding: 0;
-}
-
-.duration-fieldset legend {
-  font-weight: 700;
-  padding: 0;
-}
-
-.catalog-filters-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.filters-clear {
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.filters-clear:focus-visible {
-  outline: 3px solid var(--foreground);
-  outline-offset: 3px;
-}
-
 /* Grid de resultados: 1 col mobile → 2 tablet → 3-4 desktop */
 
 .catalog-grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
   grid-template-columns: 1fr;
   list-style: none;
 }
@@ -509,37 +452,111 @@ h1 {
 }
 
 .perfume-card {
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   background: var(--surface);
   overflow: hidden;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.perfume-card:hover,
+.perfume-card:focus-within {
+  border-color: #4a4b4e;
+  transform: translateY(-2px);
 }
 
 .perfume-card-body {
-  display: grid;
-  gap: 0.4rem;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 1rem 1.25rem 1.25rem;
 }
 
+.perfume-card-body .perfume-name {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.perfume-card-body .perfume-name a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.perfume-card {
+  position: relative;
+}
+
+.perfume-card-footer {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+}
+
 .perfume-cover {
+  position: relative;
   display: flex;
-  align-items: flex-end;
-  aspect-ratio: 4 / 3;
-  padding: 1.25rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.75rem, 4vw, 2.25rem);
-  line-height: 1.05;
+  flex-direction: column;
+  justify-content: space-between;
+  aspect-ratio: 5 / 4;
+  padding: 1.1rem 1.25rem;
   overflow: hidden;
 }
 
-.perfume-cover span {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
+.perfume-cover-mark {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 7vw, 5rem);
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+}
+
+.perfume-cover-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.compare-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.compare-toggle input {
+  accent-color: var(--accent);
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.perfume-card details {
+  font-size: 0.9rem;
+}
+
+.perfume-card summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.perfume-card .collection-form {
+  margin-top: 0.75rem;
 }
 
 .perfume-brand {
@@ -606,39 +623,12 @@ h1 {
 }
 
 @media (min-width: 640px) {
-  .catalog-filters {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .duration-fieldset {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .catalog-filters-actions {
-    grid-column: 1 / -1;
-  }
-
   .catalog-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (min-width: 1024px) {
-  .catalog-filters {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .duration-fieldset {
-    grid-template-columns: repeat(2, minmax(0, 14rem));
-    grid-column: auto;
-  }
-
-  .catalog-filters-actions {
-    grid-column: auto;
-    align-self: end;
-  }
-
   .catalog-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -655,7 +645,18 @@ h1 {
 .quiz-form {
   display: grid;
   gap: 1.25rem;
-  max-width: 44rem;
+  max-width: 64rem;
+}
+
+@media (min-width: 52rem) {
+  .quiz-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .quiz-form > :not(.quiz-question) {
+    grid-column: 1 / -1;
+  }
 }
 
 .quiz-question {
@@ -674,7 +675,8 @@ h1 {
 }
 
 .quiz-options {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -683,7 +685,15 @@ h1 {
   align-items: center;
   gap: 0.6rem;
   min-height: 2.75rem;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
   cursor: pointer;
+  padding: 0.35rem 1rem 0.35rem 0.8rem;
+}
+
+.quiz-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--surface-2);
 }
 
 .quiz-option input {
@@ -854,30 +864,346 @@ h1 em {
   color: var(--accent);
 }
 
-/* Portada (dirección "Noche"): hero centrado, tarjeta del día alineada a la izquierda. */
-.landing-content {
-  width: min(100%, 52rem);
+/* ————— Controles de formulario sobre fondo oscuro ————— */
+
+:root {
+  color-scheme: dark;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background: var(--surface-2);
+  border: 1px solid var(--control-border);
+  border-radius: 0.5rem;
+  color: var(--foreground);
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.8rem;
+}
+
+textarea {
+  min-height: 5rem;
+}
+
+::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+/* ————— Cabecera del sitio ————— */
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  margin: 0 auto;
+  max-width: 76rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.site-wordmark {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  letter-spacing: 0.03em;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.site-nav a {
+  padding: 0.5rem 0;
+}
+
+.site-nav a:hover {
+  color: var(--foreground);
+}
+
+/* ————— Portada ————— */
+
+.home {
+  display: grid;
+  gap: 5rem;
+  margin: 0 auto;
+  max-width: 76rem;
+  padding: 3rem 1.5rem 5rem;
+}
+
+.home-hero {
+  display: grid;
   justify-items: center;
+  gap: 1.75rem;
+  padding: 3rem 0 1rem;
   text-align: center;
-  gap: 2rem;
 }
 
-.landing-content h1 {
+.home-hero h1 {
   max-width: 16ch;
-  font-size: clamp(3rem, 9vw, 6rem);
+  font-size: clamp(3rem, 9vw, 6.25rem);
 }
 
-.landing-content .lead {
+.home-hero .lead {
   max-width: 36rem;
 }
 
-.landing-actions {
+.home .landing-actions {
   justify-content: center;
 }
 
-.landing-content .daily-card {
+.button-ghost {
+  background: transparent !important;
+  border: 1px solid var(--control-border) !important;
+  color: var(--foreground) !important;
+}
+
+.button-ghost:hover {
+  border-color: var(--accent) !important;
+}
+
+.home-daily {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--surface);
+}
+
+.home-daily .perfume-cover {
+  aspect-ratio: auto;
+  min-height: 16rem;
+}
+
+.home-daily .perfume-cover-mark {
+  font-size: clamp(5rem, 14vw, 9rem);
+}
+
+.home-daily-body {
+  display: grid;
+  align-content: center;
+  gap: 0.9rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.home-daily-body h2 {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: 0.012em;
+  text-wrap: balance;
+}
+
+.home-daily-body .perfume-badges {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.home-daily-link {
+  width: fit-content;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.home-features {
+  display: grid;
+  gap: 1rem;
+}
+
+.home-feature {
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 1.75rem;
+  transition: border-color 0.15s ease;
+}
+
+.home-feature:hover,
+.home-feature:focus-within {
+  border-color: var(--accent);
+}
+
+.home-feature-index {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.home-feature h2 {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.home-feature p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.home-feature a {
+  margin-top: 0.5rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.home-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (min-width: 52rem) {
+  .home-daily {
+    grid-template-columns: 5fr 6fr;
+  }
+
+  .home-features {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ————— Catálogo: barra de filtros ————— */
+
+.catalog-filter-bar {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.catalog-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.catalog-search input {
+  flex: 1 1 16rem;
+}
+
+.catalog-search button,
+.catalog-filter-grid + .catalog-filters-actions button {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0 1.5rem;
+}
+
+.catalog-more summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 600;
+  width: fit-content;
+}
+
+.catalog-more[open] summary {
+  margin-bottom: 1rem;
+}
+
+.catalog-filter-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+}
+
+.duration-fieldset {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  grid-column: span 2;
+}
+
+.duration-fieldset legend {
+  float: left;
+  margin-right: 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.duration-fieldset input {
   width: 100%;
-  margin-top: 1.5rem;
-  justify-items: start;
-  text-align: left;
+  min-width: 0;
+}
+
+.catalog-filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.catalog-filters-actions a {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.catalog-hint {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.catalog-hint a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.catalog-grid {
+  align-items: stretch;
+}
+
+/* ————— Ficha: cabecera con portada ————— */
+
+.ficha-hero {
+  display: grid;
+  gap: 1.5rem;
+  align-items: end;
+}
+
+.ficha-hero .perfume-cover {
+  border-radius: 1rem;
+  aspect-ratio: 16 / 9;
+}
+
+.ficha-hero .perfume-cover-mark {
+  font-size: clamp(4rem, 12vw, 6rem);
+}
+
+.ficha-hero-text {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ficha-hero-text h1 {
+  max-width: none;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  letter-spacing: 0.01em;
+}
+
+@media (min-width: 40rem) {
+  .ficha-hero {
+    grid-template-columns: 15rem 1fr;
+  }
+
+  .ficha-hero .perfume-cover {
+    aspect-ratio: 1 / 1;
+  }
 }

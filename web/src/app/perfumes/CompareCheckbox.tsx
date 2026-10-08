@@ -21,7 +21,7 @@ export function CompareCheckbox({ perfumeId, perfumeName }: { perfumeId: string;
   };
 
   return (
-    <label style={{ display: "flex", gap: "8px", alignItems: "center", cursor: "pointer" }}>
+    <label className="compare-toggle">
       <input
         type="checkbox"
         checked={checked}

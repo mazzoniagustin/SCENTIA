@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { getDailyPerfume } from "@/lib/daily/pick";
+import { PerfumeCover } from "@/app/perfumes/PerfumeCover";
 
 const SEASON_LABELS = {
   primavera: "la primavera",
@@ -17,10 +18,10 @@ export default async function Home() {
   const daily = await getDailyPerfume({ userId: await getSessionDbUserId() }).catch(() => null);
 
   return (
-    <main id="contenido" className="landing">
-      <div className="landing-content">
+    <main id="contenido" className="home">
+      <section className="home-hero" aria-labelledby="home-title">
         <p className="eyebrow">Catálogo editorial de perfumes</p>
-        <h1>
+        <h1 id="home-title">
           Elegí un perfume con más <em>contexto</em>.
         </h1>
         <p className="lead">
@@ -31,16 +32,24 @@ export default async function Home() {
           <Link className="button" href="/perfumes">
             Explorar el catálogo
           </Link>
-          <Link className="button" href="/quiz">
+          <Link className="button button-ghost" href="/quiz">
             Descubrí tu perfil olfativo
           </Link>
-          <Link className="button" href={user ? "/account" : "/login"}>
-            {user ? "Ver mi cuenta" : "Ingresar"}
-          </Link>
+          {!user && (
+            <Link className="button button-ghost" href="/login">
+              Ingresar
+            </Link>
+          )}
         </div>
+      </section>
 
-        {daily && (
-          <section className="daily-card" aria-labelledby="daily-title">
+      {daily && (
+        <section className="home-daily" aria-labelledby="daily-title">
+          <PerfumeCover
+            name={daily.name}
+            accords={daily.accords.map((name, i) => ({ intensity: 100 - i, accord: { name } }))}
+          />
+          <div className="home-daily-body">
             <p className="eyebrow" id="daily-title">
               Perfume del día
             </p>
@@ -62,9 +71,43 @@ export default async function Home() {
                   }.`
                 : `Una elección para ${SEASON_LABELS[daily.season]}.`}
             </p>
-          </section>
-        )}
-      </div>
+            <Link className="home-daily-link" href={`/perfumes/${daily.perfumeId}`}>
+              Ver la ficha →
+            </Link>
+          </div>
+        </section>
+      )}
+
+      <section className="home-features" aria-label="Qué podés hacer">
+        <article className="home-feature">
+          <span className="home-feature-index" aria-hidden="true">
+            01
+          </span>
+          <h2>Explorá</h2>
+          <p>Buscá por nombre, marca, acorde, nota o estación entre más de 23.000 perfumes.</p>
+          <Link href="/perfumes">Ver el catálogo →</Link>
+        </article>
+        <article className="home-feature">
+          <span className="home-feature-index" aria-hidden="true">
+            02
+          </span>
+          <h2>Descubrí</h2>
+          <p>Seis preguntas sobre lo que te gusta y te mostramos los perfumes que mejor encajan con tu perfil.</p>
+          <Link href="/quiz">Hacer el quiz →</Link>
+        </article>
+        <article className="home-feature">
+          <span className="home-feature-index" aria-hidden="true">
+            03
+          </span>
+          <h2>Organizá</h2>
+          <p>Guardá lo que tenés, lo que probaste y lo que querés, con tus notas y puntuación. Es privado.</p>
+          <Link href={user ? "/mi-coleccion" : "/login"}>{user ? "Ir a mi colección →" : "Ingresar →"}</Link>
+        </article>
+      </section>
+
+      <footer className="home-footer">
+        <p>Scentia es un proyecto personal de aprendizaje.</p>
+      </footer>
     </main>
   );
 }

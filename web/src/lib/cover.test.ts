@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import { ACCORD_TRANSLATIONS } from '../../scripts/accord-translations.ts'
-import { coverColors, dominantAccord, hueForAccord } from './cover.ts'
+import { coverColors, dominantAccord, hueForAccord, initialsOf } from './cover.ts'
 
 const acc = (name: string, intensity: number) => ({ intensity, accord: { name } })
 
@@ -36,5 +36,22 @@ describe('portada generada', () => {
 
   it('es determinista', () => {
     assert.deepEqual(coverColors([acc('amaderado', 100)]), coverColors([acc('amaderado', 100)]))
+  })
+})
+
+describe('monograma de la portada', () => {
+  it('toma las dos primeras palabras significativas', () => {
+    assert.equal(initialsOf('Bleu de Chanel'), 'BC')
+    assert.equal(initialsOf('Amber Queen'), 'AQ')
+  })
+  it('ignora números y conectores', () => {
+    assert.equal(initialsOf('Wd 18'), 'W')
+    assert.equal(initialsOf('Sn 2020'), 'S')
+    assert.equal(initialsOf('Out In the Open'), 'OO')
+  })
+  it('maneja acentos, apóstrofes y nombres solo numéricos', () => {
+    assert.equal(initialsOf('Hypnôse'), 'H')
+    assert.equal(initialsOf("L'Eau d'Issey"), 'LE')
+    assert.equal(initialsOf('212'), '2')
   })
 })
