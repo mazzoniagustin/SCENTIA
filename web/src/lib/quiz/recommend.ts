@@ -36,7 +36,7 @@ export type QuizResult = {
 
 export async function recommendFromAnswers(
   answers: QuizAnswers,
-  options: { gender?: QuizGender; limit?: number; userId?: string | null } = {},
+  options: { gender?: QuizGender; season?: string; limit?: number; userId?: string | null } = {},
 ): Promise<QuizResult[]> {
   const profile = buildProfile(answers)
   const stats = await getAccordStats()
@@ -61,7 +61,8 @@ export async function recommendFromAnswers(
       : Prisma.empty
   // Solo publicados; el género, si se pidió, se resuelve en la misma subconsulta.
   const genderClause = options.gender ? Prisma.sql`AND p.gender = ${options.gender}` : Prisma.empty
-  const publishedClause = Prisma.sql`AND p.status = 'PUBLISHED' ${genderClause}`
+  const seasonClause = options.season ? Prisma.sql`AND ${options.season} = ANY(p.seasons)` : Prisma.empty
+  const publishedClause = Prisma.sql`AND p.status = 'PUBLISHED' ${genderClause} ${seasonClause}`
 
   const [rows, collection] = await Promise.all([
     prisma.$queryRaw<Array<{ id: string; name: string; intensity: number; ratingCount: number | null }>>`
