@@ -28,7 +28,15 @@ for (const [path, marker] of [['/', 'Saltar al contenido'], ['/perfumes', 'Busca
 const list = await get('/api/perfumes?pageSize=2')
 const listBody = await list.json().catch(() => ({}))
 check('catálogo: listado paginado con datos', list.status === 200 && listBody.count === 2 && listBody.total > 1000, `total ${listBody.total}`)
-check('catálogo: cabecera de caché pública para el CDN', /s-maxage=\d+/.test(list.headers.get('cache-control') ?? ''), list.headers.get('cache-control') ?? 'sin cabecera')
+// Vercel reescribe Cache-Control hacia el cliente (quita s-maxage) y expone el estado del CDN en x-vercel-cache;
+// en local/otros hosts se ve la cabecera original.
+const listCache = list.headers.get('cache-control') ?? ''
+const cdnState = list.headers.get('x-vercel-cache')
+check(
+  'catálogo: cacheable por el CDN',
+  /s-maxage=\d+/.test(listCache) || (/public/.test(listCache) && ['HIT', 'MISS', 'STALE', 'PRERENDER'].includes(cdnState ?? '')),
+  `${listCache || 'sin cabecera'}${cdnState ? ` · x-vercel-cache: ${cdnState}` : ''}`,
+)
 const id = listBody.data?.[0]?.id
 const ficha = await get(`/perfumes/${id}`)
 check('ficha de perfume', ficha.status === 200, `http ${ficha.status}`)
