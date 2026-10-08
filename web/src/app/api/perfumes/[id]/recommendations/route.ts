@@ -90,8 +90,16 @@ export async function GET(
     const candidates = await fetchCandidates(id)
 
     // Exclusiones: solo si hay sesión y no se pidió includeOwned.
-    const user = includeOwned ? null : await getCurrentUser()
-    const collection = await getUserCollectionEntries(user?.id)
+    // getCurrentUser() devuelve el UUID de Supabase; UserCollection.userId es el cuid
+    // de la tabla User, así que se resuelve (solo lectura: un GET no crea usuarios).
+    const sessionUser = includeOwned ? null : await getCurrentUser()
+    const dbUser = sessionUser
+      ? await prisma.user.findUnique({
+          where: { supabaseId: sessionUser.id },
+          select: { id: true },
+        })
+      : null
+    const collection = await getUserCollectionEntries(dbUser?.id)
 
     const referenceAccordIds = new Set(reference.accords.map((a) => a.accordId))
     const referenceNoteIds = new Set(reference.notes.map((n) => n.noteId))

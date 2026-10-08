@@ -110,6 +110,15 @@ describe('exclusiones por colección', () => {
     assertClose(calculateSimilarityScore(base, candidate, sampled), 0.54)
   })
 
+  it('acepta los estados en mayúscula del enum de Prisma (OWNED, DISLIKED)', () => {
+    for (const status of ['OWNED', 'DISLIKED']) {
+      assert.equal(calculateSimilarityScore(base, candidate, [{ perfumeId: 'p2', status }]), 0)
+    }
+    for (const status of ['WISHLIST', 'SAMPLED']) {
+      assertClose(calculateSimilarityScore(base, candidate, [{ perfumeId: 'p2', status }]), 0.54)
+    }
+  })
+
   it('solo excluye al perfume señalado, no a otros de la colección', () => {
     const other: UserCollectionEntry[] = [{ perfumeId: 'other', status: 'owned' }]
     assertClose(calculateSimilarityScore(base, candidate, other), 0.54)

@@ -127,7 +127,9 @@ export function calculateSimilarityScore(
   const isExcluded =
     userCollection?.some(
       (entry) =>
-        entry.perfumeId === candidate.id && EXCLUDED_STATUSES.has(entry.status),
+        // La DB guarda el enum en mayúscula ('OWNED'); el vocabulario del motor es minúscula.
+        entry.perfumeId === candidate.id &&
+        EXCLUDED_STATUSES.has(entry.status.toLowerCase()),
     ) ?? false
   if (isExcluded) return 0
 
