@@ -54,7 +54,7 @@ export default async function AccountPage({
 
       <section className="ficha-section" aria-labelledby="acc-prefs">
         <h2 id="acc-prefs">Preferencias</h2>
-        <form className="catalog-filters" action={savePreferencesAction}>
+        <form className="account-form" action={savePreferencesAction}>
           <label>
             Idioma
             <select name="locale" defaultValue={preferences.locale}>
@@ -111,7 +111,7 @@ export default async function AccountPage({
           Borra tu colección, tus notas, tu perfil y tus preferencias. No se puede deshacer. Para confirmar, escribí{" "}
           <strong>{DELETE_CONFIRMATION}</strong>.
         </p>
-        <form className="catalog-filters" action={deleteAccountAction}>
+        <form className="account-form" action={deleteAccountAction}>
           <label>
             Confirmación
             <input name="confirm" autoComplete="off" required aria-describedby="acc-delete" />

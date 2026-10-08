@@ -267,7 +267,7 @@ h1 {
 }
 
 .lead,
-.auth-card > p {
+.auth-card > p:not(.eyebrow) {
   color: var(--muted);
   font-size: 1.1rem;
   line-height: 1.6;
@@ -339,6 +339,7 @@ h1 {
 }
 
 .auth-shell {
+  min-height: calc(100vh - 5rem);
   align-content: center;
   justify-items: center;
   gap: 1.5rem;
@@ -704,7 +705,32 @@ h1 {
 }
 
 .quiz-gender {
-  max-width: 24rem;
+  max-width: 30rem;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+}
+
+.quiz-gender label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.quiz-gender button {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0 1.5rem;
+}
+
+.quiz-gender .catalog-filters-actions {
+  margin: 0;
 }
 
 .quiz-reason {
@@ -846,12 +872,9 @@ h1 {
 }
 
 textarea,
-.collection-form select,
-.collection-form input {
-  border: 1px solid var(--control-border);
-  border-radius: 0.4rem;
-  font: inherit;
-  padding: 0.5rem 0.65rem;
+.collection-form {
+  display: grid;
+  gap: 0.5rem;
 }
 
 /* Enlace para saltar la navegación: oculto hasta recibir el foco con el teclado. */
@@ -1115,7 +1138,8 @@ textarea {
 }
 
 .catalog-search button,
-.catalog-filter-grid + .catalog-filters-actions button {
+.catalog-filters-actions button,
+.collection-form button {
   min-height: 2.75rem;
   border: 0;
   border-radius: 0.5rem;
@@ -1250,4 +1274,44 @@ textarea {
 
 .home-daily-profile .ficha-phases > div {
   grid-template-columns: 9.5rem 1fr;
+}
+
+/* ————— Cuenta y colección ————— */
+
+.account-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 28rem;
+}
+
+.account-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.account-form .catalog-filters-actions {
+  margin: 0.25rem 0 0;
+}
+
+.button-danger {
+  min-height: 2.75rem;
+  width: 100%;
+  border: 1px solid var(--error);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--error);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0 1.25rem;
+}
+
+.button-danger:hover {
+  background: var(--error-bg);
+}
+
+.account-danger .catalog-filters-actions button {
+  background: var(--error);
 }
