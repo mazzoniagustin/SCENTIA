@@ -9,6 +9,7 @@ export function SiteHeader() {
       </Link>
       <nav className="site-nav" aria-label="Principal">
         <Link href="/perfumes">Catálogo</Link>
+        <Link href="/marcas">Marcas</Link>
         <Link href="/quiz">Quiz olfativo</Link>
         <Link href="/mi-coleccion">Mi colección</Link>
         <Link href="/account">Cuenta</Link>

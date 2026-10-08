@@ -17,6 +17,8 @@ async function pages() {
   return [
     ['Portada', '/'],
     ['Ingresar', '/login'],
+    ['Marcas', '/marcas'],
+    ['Marca', '/marcas/Armaf'],
     ['Quiz', '/quiz'],
     ['Resultado del quiz', `/quiz/resultado?${quiz}`],
     ['Catálogo', '/perfumes'],

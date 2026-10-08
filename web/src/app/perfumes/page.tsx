@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { CompareCheckbox } from "./CompareCheckbox";
-import { CollectionForm } from "./CollectionForm";
+import { PerfumeCard } from "./PerfumeCard";
 import { CompareBar } from "./CompareBar";
-import { PerfumeCover } from "./PerfumeCover";
-import { genderLabel, Perfume, PRICE_TIER_LABELS } from "./types";
+import type { Perfume } from "./types";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
 import { getAccordNames } from "@/lib/accord-stats";
@@ -74,49 +72,6 @@ async function fetchPerfumes(
     logServerError("perfumes/page", error);
     return { perfumes: [], error: "No se pudo cargar el catálogo." };
   }
-}
-
-function Card({ perfume, collectionEntry, isAuthenticated }: { perfume: Perfume; collectionEntry?: { status: string; rating?: number | null; personalNotes?: string | null }; isAuthenticated: boolean }) {
-  const priceTierLabel = perfume.priceTier ? PRICE_TIER_LABELS[perfume.priceTier] : null;
-  const meta = [genderLabel(perfume.gender), perfume.concentration?.toUpperCase(), perfume.releaseYear].filter(Boolean).join(" · ");
-
-  return (
-    <article className="perfume-card">
-      <PerfumeCover name={perfume.name} accords={perfume.accords} />
-      <div className="perfume-card-body">
-        <p className="perfume-brand">{perfume.brand}</p>
-        <h2 className="perfume-name">
-          <Link href={`/perfumes/${perfume.id}`}>{perfume.name}</Link>
-        </h2>
-        {meta && <p className="perfume-meta">{meta}</p>}
-        {(priceTierLabel || perfume.seasons.length > 0) && (
-          <ul className="perfume-badges" aria-label="Categoría y estaciones">
-            {priceTierLabel && <li>{priceTierLabel}</li>}
-            {perfume.seasons.map((season) => (
-              <li key={season}>{season}</li>
-            ))}
-          </ul>
-        )}
-        {perfume.occasions.length > 0 && (
-          <ul className="perfume-badges" aria-label="Ocasiones">
-            {perfume.occasions.map((occasion) => (
-              <li key={occasion}>{occasion}</li>
-            ))}
-          </ul>
-        )}
-
-        <div className="perfume-card-footer">
-          <CompareCheckbox perfumeId={perfume.id} perfumeName={perfume.name} />
-          {isAuthenticated && (
-            <details>
-              <summary>{collectionEntry ? "En tu colección" : "Guardar en mi colección"}</summary>
-              <CollectionForm perfumeId={perfume.id} initialData={collectionEntry} />
-            </details>
-          )}
-        </div>
-      </div>
-    </article>
-  );
 }
 
 export const metadata = { title: "Catálogo" };
@@ -287,7 +242,7 @@ export default async function PerfumesPage({
               const entry = collection.find(c => c.perfumeId === perfume.id);
               return (
                 <li key={perfume.id}>
-                  <Card perfume={perfume} collectionEntry={entry} isAuthenticated={isAuthenticated} />
+                  <PerfumeCard perfume={perfume} collectionEntry={entry} isAuthenticated={isAuthenticated} />
                 </li>
               );
             })}

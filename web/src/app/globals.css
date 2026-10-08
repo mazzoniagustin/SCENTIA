@@ -1522,3 +1522,81 @@ textarea {
     gap: 3rem;
   }
 }
+
+/* ————— Marcas ————— */
+
+.brands-subtitle {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.brands-letters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.brands-letters a {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+
+.brands-letters a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.brands-group {
+  display: grid;
+  gap: 0.75rem;
+  scroll-margin-top: 1rem;
+}
+
+.brands-group h2 {
+  border-bottom: 1px solid var(--border);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  padding-bottom: 0.4rem;
+}
+
+.brands-list {
+  columns: 16rem;
+  column-gap: 2rem;
+  list-style: none;
+}
+
+.brands-list li {
+  break-inside: avoid;
+}
+
+.brands-list a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0;
+}
+
+.brands-list a:hover span {
+  color: var(--accent);
+}
+
+.brands-list small {
+  color: var(--muted);
+}
+
+.catalog-header {
+  display: grid;
+  gap: 0.6rem;
+}
