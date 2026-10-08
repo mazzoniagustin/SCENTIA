@@ -20,7 +20,9 @@ export default async function Home() {
     <main id="contenido" className="landing">
       <div className="landing-content">
         <p className="eyebrow">Catálogo editorial de perfumes</p>
-        <h1>Elegí un perfume con más contexto.</h1>
+        <h1>
+          Elegí un perfume con más <em>contexto</em>.
+        </h1>
         <p className="lead">
           Explorá más de veinte mil perfumes por sus acordes, compará hasta cuatro, armá tu colección privada y
           descubrí cuál va con vos.
