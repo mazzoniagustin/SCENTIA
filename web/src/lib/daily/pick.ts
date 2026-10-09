@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { sharedCache } from '@/lib/shared-cache'
 import { getUserProfile } from '@/lib/account/data'
 import { recommendFromAnswers } from '@/lib/quiz/recommend'
 import { dayKey, hemisphereForCountry, pickIndex, seasonFor, type Hemisphere } from './daily'
@@ -37,7 +38,7 @@ export type DailyPerfume = {
 // El pick general es igual todo el día: se cachea por (día, estación) para no repetir consultas.
 const generalCache = new Map<string, string>()
 
-async function generalPerfumeId(day: string, season: Season): Promise<string | null> {
+async function computeGeneralPerfumeId(day: string, season: Season): Promise<string | null> {
   const key = `${day}|${season}`
   const cached = generalCache.get(key)
   if (cached) return cached
@@ -59,6 +60,9 @@ async function generalPerfumeId(day: string, season: Season): Promise<string | n
   generalCache.set(key, pool[index].id)
   return pool[index].id
 }
+
+// Compartido entre instancias (día y estación forman la clave): una instancia fría no vuelve a recorrer el pool.
+const generalPerfumeId = sharedCache(computeGeneralPerfumeId, 'daily-general')
 
 export async function getDailyPerfume(options: {
   userId?: string | null

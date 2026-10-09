@@ -91,7 +91,7 @@ export const QUESTIONS: ReadonlyArray<QuizQuestion> = [
   },
   {
     id: 'familias',
-    label: '¿Qué familias te gustan? (podés elegir varias)',
+    label: '¿Qué familias te gustan?',
     kind: 'multi',
     options: [
       { id: 'floral', label: 'Florales', weights: { floral: 40, 'floral blanco': 20 } },
@@ -103,7 +103,7 @@ export const QUESTIONS: ReadonlyArray<QuizQuestion> = [
   },
   {
     id: 'evitar',
-    label: '¿Qué querés evitar? (podés elegir varias)',
+    label: '¿Qué querés evitar?',
     kind: 'multi',
     options: [
       { id: 'dulce', label: 'Lo dulce', avoid: ['dulce'] },

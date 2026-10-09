@@ -3,15 +3,13 @@ import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { CollectionForm } from '../perfumes/CollectionForm';
 import { PerfumeImage } from '../perfumes/PerfumeImage';
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/session";
 import { redirect } from 'next/navigation';
 
 export const metadata = { title: "Mi colección" };
 
 export default async function MyCollectionPage() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) {
+  if (!(await getCurrentUser())) {
     redirect('/login');
   }
 

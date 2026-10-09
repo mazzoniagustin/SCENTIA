@@ -3,6 +3,7 @@ import { fetchCandidates } from '@/lib/candidates'
 import { getUserCollectionEntries } from '@/lib/exclusions'
 import { calculateSimilarityScore, EXCLUDED_STATUSES } from '@/lib/similarity'
 import { createTtlCache } from '@/lib/ttl-cache'
+import { sharedCache } from '@/lib/shared-cache'
 
 // Perfumes similares a uno de referencia (motor determinista de similarity.ts).
 // Compartido por GET /api/perfumes/[id]/recommendations y la ficha del perfume.
@@ -50,7 +51,7 @@ function buildReasons(
   return reasons
 }
 
-async function computeRanking(referenceId: string): Promise<Recommendation[] | null> {
+async function computeRankingUncached(referenceId: string): Promise<Recommendation[] | null> {
   const reference = await prisma.perfume.findUnique({
     where: { id: referenceId },
     select: {
@@ -96,6 +97,9 @@ async function computeRanking(referenceId: string): Promise<Recommendation[] | n
     ),
   }))
 }
+
+// Ranking común (sin datos personales): se comparte entre instancias para que un perfume ya visto no se recalcule.
+const computeRanking = sharedCache(computeRankingUncached, 'similar-ranking')
 
 /**
  * Devuelve null si el perfume de referencia no existe o no está publicado. `userId` es el cuid de la tabla

@@ -1,55 +1,44 @@
+import { cache, Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getUserCollection } from "@/app/actions/collection";
 import { LONGEVITY_LABELS, scaleLabel } from "@/lib/community";
-import { getSessionDbUserId } from "@/lib/auth/db-user";
+import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { getSimilarPerfumes } from "@/lib/recommendations/similar";
-import { createClient } from "@/lib/supabase/server";
-import { CollectionForm } from "../CollectionForm";
-import { CompareCheckbox } from "../CompareCheckbox";
+import { CardGridSkeleton, SectionSkeleton } from "@/components/Skeleton";
 import { PerfumeImage } from "../PerfumeImage";
 import { isAllowedImageUrl, isAllowedSourcePageUrl } from "@/lib/images";
 import { CommunityStats } from "../CommunityStats";
-import { RemindsMeSection } from "../RemindsMeSection";
-import { getRemindsMe } from "@/lib/similar/reminds";
+import { CollectionSection, RemindsMeLoader, SimilarSection } from "./sections";
 import { AccordBars, NotePyramid } from "../PerfumeProfile";
 import { genderLabel, PRICE_TIER_LABELS, valueOrNoData } from "../types";
 
-const SIMILAR_LIMIT = 6;
-
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const perfume = await prisma.perfume.findUnique({ where: { id }, select: { brand: true, name: true, status: true } });
-  return { title: perfume?.status === "PUBLISHED" ? `${perfume.name} — ${perfume.brand}` : "Perfume no encontrado" };
-}
-
-export default async function PerfumePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-
-  const perfume = await prisma.perfume.findUnique({
+// Una sola consulta por solicitud, compartida por los metadatos y la página.
+const getPerfume = cache((id: string) =>
+  prisma.perfume.findUnique({
     where: { id },
     include: {
       notes: { include: { note: true }, orderBy: [{ weight: { sort: "desc", nulls: "last" } }, { noteId: "asc" }] },
       accords: { include: { accord: true }, orderBy: { intensity: "desc" } },
     },
-  });
+  }),
+);
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const perfume = await getPerfume(id);
+  return { title: perfume?.status === "PUBLISHED" ? `${perfume.name} — ${perfume.brand}` : "Perfume no encontrado" };
+}
+
+export default async function PerfumePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const perfume = await getPerfume(id);
   if (!perfume || perfume.status !== "PUBLISHED") notFound();
 
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const isAuthenticated = !!data.user;
-
-  const [similar, collection, remindsMe] = await Promise.all([
-    getSimilarPerfumes(id, { limit: SIMILAR_LIMIT, userId: await getSessionDbUserId() }),
-    isAuthenticated ? getUserCollection().catch(() => []) : Promise.resolve([]),
-    // Un fallo aquí no debe tumbar la ficha.
-    getRemindsMe(id).catch(() => []),
-  ]);
-  const collectionEntry = collection.find((entry) => entry.perfumeId === id);
+  // Con las claims de la sesión (sin ida y vuelta a Supabase) alcanza para saber si hay sesión.
+  const isAuthenticated = !!(await getCurrentUser());
 
   const details: Array<[string, string]> = [
     ["Género", capitalize(perfume.gender)],
@@ -123,45 +112,24 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
 
       <CommunityStats longevity={perfume.longevity} sillage={perfume.sillage} stats={perfume.stats} />
 
-      <section className="ficha-section" aria-labelledby="ficha-acciones">
-        <h2 id="ficha-acciones">Tu colección</h2>
-        <CompareCheckbox perfumeId={perfume.id} perfumeName={perfume.name} />
-        {isAuthenticated ? (
-          <CollectionForm perfumeId={perfume.id} initialData={collectionEntry} />
-        ) : (
-          <p>
-            <Link href="/login">Iniciá sesión</Link> para añadirlo a tu colección.
-          </p>
-        )}
-      </section>
+      <Suspense fallback={<SectionSkeleton title="Tu colección" lines={2} />}>
+        <CollectionSection perfumeId={perfume.id} perfumeName={perfume.name} isAuthenticated={isAuthenticated} />
+      </Suspense>
 
-      <RemindsMeSection items={remindsMe} />
+      <Suspense fallback={null}>
+        <RemindsMeLoader perfumeId={perfume.id} />
+      </Suspense>
 
-      <section className="ficha-section" aria-labelledby="ficha-similares">
-        <h2 id="ficha-similares">Perfumes similares</h2>
-        {!similar || similar.length === 0 ? (
-          <p>No encontramos perfumes similares.</p>
-        ) : (
-          <ul className="catalog-grid">
-            {similar.map((item) => (
-              <li key={item.perfumeId} className="perfume-card">
-                <div className="perfume-card-body">
-                <p className="perfume-brand">{item.brand}</p>
-                <h3 className="perfume-name">
-                  <Link href={`/perfumes/${item.perfumeId}`}>{item.name}</Link>
-                </h3>
-                <p className="perfume-meta">
-                  Similitud {Math.round(item.score * 100)}% ·{" "}
-                  {item.reasons
-                    .map((reason) => (reason === "shared_accords" ? "acordes en común" : "notas en común"))
-                    .join(" y ")}
-                </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <Suspense
+        fallback={
+          <section className="ficha-section" aria-busy="true">
+            <h2>Perfumes similares</h2>
+            <CardGridSkeleton count={3} />
+          </section>
+        }
+      >
+        <SimilarSection perfumeId={perfume.id} />
+      </Suspense>
     </main>
   );
 }

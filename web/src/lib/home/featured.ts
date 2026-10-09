@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { createTtlCache } from '@/lib/ttl-cache'
+import { sharedCache } from '@/lib/shared-cache'
 import type { Season } from '@/lib/seasons'
 
 // Datos públicos de la portada. Solo cambian al importar o publicar, así que se cachean en memoria del proceso.
@@ -13,8 +14,7 @@ export type CatalogStats = { perfumes: number; brands: number; notes: number; ac
 
 const statsCache = createTtlCache<CatalogStats>({ ttlMs: TTL_MS })
 
-export function getCatalogStats(): Promise<CatalogStats> {
-  return statsCache.getOrCompute('stats', async () => {
+const loadCatalogStats = sharedCache(async (): Promise<CatalogStats> => {
     const [perfumes, brands, notes, accords] = await Promise.all([
       prisma.perfume.count({ where: { status: 'PUBLISHED' } }),
       prisma.$queryRaw<Array<{ n: number }>>`SELECT COUNT(DISTINCT brand)::int AS n FROM "Perfume" WHERE status = 'PUBLISHED'`,
@@ -22,7 +22,10 @@ export function getCatalogStats(): Promise<CatalogStats> {
       prisma.accord.count(),
     ])
     return { perfumes, brands: brands[0]?.n ?? 0, notes, accords }
-  })
+}, 'catalog-stats')
+
+export function getCatalogStats(): Promise<CatalogStats> {
+  return statsCache.getOrCompute('stats', loadCatalogStats)
 }
 
 export type FeaturedPerfume = {
@@ -37,8 +40,7 @@ export type FeaturedPerfume = {
 const featuredCache = createTtlCache<FeaturedPerfume[]>({ ttlMs: TTL_MS, cacheIf: (v) => v.length > 0 })
 
 /** Los más valorados de la estación (por cantidad de valoraciones), sin repetir los ids excluidos. */
-export function getSeasonalFeatured(season: Season, limit = 8, excludeIds: string[] = []): Promise<FeaturedPerfume[]> {
-  return featuredCache.getOrCompute(`${season}|${limit}|${excludeIds.join(',')}`, async () => {
+const loadSeasonalFeatured = sharedCache(async (season: Season, limit: number, excludeIds: string[]): Promise<FeaturedPerfume[]> => {
     const rows = await prisma.perfume.findMany({
       where: {
         status: 'PUBLISHED',
@@ -59,7 +61,10 @@ export function getSeasonalFeatured(season: Season, limit = 8, excludeIds: strin
       take: limit,
     })
     return rows
-  })
+}, 'seasonal-featured')
+
+export function getSeasonalFeatured(season: Season, limit = 8, excludeIds: string[] = []): Promise<FeaturedPerfume[]> {
+  return featuredCache.getOrCompute(`${season}|${limit}|${excludeIds.join(',')}`, () => loadSeasonalFeatured(season, limit, excludeIds))
 }
 
 export type TopAccord = { name: string; count: number }
@@ -67,8 +72,7 @@ export type TopAccord = { name: string; count: number }
 const accordsCache = createTtlCache<TopAccord[]>({ ttlMs: TTL_MS, cacheIf: (v) => v.length > 0 })
 
 /** Acordes más frecuentes entre los perfumes publicados. */
-export function getTopAccords(limit = 12): Promise<TopAccord[]> {
-  return accordsCache.getOrCompute(String(limit), async () => {
+const loadTopAccords = sharedCache(async (limit: number): Promise<TopAccord[]> => {
     const rows = await prisma.$queryRaw<Array<{ name: string; count: number }>>`
       SELECT a.name, COUNT(*)::int AS count
       FROM "PerfumeAccord" pa
@@ -79,5 +83,8 @@ export function getTopAccords(limit = 12): Promise<TopAccord[]> {
       ORDER BY count DESC, a.name ASC
       LIMIT ${limit}`
     return rows
-  })
+}, 'top-accords')
+
+export function getTopAccords(limit = 12): Promise<TopAccord[]> {
+  return accordsCache.getOrCompute(String(limit), () => loadTopAccords(limit))
 }
