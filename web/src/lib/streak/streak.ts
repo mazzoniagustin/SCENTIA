@@ -24,6 +24,18 @@ export function isDayKey(value: unknown): value is string {
   return typeof value === 'string' && DAY_KEY.test(value) && shiftDay(value, 0) === value
 }
 
+export type DayDot = { day: string; logged: boolean; isToday: boolean; /** 0 = domingo … 6 = sábado */ weekday: number }
+
+/** Los últimos `count` días hasta hoy (del más viejo al más nuevo), marcando en cuáles hubo registro. */
+export function lastDays(days: readonly string[], today: string, count = 7): DayDot[] {
+  if (!isDayKey(today)) return []
+  const logged = new Set(days.filter(isDayKey))
+  return Array.from({ length: count }, (_, i) => {
+    const day = shiftDay(today, i - (count - 1))
+    return { day, logged: logged.has(day), isToday: day === today, weekday: new Date(`${day}T12:00:00Z`).getUTCDay() }
+  })
+}
+
 export function summarizeStreak(days: readonly string[], today: string): StreakSummary {
   const unique = [...new Set(days.filter(isDayKey))].sort()
   const set = new Set(unique)

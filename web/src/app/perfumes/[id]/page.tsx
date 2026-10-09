@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { LONGEVITY_LABELS, scaleLabel } from "@/lib/community";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
+import { LoadBar } from "@/components/LoadBar";
 import { CardGridSkeleton, SectionSkeleton } from "@/components/Skeleton";
 import { PerfumeImage } from "../PerfumeImage";
 import { isAllowedImageUrl, isAllowedSourcePageUrl } from "@/lib/images";
@@ -124,6 +125,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
         fallback={
           <section className="ficha-section" aria-busy="true">
             <h2>Perfumes similares</h2>
+            <LoadBar label="Calculando perfumes similares" />
             <CardGridSkeleton count={3} />
           </section>
         }

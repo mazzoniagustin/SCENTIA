@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Newsreader } from "next/font/google";
 
 import { CompareBar } from "@/app/perfumes/CompareBar";
+import { NavigationProgress } from "@/components/NavigationProgress";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { Suspense } from "react";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -25,6 +27,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a className="skip-link" href="#contenido">
           Saltar al contenido
         </a>
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <SiteHeader />
         {children}
         <SiteFooter />

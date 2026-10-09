@@ -42,7 +42,7 @@ export function IdentityCard({
           border: "none",
           cursor: "pointer",
           fontWeight: "bold",
-          color: "var(--ink-soft)",
+          color: "var(--muted)",
         }}
         aria-label={`Quitar ${perfume.name}`}
       >
