@@ -126,8 +126,8 @@ function RadarChart({ perfumes }: { perfumes: Perfume[] }) {
       {absentAxes.length > 0 && (
         <p className="compare-radar-absent">
           Un perfume sin un acorde dibuja su vértice en el centro: es ausencia
-          del acorde, no intensidad 0. La tabla de acordes lo marca como “Sin
-          dato”. {absentAxes.length === 1 ? `Acorde afectado: ${absentAxes[0]}.` : `Acordes afectados: ${absentAxes.join(", ")}.`}
+          del acorde, no intensidad 0. La tabla de acordes lo marca con un
+          guion (—). {absentAxes.length === 1 ? `Acorde afectado: ${absentAxes[0]}.` : `Acordes afectados: ${absentAxes.join(", ")}.`}
         </p>
       )}
     </div>
@@ -148,6 +148,18 @@ function notesByPhase(perfume: Perfume): string[] {
   });
 }
 
+/** Valor ausente: guion a la vista y "Sin dato" para lectores de pantalla (ausente ≠ 0). */
+function Absent() {
+  return (
+    <>
+      <span className="compare-dash" aria-hidden="true">
+        —
+      </span>
+      <span className="sr-only">{NO_DATA}</span>
+    </>
+  );
+}
+
 function DiffRow({
   label,
   values,
@@ -163,7 +175,7 @@ function DiffRow({
       <th scope="row">{label}</th>
       {values.map((value, i) => (
         <td key={i} lang={value === null ? undefined : lang}>
-          {value ?? NO_DATA}
+          {value ?? <Absent />}
         </td>
       ))}
     </tr>
@@ -172,6 +184,7 @@ function DiffRow({
 
 function DifferencesTable({ perfumes }: { perfumes: Perfume[] }) {
   return (
+    <div className="compare-table-scroll" role="region" aria-label="Comparación de atributos, desplazable" tabIndex={0}>
     <table className="compare-table">
       <caption>Comparación de atributos</caption>
       <thead>
@@ -219,6 +232,7 @@ function DifferencesTable({ perfumes }: { perfumes: Perfume[] }) {
         />
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -231,6 +245,7 @@ function AccordsTable({ perfumes }: { perfumes: Perfume[] }) {
   const rows = [...accordNames].sort((a: string, b: string) => a.localeCompare(b, "es"));
 
   return (
+    <div className="compare-table-scroll" role="region" aria-label="Acordes e intensidad, desplazable" tabIndex={0}>
     <table className="compare-table">
       <caption>Acordes e intensidad (0-100)</caption>
       <thead>
@@ -249,13 +264,27 @@ function AccordsTable({ perfumes }: { perfumes: Perfume[] }) {
             <th scope="row">{name}</th>
             {perfumes.map((p) => {
               const accord = (p.accords ?? []).find((a) => a.accord.name === name);
-              // Ausente ≠ intensidad 0: el texto lo explicita (spec RF-03).
-              return <td key={p.id}>{accord ? `${accord.intensity}` : NO_DATA}</td>;
+              // Ausente ≠ intensidad 0 (spec RF-03): sin barra, con guion.
+              return (
+                <td key={p.id}>
+                  {accord ? (
+                    <span className="compare-bar-cell">
+                      <span className="compare-bar-value">{accord.intensity}</span>
+                      <span className="accord-meter" aria-hidden="true">
+                        <span style={{ width: `${accord.intensity}%` }} />
+                      </span>
+                    </span>
+                  ) : (
+                    <Absent />
+                  )}
+                </td>
+              );
             })}
           </tr>
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 

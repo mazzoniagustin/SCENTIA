@@ -173,6 +173,18 @@
   color: var(--muted);
 }
 
+/* En pantallas angostas la tabla no cabe (hasta 4 perfumes): se desplaza dentro de su región en vez de cortarse. */
+.compare-table-scroll {
+  position: relative; /* contiene los .sr-only (absolutos): si no, escapan del recorte y ensanchan la página */
+  margin-top: 2rem;
+  overflow-x: auto;
+}
+
+.compare-table-scroll > .compare-table {
+  margin-top: 0;
+  min-width: 34rem;
+}
+
 .compare-table {
   width: 100%;
   border-collapse: collapse;
@@ -202,6 +214,35 @@
   letter-spacing: 0.05em;
   font-size: var(--text-xs);
   text-align: left;
+}
+
+/* Celda de acorde: número y barra de intensidad (0-100); la ausencia es un guion, sin barra. */
+.compare-bar-cell {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 2.75rem;
+}
+
+.compare-bar-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.accord-meter {
+  display: block;
+  height: 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.accord-meter > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.compare-dash {
+  color: var(--muted);
 }
 
 .compare-legend {
