@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { PerfumeCard } from "./PerfumeCard";
-import { CompareBar } from "./CompareBar";
-import type { Perfume } from "./types";
+import { PerfumeCard } from "../PerfumeCard";
+import { CompareBar } from "../CompareBar";
+import type { Perfume } from "../types";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
 import { getAccordNames } from "@/lib/accord-stats";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getUserCollection } from "@/app/actions/collection";
 
 type Pagination = { total: number; page: number; totalPages: number };
@@ -88,10 +88,8 @@ export default async function PerfumesPage({
     getAccordNames(),
   ]);
 
-  // Check auth
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const isAuthenticated = !!data.user;
+  // Con las claims de la sesión alcanza (sin ida y vuelta a Supabase).
+  const isAuthenticated = !!(await getCurrentUser());
 
   let collection: Awaited<ReturnType<typeof getUserCollection>> = [];
   if (isAuthenticated) {

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { createTtlCache } from '@/lib/ttl-cache'
+import { sharedCache } from '@/lib/shared-cache'
 import type { BrandEntry } from '@/lib/brand-index'
 
 // Marcas del catálogo publicado: índice A-Z y resumen por marca. Solo cambian al importar o publicar.
@@ -10,14 +11,18 @@ export type { BrandEntry } from '@/lib/brand-index'
 
 const indexCache = createTtlCache<BrandEntry[]>({ ttlMs: TTL_MS, cacheIf: (v) => v.length > 0 })
 
-export function getBrandIndex(): Promise<BrandEntry[]> {
-  return indexCache.getOrCompute('all', () =>
+const loadBrandIndex = sharedCache(
+  () =>
     prisma.$queryRaw<BrandEntry[]>`
       SELECT brand, COUNT(*)::int AS count
       FROM "Perfume" WHERE status = 'PUBLISHED'
       GROUP BY brand
       ORDER BY brand ASC`,
-  )
+  'brand-index',
+)
+
+export function getBrandIndex(): Promise<BrandEntry[]> {
+  return indexCache.getOrCompute('all', loadBrandIndex)
 }
 
 /** Nombre canónico de una marca a partir de lo que llega en la URL (sin distinguir mayúsculas), o null. */
@@ -31,8 +36,7 @@ export type BrandSummary = { brand: string; count: number; topAccords: string[];
 
 const summaryCache = createTtlCache<BrandSummary>({ ttlMs: TTL_MS })
 
-export function getBrandSummary(entry: BrandEntry): Promise<BrandSummary> {
-  return summaryCache.getOrCompute(entry.brand, async () => {
+const loadBrandSummary = sharedCache(async (entry: BrandEntry): Promise<BrandSummary> => {
     const [accords, genders] = await Promise.all([
       prisma.$queryRaw<Array<{ name: string }>>`
         SELECT a.name
@@ -51,5 +55,8 @@ export function getBrandSummary(entry: BrandEntry): Promise<BrandSummary> {
       topAccords: accords.map((a) => a.name),
       gendersCount: Object.fromEntries(genders.map((g) => [g.gender, g._count._all])),
     }
-  })
+}, 'brand-summary')
+
+export function getBrandSummary(entry: BrandEntry): Promise<BrandSummary> {
+  return summaryCache.getOrCompute(entry.brand, () => loadBrandSummary(entry))
 }

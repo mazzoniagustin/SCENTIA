@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 
 import { saveQuizProfile } from "@/app/actions/account";
@@ -6,7 +7,9 @@ import { genderLabel } from "@/app/perfumes/types";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
 import { answersFromSearchParams } from "@/lib/quiz/params";
 import { validateAnswers } from "@/lib/quiz/profile";
-import { QUESTIONS } from "@/lib/quiz/questions";
+import { QUESTIONS, type QuizAnswers } from "@/lib/quiz/questions";
+import { AffinityRing } from "@/components/AffinityRing";
+import { AnalyzingLoader } from "@/components/AnalyzingLoader";
 import { QUIZ_GENDERS, recommendFromAnswers, type QuizGender } from "@/lib/quiz/recommend";
 
 export const metadata = { title: "Tus recomendaciones" };
@@ -40,9 +43,6 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
   const gender = (QUIZ_GENDERS as readonly string[]).includes(genderParam ?? "")
     ? (genderParam as QuizGender)
     : undefined;
-
-  const userId = await getSessionDbUserId();
-  const results = await recommendFromAnswers(validated.answers, { gender, limit: RESULT_LIMIT, userId });
 
   // Para el filtro de género se reenvían las mismas respuestas como campos ocultos.
   const hiddenFields = QUESTIONS.flatMap((question) => {
@@ -86,63 +86,88 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
         </div>
       </form>
 
-      {userId ? (
-        <form action={saveQuizProfile}>
-          {hiddenFields.map((field, i) => (
-            <input key={i} type="hidden" name={field.name} value={field.value} />
-          ))}
-          {gender && <input type="hidden" name="gender" value={gender} />}
-          <button className="button" type="submit">
-            Guardar este perfil
-          </button>
-        </form>
-      ) : (
-        <p>
-          <Link href="/login">Iniciá sesión</Link> para guardar tu perfil.
-        </p>
-      )}
+      <Suspense fallback={null}>
+        <SaveProfile hiddenFields={hiddenFields} gender={gender} />
+      </Suspense>
 
-      {results.length === 0 ? (
-        <section className="catalog-empty">
-          <p className="catalog-empty-title">No encontramos perfumes para este perfil.</p>
-          <p>Probá quitar algún rechazo o cambiar el filtro de género.</p>
-        </section>
-      ) : (
-        <>
-          <p className="catalog-count">{results.length} recomendaciones</p>
-          <div className="catalog-grid">
-            {results.map((result) => (
-              <article key={result.perfumeId} className="perfume-card">
-                <PerfumeImage
-                  name={result.name}
-                  brand={result.brand}
-                  imageUrl={result.imageUrl}
-                  accords={result.matchedAccords.map((name, i) => ({ intensity: 100 - i, accord: { name } }))}
-                />
-                <div className="perfume-card-body">
-                  <p className="perfume-brand">{result.brand}</p>
-                  <h2 className="perfume-name">
-                    <Link href={`/perfumes/${result.perfumeId}`}>{result.name}</Link>
-                  </h2>
-                  <p className="perfume-meta">
-                    {genderLabel(result.gender)} · afinidad {Math.round(result.score * 100)}%
-                  </p>
-                  {result.matchedAccords.length > 0 && (
-                    <ul className="perfume-badges" aria-label="Acordes en común con tu perfil">
-                      {result.matchedAccords.map((accord) => (
-                        <li key={accord}>{accord}</li>
-                      ))}
-                    </ul>
-                  )}
-                  {result.reasons.includes("avoids_rejected") && (
-                    <p className="quiz-reason">Evita lo que marcaste como rechazo.</p>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-        </>
-      )}
+      <Suspense fallback={<AnalyzingLoader />}>
+        <Results answers={validated.answers} gender={gender} />
+      </Suspense>
     </main>
+  );
+}
+
+type Field = { name: string; value: string };
+
+// "Guardar este perfil" depende de la sesión: se resuelve aparte para no frenar el resto de la página.
+async function SaveProfile({ hiddenFields, gender }: { hiddenFields: Field[]; gender?: QuizGender }) {
+  const userId = await getSessionDbUserId();
+  return userId ? (
+    <form action={saveQuizProfile}>
+      {hiddenFields.map((field, i) => (
+        <input key={i} type="hidden" name={field.name} value={field.value} />
+      ))}
+      {gender && <input type="hidden" name="gender" value={gender} />}
+      <button className="button" type="submit">
+        Guardar este perfil
+      </button>
+    </form>
+  ) : (
+    <p>
+      <Link href="/login">Iniciá sesión</Link> para guardar tu perfil.
+    </p>
+  );
+}
+
+// El cálculo es lo más lento de la página: llega por streaming mientras se muestra el indicador de análisis.
+async function Results({ answers, gender }: { answers: QuizAnswers; gender?: QuizGender }) {
+  const userId = await getSessionDbUserId();
+  const results = await recommendFromAnswers(answers, { gender, limit: RESULT_LIMIT, userId });
+
+  if (results.length === 0) {
+    return (
+      <section className="catalog-empty">
+        <p className="catalog-empty-title">No encontramos perfumes para este perfil.</p>
+        <p>Probá quitar algún rechazo o cambiar el filtro de género.</p>
+      </section>
+    );
+  }
+
+  return (
+    <>
+      <p className="catalog-count">{results.length} recomendaciones</p>
+      <div className="catalog-grid">
+        {results.map((result, index) => (
+          <article key={result.perfumeId} className="perfume-card" style={{ "--i": index } as React.CSSProperties}>
+            <PerfumeImage
+              name={result.name}
+              brand={result.brand}
+              imageUrl={result.imageUrl}
+              accords={result.matchedAccords.map((name, i) => ({ intensity: 100 - i, accord: { name } }))}
+            />
+            <AffinityRing percent={Math.round(result.score * 100)} index={index} />
+            <div className="perfume-card-body">
+              <p className="perfume-brand">{result.brand}</p>
+              <h2 className="perfume-name">
+                <Link href={`/perfumes/${result.perfumeId}`}>{result.name}</Link>
+              </h2>
+              <p className="perfume-meta">
+                {genderLabel(result.gender)} · afinidad {Math.round(result.score * 100)}%
+              </p>
+              {result.matchedAccords.length > 0 && (
+                <ul className="perfume-badges" aria-label="Acordes en común con tu perfil">
+                  {result.matchedAccords.map((accord) => (
+                    <li key={accord}>{accord}</li>
+                  ))}
+                </ul>
+              )}
+              {result.reasons.includes("avoids_rejected") && (
+                <p className="quiz-reason">Evita lo que marcaste como rechazo.</p>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </>
   );
 }

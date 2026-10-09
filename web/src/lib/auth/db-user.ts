@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/session";
 
@@ -8,7 +10,7 @@ import { getCurrentUser } from "@/lib/auth/session";
  * o todavía no tiene fila. `getCurrentUser()` devuelve el UUID de Supabase, que
  * NO es la clave de `UserCollection.userId`. Es solo lectura: un GET no crea usuarios.
  */
-export async function getSessionDbUserId(): Promise<string | null> {
+export const getSessionDbUserId = cache(async (): Promise<string | null> => {
   const sessionUser = await getCurrentUser();
   if (!sessionUser) return null;
 
@@ -17,4 +19,4 @@ export async function getSessionDbUserId(): Promise<string | null> {
     select: { id: true },
   });
   return dbUser?.id ?? null;
-}
+});

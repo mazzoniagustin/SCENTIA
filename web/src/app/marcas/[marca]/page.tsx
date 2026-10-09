@@ -8,7 +8,7 @@ import type { Perfume } from "@/app/perfumes/types";
 import { getBrandSummary, resolveBrand } from "@/lib/brands";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/session";
 
 const PAGE_SIZE = 24;
 const GENDER_PLURAL: Record<string, string> = { femenino: "para mujeres", masculino: "para hombres", unisex: "unisex" };
@@ -43,9 +43,8 @@ export default async function BrandPage({
 
   const summary = await getBrandSummary(entry);
 
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const isAuthenticated = !!data.user;
+  // Con las claims de la sesión alcanza (sin ida y vuelta a Supabase).
+  const isAuthenticated = !!(await getCurrentUser());
   const collection = isAuthenticated ? await getUserCollection().catch(() => []) : [];
 
   let perfumes: Perfume[] = [];

@@ -4,10 +4,11 @@ import { getUserProfile } from "@/lib/account/data";
 import { getAuthenticatedUserOrNull } from "@/lib/auth/require-user";
 import { answersToSearchParams } from "@/lib/quiz/params";
 import { QUESTIONS } from "@/lib/quiz/questions";
+import { QuizWizard } from "./QuizWizard";
 
 export const metadata = { title: "Quiz de perfil olfativo" };
 
-// Formulario HTML nativo (GET): funciona sin JavaScript. Las respuestas viajan en la URL
+// Quiz paso a paso (QuizWizard) sobre un formulario GET: sin JavaScript también funciona. Las respuestas viajan en la URL
 // hacia /quiz/resultado, que las valida en el servidor.
 export default async function QuizPage() {
   // Con sesión y un perfil guardado vigente, se precarga el formulario y se ofrece verlo directo.
@@ -36,36 +37,10 @@ export default async function QuizPage() {
         </p>
       )}
 
-      <form className="quiz-form" action="/quiz/resultado" method="GET">
-        {QUESTIONS.map((question) => (
-          <fieldset key={question.id} className="quiz-question">
-            <legend>{question.label}</legend>
-            <div className="quiz-options">
-              {question.options.map((option, index) => (
-                <label key={option.id} className="quiz-option">
-                  <input
-                    type={question.kind === "single" ? "radio" : "checkbox"}
-                    name={question.id}
-                    value={option.id}
-                    defaultChecked={
-                      saved
-                        ? question.kind === "single"
-                          ? saved[question.id] === option.id
-                          : (saved[question.id] as string[]).includes(option.id)
-                        : false
-                    }
-                    required={question.kind === "single" && index === 0}
-                  />
-                  <span>{option.label}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-        ))}
-        <button className="button" type="submit">
-          Ver mis recomendaciones
-        </button>
-      </form>
+      <QuizWizard
+        questions={QUESTIONS.map((q) => ({ id: q.id, label: q.label, kind: q.kind, options: q.options.map((o) => ({ id: o.id, label: o.label })) }))}
+        saved={saved}
+      />
     </main>
   );
 }
