@@ -253,7 +253,9 @@ body {
 }
 
 body {
-  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh; /* el pie queda al fondo aunque la página sea corta (login, 404) */
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-body);
@@ -379,8 +381,9 @@ h1 {
   outline-offset: 3px;
 }
 
+/* La altura la reparte el diseño en columna del <body> (el contenido crece y el pie queda abajo). */
 .auth-shell {
-  min-height: calc(100vh - 5rem);
+  min-height: 0;
   align-content: center;
   justify-items: center;
   gap: 1.5rem;
@@ -1907,6 +1910,12 @@ html {
   color: var(--accent);
 }
 
+.brands-letters a[aria-current="page"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
 .brands-group {
   display: grid;
   gap: 0.75rem;
@@ -1963,6 +1972,7 @@ html {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.5rem 2rem;
+  width: 100%;
   margin: 3rem auto 0;
   max-width: 76rem;
   border-top: 1px solid var(--border);
@@ -3168,5 +3178,136 @@ html {
   .perfume-card:hover .perfume-media img,
   .perfume-card:hover .perfume-cover-mark {
     transform: none;
+  }
+}
+
+/* ————— Estructura: pie al fondo y enlace "volver" alineado con la tarjeta ————— */
+
+/* El <body> es una columna: la página (<main>) ocupa todo el alto sobrante y empuja el pie hacia abajo. */
+body > main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+/* Las páginas son grillas: sin esto, al crecer el <main> las filas se estiran y se abren huecos entre el título, el texto y los botones. */
+.catalog,
+.compare,
+.home {
+  align-content: start;
+}
+
+/* En el login la tarjeta mide 42 rem; el enlace de vuelta usa el mismo ancho para empezar en el mismo borde. */
+.auth-shell .back-link {
+  width: min(100%, 42rem);
+}
+
+/* ————— Impresión ————— */
+
+@media print {
+  /* Sin la cabecera, las barras flotantes ni el menú, y con colores aptos para papel (las entradas animadas no ocultan nada). */
+  .site-header,
+  .compare-bar,
+  .compare-bar-spacer,
+  .nav-progress,
+  .skip-link,
+  .scroller-button,
+  .hero-search,
+  .landing-actions {
+    display: none !important;
+  }
+
+  :root {
+    --background: #ffffff;
+    --foreground: #111111;
+    --muted: #444444;
+    --subtle: #555555;
+    --surface: #ffffff;
+    --surface-2: #f3f3f3;
+    --surface-3: #e9e9e9;
+    --border: #cccccc;
+    --border-strong: #bbbbbb;
+    --control-border: #888888;
+    --accent: #6b4e0e;
+    --accent-hover: #6b4e0e;
+    --accent-contrast: #ffffff;
+    --accent-glow: transparent;
+    --paper: #efefef;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+  }
+
+  body {
+    min-height: 0;
+  }
+
+  .perfume-card,
+  .ficha-section,
+  .compare-card {
+    break-inside: avoid;
+  }
+}
+
+/* En una página 404 la URL puede empezar con /perfumes o /marcas y el menú marcaría esa sección como activa: aquí no hay ninguna. */
+body:has([data-page="not-found"]) .site-nav a[aria-current="page"] {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
+  display: none;
+}
+
+/* ————— Catálogo en el celular: tarjetas horizontales (foto a la izquierda, texto a la derecha) ————— */
+
+@media (max-width: 39.99rem) {
+  /* Antes cada tarjeta ocupaba ~800 px (foto 4/5 a ancho completo): el listado de 24 perfumes medía más de 20 pantallas. */
+  .catalog-grid > li > .perfume-card {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    height: auto;
+  }
+
+  .catalog-grid > li > .perfume-card > .perfume-media,
+  .catalog-grid > li > .perfume-card > .perfume-cover {
+    height: 100%;
+    min-height: 9.5rem;
+    aspect-ratio: auto;
+    padding: 0;
+  }
+
+  .catalog-grid > li > .perfume-card > .perfume-cover {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .catalog-grid > li > .perfume-card > .perfume-cover .perfume-cover-label {
+    display: none;
+  }
+
+  .catalog-grid > li > .perfume-card > .perfume-cover .perfume-cover-mark {
+    font-size: 2.25rem;
+  }
+
+  .catalog-grid > li > .perfume-card > .perfume-media img {
+    padding: 0.4rem;
+  }
+
+  .catalog-grid > li > .perfume-card > .perfume-card-body {
+    padding: 0.85rem 1rem;
+    gap: 0.35rem;
+  }
+
+  .catalog-grid > li > .perfume-card .perfume-name {
+    font-size: 1.15rem;
   }
 }

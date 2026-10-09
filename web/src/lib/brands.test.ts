@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { filterBrands, groupByLetter, indexLetter } from './brand-index.ts'
+import { filterBrands, groupByLetter, indexLetter, letterParam, parseLetter } from './brand-index.ts'
 
 const e = (brand: string, count = 1) => ({ brand, count })
 
@@ -32,5 +32,22 @@ describe('filterBrands', () => {
   it('sin texto devuelve todo y sin coincidencias nada', () => {
     assert.equal(filterBrands(all, '').length, 3)
     assert.equal(filterBrands(all, 'zzz').length, 0)
+  })
+})
+
+describe('parseLetter / letterParam', () => {
+  it('acepta una letra (sin importar mayúsculas) y "otros"', () => {
+    assert.equal(parseLetter('a'), 'A')
+    assert.equal(parseLetter(' Z '), 'Z')
+    assert.equal(parseLetter('otros'), '#')
+    assert.equal(parseLetter('#'), '#')
+  })
+  it('rechaza todo lo demás', () => {
+    for (const bad of [null, undefined, '', 'ab', '1', 'ñ', '<script>', 'A;B']) assert.equal(parseLetter(bad as string | null), null)
+  })
+  it('ida y vuelta con la URL', () => {
+    assert.equal(letterParam('#'), 'otros')
+    assert.equal(letterParam('K'), 'K')
+    assert.equal(parseLetter(letterParam('#')), '#')
   })
 })
