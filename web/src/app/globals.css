@@ -751,9 +751,10 @@ h1 {
 /* ————— Quiz de perfil olfativo ————— */
 
 .quiz-gender {
-  max-width: 30rem;
-  grid-template-columns: 1fr auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: end;
+  gap: 0.75rem;
 }
 
 .quiz-gender label {
@@ -775,8 +776,91 @@ h1 {
   padding: 0 1.5rem;
 }
 
-.quiz-gender .catalog-filters-actions {
+/* Resumen de las respuestas arriba de los resultados. */
+.quiz-summary {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 1.1rem 1.25rem;
+}
+
+.quiz-summary-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.quiz-summary h2 {
   margin: 0;
+  font-size: 1.15rem;
+}
+
+.quiz-summary-edit {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+}
+
+.quiz-summary-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.quiz-summary-list > div {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.quiz-summary-list dt {
+  padding-top: 0.2rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.quiz-summary-list dd {
+  margin: 0;
+}
+
+.quiz-summary .perfume-badges {
+  margin-top: 0;
+}
+
+/* Son frases ("Un jardín en flor"), no etiquetas sueltas: sin mayúscula en cada palabra. */
+.quiz-summary .perfume-badges li {
+  text-transform: none;
+}
+
+.quiz-summary-none {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.quiz-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.quiz-summary-actions > p {
+  margin: 0;
+}
+
+@media (max-width: 39.99rem) {
+  .quiz-summary-list > div {
+    grid-template-columns: 5.25rem minmax(0, 1fr);
+    gap: 0.5rem;
+  }
 }
 
 .quiz-reason {
@@ -2059,7 +2143,9 @@ html {
 }
 
 .ficha-section p a,
-.community-source a {
+.community-source a,
+.quiz-summary-edit,
+.quiz-summary-actions > p a {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.2em;
