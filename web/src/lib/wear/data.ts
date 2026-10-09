@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { isValidPerfumeId } from '@/lib/collection/validation'
 import { dayKey } from '@/lib/daily/daily'
-import { summarizeStreak, type StreakSummary } from '@/lib/streak/streak'
+import { lastDays, summarizeStreak, type DayDot, type StreakSummary } from '@/lib/streak/streak'
 
 // Registro diario de uso y racha. Todo parte del userId de la sesión del servidor, nunca de uno del cliente.
 // Solo se puede registrar el día en curso (hora de Buenos Aires) y perfumes de la propia colección que se usan:
@@ -13,6 +13,8 @@ export type WearToday = { perfumeId: string; brand: string; name: string }
 
 export type WearSummary = {
   streak: StreakSummary
+  /** Últimos 7 días (hasta hoy) y si hubo registro en cada uno. */
+  recent: DayDot[]
   today: WearToday | null
   day: string
 }
@@ -28,19 +30,20 @@ export async function getWearSummary(userId: string, now: Date = new Date()): Pr
   ])
   return {
     streak: summarizeStreak(logs.map((l) => l.day), day),
+    recent: lastDays(logs.map((l) => l.day), day),
     today: todayLog ? { perfumeId: todayLog.perfume.id, brand: todayLog.perfume.brand, name: todayLog.perfume.name } : null,
     day,
   }
 }
 
 /** Perfumes de la colección que se pueden registrar como "uso de hoy". */
-export async function getWearOptions(userId: string): Promise<Array<{ perfumeId: string; brand: string; name: string }>> {
+export async function getWearOptions(userId: string): Promise<Array<{ perfumeId: string; brand: string; name: string; imageUrl: string | null }>> {
   const rows = await prisma.userCollection.findMany({
     where: { userId, status: { in: [...WEARABLE_STATUSES] } },
-    select: { perfume: { select: { id: true, brand: true, name: true } } },
+    select: { perfume: { select: { id: true, brand: true, name: true, imageUrl: true } } },
     orderBy: [{ perfume: { brand: 'asc' } }, { perfume: { name: 'asc' } }],
   })
-  return rows.map((r) => ({ perfumeId: r.perfume.id, brand: r.perfume.brand, name: r.perfume.name }))
+  return rows.map((r) => ({ perfumeId: r.perfume.id, brand: r.perfume.brand, name: r.perfume.name, imageUrl: r.perfume.imageUrl }))
 }
 
 /** Cuántos perfumes tiene la persona en su colección y cuántos se pueden registrar como uso de hoy. */

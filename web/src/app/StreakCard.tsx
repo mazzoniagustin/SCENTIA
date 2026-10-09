@@ -1,9 +1,14 @@
 import Link from "next/link";
 
 import { logWearAction } from "@/app/actions/wear";
+import { PerfumeImage } from "@/app/perfumes/PerfumeImage";
+import { WearSubmit } from "@/app/WearSubmit";
 import type { WearSummary } from "@/lib/wear/data";
 
-type Option = { perfumeId: string; brand: string; name: string };
+type Option = { perfumeId: string; brand: string; name: string; imageUrl?: string | null };
+
+const WEEKDAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+const WEEKDAY_INITIALS = ["D", "L", "M", "M", "J", "V", "S"];
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString("es-AR")} ${n === 1 ? one : many}`;
 
@@ -22,7 +27,7 @@ export function StreakCard({
 }) {
   if (!summary) {
     return (
-      <section className="streak-card" aria-labelledby="streak-title">
+      <section className="streak-card" id="racha" aria-labelledby="streak-title">
         <div>
           <p className="eyebrow" id="streak-title">
             Tu racha
@@ -39,9 +44,9 @@ export function StreakCard({
     );
   }
 
-  const { streak, today } = summary;
+  const { streak, today, recent } = summary;
   return (
-    <section className="streak-card" aria-labelledby="streak-title">
+    <section className="streak-card" id="racha" aria-labelledby="streak-title" data-done={streak.loggedToday}>
       <div className="streak-figures">
         <p className="eyebrow" id="streak-title">
           Tu racha
@@ -51,6 +56,22 @@ export function StreakCard({
           <span className="sr-only">{plural(streak.current, "día seguido", "días seguidos")}</span>
           <small aria-hidden="true">{streak.current === 1 ? "día" : "días"}</small>
         </p>
+        {recent.length > 0 && (
+          <ol className="streak-week" aria-label="Últimos 7 días">
+            {recent.map((d) => (
+              <li key={d.day} className="streak-day" data-logged={d.logged} data-today={d.isToday}>
+                <span className="streak-dot" aria-hidden="true" />
+                <span className="streak-day-initial" aria-hidden="true">
+                  {WEEKDAY_INITIALS[d.weekday]}
+                </span>
+                <span className="sr-only">
+                  {WEEKDAY_NAMES[d.weekday]} {Number(d.day.slice(8))}
+                  {d.isToday ? " (hoy)" : ""}: {d.logged ? "usaste un perfume" : "sin registro"}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
         <p className="streak-lead">
           Mejor racha: {plural(streak.best, "día", "días")} · Total: {plural(streak.total, "día registrado", "días registrados")}
         </p>
@@ -88,20 +109,30 @@ export function StreakCard({
           )
         ) : (
           <form className="streak-form" action={logWearAction}>
-            <label>
-              {today ? "Cambiar el perfume de hoy" : "¿Qué perfume usás hoy?"}
-              <select name="perfumeId" defaultValue={today?.perfumeId ?? ""} required>
-                <option value="" disabled>
-                  Elegí de tu colección
-                </option>
+            <fieldset className="wear-picker">
+              <legend>{today ? "Cambiar el perfume de hoy" : "¿Qué perfume usás hoy?"}</legend>
+              <div className="wear-options">
                 {options.map((o) => (
-                  <option key={o.perfumeId} value={o.perfumeId}>
-                    {o.brand} · {o.name}
-                  </option>
+                  <label key={o.perfumeId} className="wear-option">
+                    <input
+                      className="sr-only"
+                      type="radio"
+                      name="perfumeId"
+                      value={o.perfumeId}
+                      defaultChecked={today?.perfumeId === o.perfumeId}
+                      required
+                    />
+                    <PerfumeImage name={o.name} brand={o.brand} imageUrl={o.imageUrl} size="thumb" />
+                    <span className="wear-option-text">
+                      <small>{o.brand}</small>
+                      <span>{o.name}</span>
+                    </span>
+                    <span className="wear-option-mark" aria-hidden="true" />
+                  </label>
                 ))}
-              </select>
-            </label>
-            <button type="submit">{today ? "Actualizar" : "Registrar hoy"}</button>
+              </div>
+            </fieldset>
+            <WearSubmit label={today ? "Actualizar" : "Registrar hoy"} />
           </form>
         )}
       </div>

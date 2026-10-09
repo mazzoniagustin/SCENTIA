@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { isDayKey, shiftDay, summarizeStreak } from './streak.ts'
+import { isDayKey, lastDays, shiftDay, summarizeStreak } from './streak.ts'
 
 describe('shiftDay', () => {
   it('cruza meses, años y bisiestos', () => {
@@ -59,5 +59,35 @@ describe('summarizeStreak', () => {
   it('un día futuro no cuenta para la racha actual', () => {
     const s = summarizeStreak(['2026-10-12'], today)
     assert.equal(s.current, 0)
+  })
+})
+
+describe('lastDays', () => {
+  const today = '2026-10-09' // viernes
+
+  it('devuelve 7 días, del más viejo al más nuevo, terminando hoy', () => {
+    const dots = lastDays([], today)
+    assert.equal(dots.length, 7)
+    assert.equal(dots[0].day, '2026-10-03')
+    assert.equal(dots[6].day, today)
+    assert.deepEqual(dots.map((d) => d.isToday), [false, false, false, false, false, false, true])
+  })
+  it('marca los días con registro y cruza el fin de mes', () => {
+    const dots = lastDays(['2026-10-09', '2026-10-07', '2026-09-30', 'basura'], '2026-10-02')
+    assert.deepEqual(dots.map((d) => [d.day, d.logged]).filter(([, l]) => l), [['2026-09-30', true]])
+    assert.equal(dots[0].day, '2026-09-26')
+  })
+  it('calcula el día de la semana (0 = domingo)', () => {
+    const dots = lastDays([], today)
+    assert.equal(dots[6].weekday, 5) // viernes
+    assert.equal(dots[0].weekday, 6) // sábado 3
+  })
+  it('una fecha de hoy inválida no rompe', () => {
+    assert.deepEqual(lastDays(['2026-10-09'], 'x'), [])
+  })
+  it('es coherente con la racha: los días seguidos hasta hoy quedan todos marcados', () => {
+    const days = ['2026-10-07', '2026-10-08', '2026-10-09']
+    const dots = lastDays(days, today)
+    assert.equal(dots.filter((d) => d.logged).length, summarizeStreak(days, today).current)
   })
 })

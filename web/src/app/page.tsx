@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
+import { LoadingPanel } from "@/components/LoadBar";
 import { Skeleton } from "@/components/Skeleton";
 import { AccordsSection, CatalogCount, DailySection, FeaturedSection, HeroAuthButton, PersonalSection, StatsSection } from "./home-sections";
 
@@ -62,11 +63,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
         <PersonalSection notice={notice} />
       </Suspense>
 
-      <Suspense fallback={<Skeleton style={{ height: "30rem", borderRadius: "1.25rem" }} />}>
+      <Suspense fallback={<LoadingPanel label="Eligiendo el perfume del día…" minHeight="30rem" />}>
         <DailySection />
       </Suspense>
 
-      <Suspense fallback={<Skeleton style={{ height: "22rem", borderRadius: "1rem" }} />}>
+      <Suspense fallback={<LoadingPanel label="Buscando los perfumes de la estación…" minHeight="22rem" />}>
         <FeaturedSection />
       </Suspense>
 

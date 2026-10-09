@@ -14,5 +14,6 @@ export async function logWearAction(formData: FormData) {
 
   revalidatePath('/')
   revalidatePath('/mi-coleccion')
-  redirect(result.ok ? '/?racha=ok' : '/?racha=error')
+  // El ancla (#racha) lleva a la tarjeta de la racha, donde se ve el mensaje de resultado (sin ella la página volvía arriba de todo).
+  redirect(result.ok ? '/?racha=ok#racha' : '/?racha=error#racha')
 }

@@ -10,7 +10,7 @@ import { StreakCard } from "@/app/StreakCard";
 import { genderLabel } from "@/app/perfumes/types";
 import { cache } from "react";
 import { CountUp } from "@/components/CountUp";
-import { hueForAccord } from "@/lib/cover";
+import { accordDotColor } from "@/lib/cover";
 import { seasonFor, DEFAULT_HEMISPHERE } from "@/lib/daily/daily";
 import { getCatalogStats, getSeasonalFeatured, getTopAccords } from "@/lib/home/featured";
 import { getCollectionOverview, getWearOptions, getWearSummary, type WearSummary } from "@/lib/wear/data";
@@ -27,7 +27,7 @@ const SEASON_LABELS = {
 
 const safe = <T,>(promise: Promise<T>, fallback: T) => promise.catch(() => fallback);
 
-const EMPTY_WEAR: WearSummary = { streak: { current: 0, best: 0, loggedToday: false, total: 0 }, today: null, day: "" };
+const EMPTY_WEAR: WearSummary = { streak: { current: 0, best: 0, loggedToday: false, total: 0 }, recent: [], today: null, day: "" };
 
 /** El perfume del día se pide una sola vez por solicitud aunque lo usen varias secciones. */
 const getDaily = cache(async () => safe(getDailyPerfume({ userId: await getSessionDbUserId() }), null));
@@ -165,7 +165,7 @@ export async function AccordsSection() {
               <Link href={`/perfumes?accord=${encodeURIComponent(accord.name)}`}>
                 <span
                   className="home-accord-dot"
-                  style={{ background: `hsl(${hueForAccord(accord.name).hue} 45% 62%)` }}
+                  style={{ background: accordDotColor(accord.name) }}
                   aria-hidden="true"
                 />
                 {accord.name.charAt(0).toUpperCase() + accord.name.slice(1)}

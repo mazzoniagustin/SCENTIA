@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import { ACCORD_TRANSLATIONS } from '../../scripts/accord-translations.ts'
-import { coverColors, dominantAccord, hueForAccord, initialsOf } from './cover.ts'
+import { accordDotColor, coverColors, dominantAccord, hueForAccord, initialsOf, NEUTRAL_DOT_COLOR } from './cover.ts'
 
 const acc = (name: string, intensity: number) => ({ intensity, accord: { name } })
 
@@ -53,5 +53,24 @@ describe('monograma de la portada', () => {
     assert.equal(initialsOf('Hypnôse'), 'H')
     assert.equal(initialsOf("L'Eau d'Issey"), 'LE')
     assert.equal(initialsOf('212'), '2')
+  })
+})
+
+describe('color del punto de los chips', () => {
+  it('cítrico, afrutado y aromático ya no comparten color', () => {
+    const colors = ['cítrico', 'afrutado', 'aromático', 'verde'].map(accordDotColor)
+    assert.equal(new Set(colors).size, 4)
+  })
+  it('los 14 acordes más frecuentes de la portada se distinguen entre familias', () => {
+    const top = ['amaderado', 'cítrico', 'dulce', 'aromático', 'afrutado', 'empolvado', 'especiado cálido', 'ámbar', 'floral', 'floral blanco', 'especiado fresco', 'vainilla', 'almizclado', 'verde']
+    const distinct = new Set(top.map(accordDotColor))
+    assert.ok(distinct.size >= 10, `solo ${distinct.size} colores distintos`)
+  })
+  it('acordes de la misma familia comparten color y los desconocidos van en gris', () => {
+    assert.equal(accordDotColor('Vainilla'), accordDotColor('dulce'))
+    assert.equal(accordDotColor('plástico'), NEUTRAL_DOT_COLOR)
+  })
+  it('todos son colores hexadecimales válidos', () => {
+    for (const name of ['cítrico', 'oud', 'marino', 'rosa', 'plástico']) assert.match(accordDotColor(name), /^#[0-9a-f]{6}$/)
   })
 })

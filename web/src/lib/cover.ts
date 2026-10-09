@@ -62,3 +62,28 @@ export function initialsOf(name: string): string {
     .map((w) => Array.from(w)[0].toUpperCase())
     .join("");
 }
+
+// Color del punto de cada acorde en los chips. Más fino que las familias de la portada: cítrico, afrutado y aromático ya no
+// comparten verde. Decorativo: el nombre del acorde siempre está en el texto.
+const DOT_GROUPS: Array<{ color: string; words: string[] }> = [
+  { color: '#e4d34a', words: ['cítrico'] },
+  { color: '#f0825a', words: ['afrutado', 'tropical', 'cereza', 'pera', 'coco', 'ácido', 'amargo'] },
+  { color: '#5dbb78', words: ['verde', 'herbal', 'boscoso', 'conífera', 'terpénico', 'musgoso'] },
+  { color: '#8a84e6', words: ['aromático', 'lavanda'] },
+  { color: '#e879a8', words: ['floral', 'rosa', 'floral amarillo', 'violeta', 'iris', 'nardo'] },
+  { color: '#f2d0e0', words: ['floral blanco'] },
+  { color: '#b6a6c9', words: ['empolvado', 'almizclado', 'jabonoso', 'aldehídico'] },
+  { color: '#d49b63', words: ['dulce', 'vainilla', 'caramelo', 'miel', 'gourmand', 'chocolate', 'cacao', 'café', 'cremoso', 'lactónico', 'lácteo', 'almendra', 'frutos secos', 'ron', 'whisky', 'vino', 'champán', 'vodka', 'sake'] },
+  { color: '#d9822b', words: ['ámbar', 'oriental', 'balsámico'] },
+  { color: '#c9503c', words: ['especiado', 'especiado cálido', 'especiado suave', 'especiado fresco', 'canela', 'anís'] },
+  { color: '#9a7552', words: ['amaderado', 'terroso', 'arena', 'arcilla'] },
+  { color: '#7d6a5a', words: ['cuero', 'tabaco', 'oud', 'pachuli', 'ahumado', 'animalicio'] },
+  { color: '#4aa5d6', words: ['acuático', 'marino', 'ozónico', 'salado', 'fresco', 'mineral', 'metálico'] },
+]
+
+export const NEUTRAL_DOT_COLOR = '#8a867f'
+
+export function accordDotColor(name: string): string {
+  const key = name.trim().toLowerCase()
+  return DOT_GROUPS.find((g) => g.words.includes(key))?.color ?? NEUTRAL_DOT_COLOR
+}

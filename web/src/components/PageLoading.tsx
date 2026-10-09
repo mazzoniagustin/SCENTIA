@@ -1,3 +1,4 @@
+import { LoadBar } from "./LoadBar";
 import { CardGridSkeleton, Skeleton } from "./Skeleton";
 
 // Esqueletos de página para los `loading.tsx`: se muestran al instante mientras el servidor arma la página.
@@ -26,6 +27,7 @@ export function GenericLoading() {
 export function CatalogLoading() {
   return (
     <main className="catalog" aria-busy="true">
+      <LoadBar label="Cargando perfumes" />
       <HeaderSkeleton withLead={false} />
       <Skeleton style={{ height: "6.5rem", borderRadius: "1rem" }} />
       <CardGridSkeleton count={8} />
