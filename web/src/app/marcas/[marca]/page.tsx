@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getUserCollection } from "@/app/actions/collection";
-import { CompareBar } from "@/app/perfumes/CompareBar";
 import { PerfumeCard } from "@/app/perfumes/PerfumeCard";
 import type { Perfume } from "@/app/perfumes/types";
 import { getBrandSummary, resolveBrand } from "@/lib/brands";
@@ -70,7 +69,6 @@ export default async function BrandPage({
 
   return (
     <main id="contenido" className="catalog">
-      <CompareBar />
       <Link className="back-link" href="/marcas">
         ← Marcas
       </Link>

@@ -113,7 +113,7 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
       <CommunityStats longevity={perfume.longevity} sillage={perfume.sillage} stats={perfume.stats} />
 
       <Suspense fallback={<SectionSkeleton title="Tu colección" lines={2} />}>
-        <CollectionSection perfumeId={perfume.id} perfumeName={perfume.name} isAuthenticated={isAuthenticated} />
+        <CollectionSection perfumeId={perfume.id} perfumeName={perfume.name} brand={perfume.brand} isAuthenticated={isAuthenticated} />
       </Suspense>
 
       <Suspense fallback={null}>

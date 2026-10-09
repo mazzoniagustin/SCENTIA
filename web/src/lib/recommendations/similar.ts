@@ -99,7 +99,18 @@ async function computeRankingUncached(referenceId: string): Promise<Recommendati
 }
 
 // Ranking común (sin datos personales): se comparte entre instancias para que un perfume ya visto no se recalcule.
-const computeRanking = sharedCache(computeRankingUncached, 'similar-ranking')
+const computeRankingShared = sharedCache(computeRankingUncached, 'similar-ranking')
+
+const MAX_ID_LENGTH = 64
+
+// Antes de usar la caché compartida se comprueba que el perfume exista y esté publicado: el id llega de la URL y, sin esto,
+// cualquiera podría llenar la caché con una entrada por cada id inventado.
+async function computeRanking(referenceId: string): Promise<Recommendation[] | null> {
+  if (referenceId.length === 0 || referenceId.length > MAX_ID_LENGTH) return null
+  const reference = await prisma.perfume.findUnique({ where: { id: referenceId }, select: { status: true } })
+  if (!reference || reference.status !== 'PUBLISHED') return null
+  return computeRankingShared(referenceId)
+}
 
 /**
  * Devuelve null si el perfume de referencia no existe o no está publicado. `userId` es el cuid de la tabla

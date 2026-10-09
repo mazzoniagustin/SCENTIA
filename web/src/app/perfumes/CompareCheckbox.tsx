@@ -1,31 +1,21 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { isFull, isSelected, MAX_COMPARE } from "@/lib/compare/selection";
+import { toggleCompare, useCompareSelection } from "./compare-store";
 
-export function CompareCheckbox({ perfumeId, perfumeName }: { perfumeId: string; perfumeName: string }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const current = searchParams.get("compare")?.split(",") ?? [];
-  const checked = current.includes(perfumeId);
-
-  const toggle = () => {
-    const next = checked
-      ? current.filter((id) => id !== perfumeId)
-      : [...current, perfumeId];
-
-    const params = new URLSearchParams(searchParams);
-    if (next.length > 0) params.set("compare", next.join(","));
-    else params.delete("compare");
-
-    router.replace(`?${params.toString()}`);
-  };
+// Casilla "Comparar": la selección se conserva entre búsquedas y páginas (ver compare-store.ts) y llega hasta 4 perfumes.
+export function CompareCheckbox({ perfumeId, perfumeName, brand }: { perfumeId: string; perfumeName: string; brand: string }) {
+  const items = useCompareSelection();
+  const checked = isSelected(items, perfumeId);
+  const blocked = isFull(items) && !checked;
 
   return (
-    <label className="compare-toggle">
+    <label className="compare-toggle" title={blocked ? `Ya elegiste ${MAX_COMPARE} perfumes: quitá uno para sumar otro` : undefined}>
       <input
         type="checkbox"
         checked={checked}
-        onChange={toggle}
+        disabled={blocked}
+        onChange={() => toggleCompare({ id: perfumeId, brand, name: perfumeName })}
         aria-label={`Comparar ${perfumeName}`}
       />
       Comparar

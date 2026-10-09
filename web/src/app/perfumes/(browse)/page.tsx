@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { PerfumeCard } from "../PerfumeCard";
-import { CompareBar } from "../CompareBar";
 import type { Perfume } from "../types";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
@@ -121,7 +120,6 @@ export default async function PerfumesPage({
 
   return (
     <main id="contenido" className="catalog">
-      <CompareBar />
       <header className="catalog-header">
         <p className="eyebrow">Catálogo</p>
         <h1>Perfumes</h1>

@@ -9,7 +9,8 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { getOrCreateUser } from '../src/lib/auth'
 import { deleteUserData, exportUserData } from '../src/lib/account/data'
-import { getWearOptions, getWearSummary, logWearToday } from '../src/lib/wear/data'
+import { getCollectionOverview, getWearOptions, getWearSummary, logWearToday } from '../src/lib/wear/data'
+import { upsertCollectionForUser } from '../src/lib/collection/data'
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL as string) })
 // Mediodía UTC de cada fecha: cae en el mismo día de Buenos Aires.
@@ -77,6 +78,28 @@ async function main() {
     await prisma.userCollection.update({ where: { userId_perfumeId: { userId: user.id, perfumeId: a.id } }, data: { status: 'WISHLIST' } })
     assert.equal((await getWearSummary(user.id, at('2026-10-09'))).streak.total, 4)
     console.log('OK  cambiar el estado en la colección no borra el historial')
+
+    // Flujo de la colección a la racha: con la colección solo en "Lo quiero" no hay nada para elegir; al pasarlo a "Lo tengo" sí.
+    const fresh = await getOrCreateUser({ user: { id: `verify-fresh-${stamp}`, email: `verify-fresh-${stamp}@example.test` } })
+    try {
+      assert.deepEqual(await getCollectionOverview(fresh.id), { total: 0, wearable: 0 })
+      assert.deepEqual(await getWearOptions(fresh.id), [])
+      await upsertCollectionForUser(fresh.id, { perfumeId: a.id, status: 'WISHLIST' })
+      assert.deepEqual(await getCollectionOverview(fresh.id), { total: 1, wearable: 0 })
+      assert.deepEqual(await getWearOptions(fresh.id), [])
+      assert.deepEqual(await logWearToday(fresh.id, a.id, at('2026-10-09')), { ok: false, error: 'not_in_collection' })
+      await upsertCollectionForUser(fresh.id, { perfumeId: a.id, status: 'OWNED', rating: 4, personalNotes: 'nota' })
+      assert.deepEqual(await getCollectionOverview(fresh.id), { total: 1, wearable: 1 })
+      assert.equal((await getWearOptions(fresh.id)).length, 1)
+      assert.deepEqual(await logWearToday(fresh.id, a.id, at('2026-10-09')), { ok: true })
+      // Actualizar sin puntuación ni notas las borra (el formulario manda lo que se ve).
+      await upsertCollectionForUser(fresh.id, { perfumeId: a.id, status: 'SAMPLED' })
+      const row = await prisma.userCollection.findUniqueOrThrow({ where: { userId_perfumeId: { userId: fresh.id, perfumeId: a.id } } })
+      assert.deepEqual([row.status, row.rating, row.personalNotes], ['SAMPLED', null, null])
+      console.log('OK  colección → racha: "Lo quiero" no se puede usar; "Lo tengo" y "Probé una muestra" sí; actualizar limpia puntuación y notas')
+    } finally {
+      await prisma.user.deleteMany({ where: { id: fresh.id } })
+    }
 
     // Eliminación de cuenta: cascada, sin tocar a la otra persona.
     await logWearToday(other.id, 'x', at('2026-10-09')).catch(() => null)

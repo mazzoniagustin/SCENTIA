@@ -43,6 +43,15 @@ export async function getWearOptions(userId: string): Promise<Array<{ perfumeId:
   return rows.map((r) => ({ perfumeId: r.perfume.id, brand: r.perfume.brand, name: r.perfume.name }))
 }
 
+/** Cuántos perfumes tiene la persona en su colección y cuántos se pueden registrar como uso de hoy. */
+export async function getCollectionOverview(userId: string): Promise<{ total: number; wearable: number }> {
+  const [total, wearable] = await Promise.all([
+    prisma.userCollection.count({ where: { userId } }),
+    prisma.userCollection.count({ where: { userId, status: { in: [...WEARABLE_STATUSES] } } }),
+  ])
+  return { total, wearable }
+}
+
 export type LogWearResult = { ok: true } | { ok: false; error: 'invalid' | 'not_in_collection' }
 
 /** Registra (o cambia) el perfume de hoy. Un perfume por día. */

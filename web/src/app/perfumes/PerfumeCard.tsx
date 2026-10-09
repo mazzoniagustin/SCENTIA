@@ -35,7 +35,7 @@ export function PerfumeCard({ perfume, collectionEntry, isAuthenticated }: { per
         )}
 
         <div className="perfume-card-footer">
-          <CompareCheckbox perfumeId={perfume.id} perfumeName={perfume.name} />
+          <CompareCheckbox perfumeId={perfume.id} perfumeName={perfume.name} brand={perfume.brand} />
           {isAuthenticated && (
             <details>
               <summary>{collectionEntry ? "En tu colección" : "Guardar en mi colección"}</summary>

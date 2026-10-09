@@ -13,7 +13,7 @@ import { CountUp } from "@/components/CountUp";
 import { hueForAccord } from "@/lib/cover";
 import { seasonFor, DEFAULT_HEMISPHERE } from "@/lib/daily/daily";
 import { getCatalogStats, getSeasonalFeatured, getTopAccords } from "@/lib/home/featured";
-import { getWearOptions, getWearSummary } from "@/lib/wear/data";
+import { getCollectionOverview, getWearOptions, getWearSummary, type WearSummary } from "@/lib/wear/data";
 
 // Secciones de la portada. Cada una se carga aparte (dentro de su <Suspense> en page.tsx): el título y los botones
 // aparecen al instante y lo demás llega a medida que está listo. Cada bloque falla por separado.
@@ -26,6 +26,8 @@ const SEASON_LABELS = {
 } as const;
 
 const safe = <T,>(promise: Promise<T>, fallback: T) => promise.catch(() => fallback);
+
+const EMPTY_WEAR: WearSummary = { streak: { current: 0, best: 0, loggedToday: false, total: 0 }, today: null, day: "" };
 
 /** El perfume del día se pide una sola vez por solicitud aunque lo usen varias secciones. */
 const getDaily = cache(async () => safe(getDailyPerfume({ userId: await getSessionDbUserId() }), null));
@@ -67,11 +69,14 @@ export async function StatsSection() {
 export async function PersonalSection({ notice }: { notice?: "ok" | "error" }) {
   const user = await getCurrentUser();
   const dbUserId = user ? await getSessionDbUserId() : null;
-  const [wear, wearOptions] = await Promise.all([
+  const [wear, wearOptions, overview] = await Promise.all([
     dbUserId ? safe(getWearSummary(dbUserId), null) : Promise.resolve(null),
     dbUserId ? safe(getWearOptions(dbUserId), []) : Promise.resolve([]),
+    dbUserId ? safe(getCollectionOverview(dbUserId), { total: 0, wearable: 0 }) : Promise.resolve({ total: 0, wearable: 0 }),
   ]);
-  return <StreakCard summary={user ? wear : null} options={wearOptions} notice={notice} />;
+  // Con sesión pero sin fila en la base todavía (nunca guardó nada): racha en cero, no la invitación a ingresar.
+  const summary: WearSummary | null = user ? (wear ?? EMPTY_WEAR) : null;
+  return <StreakCard summary={summary} options={wearOptions} collectionTotal={overview.total} notice={notice} />;
 }
 
 export async function DailySection() {

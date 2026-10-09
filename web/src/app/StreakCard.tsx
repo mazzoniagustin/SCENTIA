@@ -11,10 +11,13 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString("es
 export function StreakCard({
   summary,
   options,
+  collectionTotal = 0,
   notice,
 }: {
   summary: WearSummary | null;
   options: Option[];
+  /** Perfumes en la colección (de cualquier estado): para explicar por qué no hay nada que elegir. */
+  collectionTotal?: number;
   notice?: "ok" | "error";
 }) {
   if (!summary) {
@@ -72,10 +75,17 @@ export function StreakCard({
         )}
 
         {options.length === 0 ? (
-          <p className="streak-lead">
-            Para registrar tu uso diario, marcá perfumes como “Lo tengo” o “Probé una muestra” en el{" "}
-            <Link href="/perfumes">catálogo</Link>.
-          </p>
+          collectionTotal === 0 ? (
+            <p className="streak-lead">
+              Tu colección está vacía. Guardá un perfume desde el <Link href="/perfumes">catálogo</Link> con el estado “Lo tengo” o “Probé una
+              muestra” y vas a poder registrarlo acá.
+            </p>
+          ) : (
+            <p className="streak-lead">
+              Tenés {collectionTotal} {collectionTotal === 1 ? "perfume" : "perfumes"} en tu colección, pero ninguno figura como “Lo tengo” o
+              “Probé una muestra”. Cambiá el estado en <Link href="/mi-coleccion">Mi colección</Link> para poder registrarlo.
+            </p>
+          )
         ) : (
           <form className="streak-form" action={logWearAction}>
             <label>

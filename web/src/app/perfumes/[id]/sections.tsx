@@ -12,7 +12,7 @@ import { RemindsMeSection } from "../RemindsMeSection";
 
 const SIMILAR_LIMIT = 6;
 
-export async function CollectionSection({ perfumeId, perfumeName, isAuthenticated }: { perfumeId: string; perfumeName: string; isAuthenticated: boolean }) {
+export async function CollectionSection({ perfumeId, perfumeName, brand, isAuthenticated }: { perfumeId: string; perfumeName: string; brand: string; isAuthenticated: boolean }) {
   const userId = isAuthenticated ? await getSessionDbUserId() : null;
   const entry = userId
     ? await prisma.userCollection
@@ -26,7 +26,7 @@ export async function CollectionSection({ perfumeId, perfumeName, isAuthenticate
   return (
     <section className="ficha-section" aria-labelledby="ficha-acciones">
       <h2 id="ficha-acciones">Tu colección</h2>
-      <CompareCheckbox perfumeId={perfumeId} perfumeName={perfumeName} />
+      <CompareCheckbox perfumeId={perfumeId} perfumeName={perfumeName} brand={brand} />
       {isAuthenticated ? (
         <CollectionForm perfumeId={perfumeId} initialData={entry ?? undefined} />
       ) : (

@@ -2265,3 +2265,144 @@ textarea {
     }
   }
 }
+
+/* ————— Barra de comparación (en el layout) ————— */
+
+.compare-bar-spacer {
+  height: 7.5rem;
+}
+
+.compare-bar {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid var(--control-border);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+}
+
+.compare-bar-items {
+  display: flex;
+  flex: 1 1 18rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.compare-bar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.25rem 0.3rem 0.25rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.9rem;
+}
+
+.compare-bar-chip small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.compare-bar-chip button {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.compare-bar-chip button:hover {
+  background: var(--border);
+  color: var(--foreground);
+}
+
+.compare-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.compare-bar-count {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.compare-bar-clear {
+  min-height: 2.75rem;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.compare-bar-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.compare-toggle input:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* ————— Formulario de la colección con respuesta ————— */
+
+.collection-form label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.collection-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.collection-form button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.form-message {
+  min-height: 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.form-message-success {
+  color: var(--notice-text);
+}
+
+.form-message-error {
+  color: var(--error);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .form-message:not(:empty) {
+    animation: rise 0.3s ease-out backwards;
+  }
+}

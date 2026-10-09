@@ -49,6 +49,10 @@ export default function CreditsPage() {
           aloja. Pertenecen a sus titulares —las marcas, los fotógrafos y la fuente—, y cada ficha indica de dónde viene la imagen.
           Si una foto no carga o se retira, se muestra una portada generada.
         </p>
+        <p>
+          Privacidad: para mostrar una foto, tu navegador la pide directamente al servidor de origen (<code>fimgs.net</code>), que puede
+          registrar tu dirección IP. No les enviamos la página desde la que venís.
+        </p>
         {CONTACT_EMAIL && (
           <p>
             Si sos titular de los derechos y querés que retiremos una imagen, escribinos a{" "}
