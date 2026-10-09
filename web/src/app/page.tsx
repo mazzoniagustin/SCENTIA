@@ -77,9 +77,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
 
       <section className="home-features" aria-label="Qué podés hacer">
         <article className="home-feature">
-          <span className="home-feature-index" aria-hidden="true">
-            01
-          </span>
           <h2>Explorá</h2>
           <p>
             Buscá por nombre, marca, acorde, nota o estación entre{" "}
@@ -91,17 +88,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
           <Link href="/perfumes">Ver el catálogo →</Link>
         </article>
         <article className="home-feature">
-          <span className="home-feature-index" aria-hidden="true">
-            02
-          </span>
           <h2>Descubrí</h2>
-          <p>Seis preguntas sobre lo que te gusta y te mostramos los perfumes que mejor encajan con tu perfil.</p>
+          <p>Respondé unas preguntas sobre lo que te gusta y te mostramos los perfumes que mejor encajan con tu perfil.</p>
           <Link href="/quiz">Hacer el quiz →</Link>
         </article>
         <article className="home-feature">
-          <span className="home-feature-index" aria-hidden="true">
-            03
-          </span>
           <h2>Organizá</h2>
           <p>Guardá lo que tenés, lo que probaste y lo que querés, con tus notas y puntuación. Es privado.</p>
           <Link href="/mi-coleccion">Ir a mi colección →</Link>
