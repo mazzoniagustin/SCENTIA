@@ -30,7 +30,12 @@ const getPerfume = cache((id: string) =>
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const perfume = await getPerfume(id);
-  return { title: perfume?.status === "PUBLISHED" ? `${perfume.name} — ${perfume.brand}` : "Perfume no encontrado" };
+  if (perfume?.status !== "PUBLISHED") return { title: "Perfume no encontrado" };
+  const accords = perfume.accords.slice(0, 3).map((a) => a.accord.name).join(", ");
+  return {
+    title: `${perfume.name} — ${perfume.brand}`,
+    description: `${perfume.name} de ${perfume.brand}${accords ? `: acordes ${accords}` : ""}. Notas, estaciones y lo que dice la comunidad.`,
+  };
 }
 
 export default async function PerfumePage({ params }: { params: Promise<{ id: string }> }) {

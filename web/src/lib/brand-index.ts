@@ -31,3 +31,13 @@ export function filterBrands(entries: readonly BrandEntry[], query: string): Bra
   const q = norm(query.trim())
   return q ? entries.filter((e) => norm(e.brand).includes(q)) : [...entries]
 }
+
+/** Letra pedida en la URL ("a" → "A"; "otros" o "#" → "#"); null si no es una letra válida del índice. */
+export function parseLetter(raw: string | null | undefined): string | null {
+  const value = (raw ?? '').trim()
+  if (value === '#' || value.toLowerCase() === 'otros') return '#'
+  return /^[A-Za-z]$/.test(value) ? value.toUpperCase() : null
+}
+
+/** Parámetro de URL de una letra del índice ("#" se escribe "otros"). */
+export const letterParam = (letter: string) => (letter === '#' ? 'otros' : letter)
