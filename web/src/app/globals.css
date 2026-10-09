@@ -387,7 +387,10 @@ h1 {
 }
 
 .back-link {
+  display: inline-flex;
+  align-items: center;
   width: min(100%, 32rem);
+  min-height: var(--tap-size);
   color: var(--muted);
   font-weight: 700;
 }
@@ -593,6 +596,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: var(--tap-size);
   width: fit-content;
   cursor: pointer;
   font-size: var(--text-sm);
@@ -840,6 +844,13 @@ h1 {
   justify-content: space-between;
   gap: 1rem;
   margin-top: 1.5rem;
+}
+
+.catalog-pagination a,
+.catalog-pagination [aria-disabled="true"] {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
 }
 
 .catalog-pagination [aria-disabled="true"] {
@@ -1335,6 +1346,9 @@ html {
 }
 
 .home-daily-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
   width: fit-content;
   color: var(--accent);
   font-weight: 600;
@@ -1460,6 +1474,7 @@ html {
   cursor: pointer;
   color: var(--muted);
   font-weight: 600;
+  line-height: var(--tap-size); /* alto táctil de 44 px sin perder el triángulo del <summary> */
   width: fit-content;
 }
 
@@ -1765,6 +1780,9 @@ html {
 }
 
 .home-section-head a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
   color: var(--accent);
   font-weight: 600;
 }
@@ -1877,8 +1895,8 @@ html {
 .brands-letters a {
   display: inline-grid;
   place-items: center;
-  min-width: 2.5rem;
-  min-height: 2.5rem;
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-weight: 600;
@@ -1916,11 +1934,11 @@ html {
 
 .brands-list a {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 2.5rem;
-  padding: 0.5rem 0;
+  min-height: var(--tap-size);
+  padding: 0.25rem 0;
 }
 
 .brands-list a:hover span {
@@ -3096,5 +3114,59 @@ html {
 
   .streak-day[data-logged="true"] .streak-dot {
     animation: rise 0.4s var(--ease-out) backwards;
+  }
+}
+
+/* ————— Transversal: accesibilidad ————— */
+
+/* Alto táctil de 44 px en controles que eran más bajos (enlaces de texto, "Limpiar", quitar de la comparación). */
+.catalog-filters-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+}
+
+.compare-card > button[aria-label^="Quitar"] {
+  z-index: 2; /* por encima de la foto o portada del perfume */
+  display: grid;
+  place-items: center;
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  border-radius: 50% !important;
+  /* Fondo y color con !important: el botón trae estilos en línea. Sobre la foto clara el × necesita su propio fondo para verse. */
+  background: var(--scrim) !important;
+  color: var(--foreground) !important;
+  font-size: 1.25rem;
+}
+
+/* Un enlace dentro de un texto no se distingue solo por el color (WCAG 1.4.1): subrayado. */
+.streak-lead a,
+.catalog-hint a,
+.catalog-empty a,
+.notice a,
+.error-message a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Movimiento reducido: sin animaciones ni transiciones, y sin los desplazamientos de "levantar" al pasar el cursor. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .perfume-card:hover,
+  .perfume-card:focus-within,
+  .quiz-card:hover,
+  .home-accords a:hover,
+  .perfume-card:hover .perfume-media img,
+  .perfume-card:hover .perfume-cover-mark {
+    transform: none;
   }
 }
