@@ -41,6 +41,12 @@ export async function HeroAuthButton() {
   );
 }
 
+/** Cantidad de perfumes del catálogo: el mismo dato (`getCatalogStats`) para el hero, la barra de cifras y las tarjetas de acciones. */
+export async function CatalogCount() {
+  const stats = await safe(getCatalogStats(), null);
+  return <>{stats ? stats.perfumes.toLocaleString("es-AR") : "miles de"}</>;
+}
+
 export async function StatsSection() {
   const stats = await safe(getCatalogStats(), null);
   if (!stats) return null;

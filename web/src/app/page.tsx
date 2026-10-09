@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import { Skeleton } from "@/components/Skeleton";
-import { AccordsSection, DailySection, FeaturedSection, HeroAuthButton, PersonalSection, StatsSection } from "./home-sections";
+import { AccordsSection, CatalogCount, DailySection, FeaturedSection, HeroAuthButton, PersonalSection, StatsSection } from "./home-sections";
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 
@@ -15,17 +15,35 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
   return (
     <main id="contenido" className="home">
       <section className="home-hero" aria-labelledby="home-title">
-        <p className="eyebrow">Catálogo editorial de perfumes</p>
         <h1 id="home-title">
           Elegí un perfume con más <em>contexto</em>.
         </h1>
         <p className="lead">
-          Explorá más de veinte mil perfumes por sus acordes, compará hasta cuatro, armá tu colección privada y
-          descubrí cuál va con vos.
+          Explorá{" "}
+          <Suspense fallback="miles de">
+            <CatalogCount />
+          </Suspense>{" "}
+          perfumes por sus acordes, compará hasta cuatro, armá tu colección privada y descubrí cuál va con vos.
         </p>
+        {/* Formulario GET al catálogo con el parámetro `q` que ya existe (nombre o marca): funciona sin JavaScript. */}
+        <form className="hero-search" action="/perfumes" method="get" role="search">
+          <label htmlFor="hero-q" className="sr-only">
+            Buscar perfumes por nombre o marca
+          </label>
+          <input
+            id="hero-q"
+            className="hero-search-input"
+            type="search"
+            name="q"
+            placeholder="Perfume o marca"
+            maxLength={80}
+            autoComplete="off"
+          />
+          <button type="submit">Buscar</button>
+        </form>
         <div className="landing-actions">
-          <Link className="button" href="/perfumes">
-            Explorar el catálogo
+          <Link className="button button-ghost" href="/perfumes">
+            Ver todo el catálogo
           </Link>
           <Link className="button button-ghost" href="/quiz">
             Descubrí tu perfil olfativo
@@ -62,7 +80,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
             01
           </span>
           <h2>Explorá</h2>
-          <p>Buscá por nombre, marca, acorde, nota o estación entre más de 23.000 perfumes.</p>
+          <p>
+            Buscá por nombre, marca, acorde, nota o estación entre{" "}
+            <Suspense fallback="miles de">
+              <CatalogCount />
+            </Suspense>{" "}
+            perfumes.
+          </p>
           <Link href="/perfumes">Ver el catálogo →</Link>
         </article>
         <article className="home-feature">
