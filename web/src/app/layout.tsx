@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Newsreader } from "next/font/google";
 
 import { CompareBar } from "@/app/perfumes/CompareBar";
@@ -15,9 +15,34 @@ const newsreader = Newsreader({
 });
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
+// Dirección pública del sitio (la misma SITE_URL del enlace de acceso): base de las URLs absolutas de los metadatos.
+function siteUrl(): URL {
+  try {
+    return new URL(process.env.SITE_URL ?? "http://localhost:3000");
+  } catch {
+    return new URL("http://localhost:3000");
+  }
+}
+
 export const metadata: Metadata = {
+  metadataBase: siteUrl(),
   title: { default: "Scentia", template: "%s — Scentia" },
-  description: "Descubrí, compará y organizá perfumes.",
+  description: "Descubrí, compará y organizá perfumes: más de 41.000 fragancias por acordes y notas, quiz olfativo y colección privada.",
+  applicationName: "Scentia",
+  openGraph: {
+    type: "website",
+    siteName: "Scentia",
+    locale: "es_AR",
+    title: "Scentia — catálogo editorial de perfumes",
+    description: "Elegí un perfume con más contexto: acordes, notas, comparador y tu perfil olfativo.",
+  },
+  twitter: { card: "summary", title: "Scentia", description: "Elegí un perfume con más contexto." },
+};
+
+// Barra del navegador del celular en el color del fondo, y esquema oscuro para los controles nativos.
+export const viewport: Viewport = {
+  themeColor: "#0f1011",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

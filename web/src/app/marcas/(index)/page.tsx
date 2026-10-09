@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { filterBrands, groupByLetter } from "@/lib/brand-index";
+import { filterBrands, groupByLetter, letterParam, parseLetter } from "@/lib/brand-index";
 import { getBrandIndex } from "@/lib/brands";
 import { logServerError } from "@/lib/log";
 
@@ -8,6 +8,8 @@ export const metadata = { title: "Marcas" };
 
 const MAX_QUERY = 60;
 const POPULAR = 12;
+/** Con una búsqueda se muestran como mucho tantas marcas: la lista completa pesaba más de 120.000 px en el celular. */
+const MAX_RESULTS = 200;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 const brandHref = (brand: string) => `/marcas/${encodeURIComponent(brand)}`;
@@ -29,9 +31,14 @@ export default async function BrandsPage({
     failed = true;
   }
 
-  const filtered = filterBrands(index, q);
-  const groups = groupByLetter(filtered);
-  const popular = q ? [] : [...index].sort((a, b) => b.count - a.count || a.brand.localeCompare(b.brand)).slice(0, POPULAR);
+  // Sin búsqueda se muestra una letra por vez (?letra=A): antes se listaban las 2.681 marcas en una sola página.
+  const allGroups = groupByLetter(index);
+  const letter = parseLetter(first(params.letra));
+  const currentGroup = letter ? allGroups.find((g) => g.letter === letter) : undefined;
+  const matches = filterBrands(index, q);
+  const shown = matches.slice(0, MAX_RESULTS);
+  const groups = q ? groupByLetter(shown) : currentGroup ? [currentGroup] : [];
+  const popular = q || currentGroup ? [] : [...index].sort((a, b) => b.count - a.count || a.brand.localeCompare(b.brand)).slice(0, POPULAR);
 
   return (
     <main id="contenido" className="catalog">
@@ -72,17 +79,22 @@ export default async function BrandsPage({
         </section>
       )}
 
-      {groups.length > 0 && (
-        <nav className="brands-letters" aria-label="Ir a la letra">
-          {groups.map(({ letter }) => (
-            <a key={letter} href={`#letra-${letter === "#" ? "otros" : letter}`}>
-              {letter}
-            </a>
+      {allGroups.length > 0 && !q && (
+        <nav className="brands-letters" aria-label="Marcas por letra">
+          {allGroups.map((g) => (
+            <Link
+              key={g.letter}
+              href={`/marcas?letra=${letterParam(g.letter)}`}
+              aria-current={g.letter === currentGroup?.letter ? "page" : undefined}
+              title={`${g.brands.length.toLocaleString("es-AR")} marcas`}
+            >
+              {g.letter}
+            </Link>
           ))}
         </nav>
       )}
 
-      {!failed && filtered.length === 0 ? (
+      {!failed && q && matches.length === 0 ? (
         <div className="catalog-empty">
           <p className="catalog-empty-title">No encontramos marcas con “{q}”.</p>
           <p>
@@ -90,9 +102,9 @@ export default async function BrandsPage({
           </p>
         </div>
       ) : (
-        groups.map(({ letter, brands }) => (
-          <section key={letter} className="brands-group" aria-labelledby={`letra-${letter === "#" ? "otros" : letter}`}>
-            <h2 id={`letra-${letter === "#" ? "otros" : letter}`}>{letter}</h2>
+        groups.map(({ letter: groupLetter, brands }) => (
+          <section key={groupLetter} className="brands-group" aria-labelledby={`letra-${letterParam(groupLetter)}`}>
+            <h2 id={`letra-${letterParam(groupLetter)}`}>{groupLetter}</h2>
             <ul className="brands-list">
               {brands.map(({ brand, count }) => (
                 <li key={brand}>
@@ -105,6 +117,17 @@ export default async function BrandsPage({
             </ul>
           </section>
         ))
+      )}
+      {q && matches.length > MAX_RESULTS && (
+        <p className="catalog-hint">
+          Mostrando {MAX_RESULTS} de {matches.length.toLocaleString("es-AR")} marcas. Escribí más del nombre para afinar la búsqueda.
+        </p>
+      )}
+
+      {!failed && !q && !currentGroup && allGroups.length > 0 && (
+        <p className="catalog-hint">
+          {letter ? "No hay marcas con esa letra. " : ""}Elegí una letra para ver sus marcas, o buscá por nombre.
+        </p>
       )}
     </main>
   );
