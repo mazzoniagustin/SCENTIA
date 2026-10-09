@@ -1544,7 +1544,7 @@ html {
 .ficha-hero {
   display: grid;
   gap: 1.5rem;
-  align-items: end;
+  align-items: start;
 }
 
 .ficha-hero .perfume-cover,
@@ -1561,6 +1561,30 @@ html {
 .ficha-hero-text {
   display: grid;
   gap: 0.6rem;
+  align-content: start;
+}
+
+.ficha-hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: var(--text-md);
+}
+
+.ficha-hero-actions {
+  margin-top: 0.75rem;
+}
+
+/* Datos que faltan: presentes pero en segundo plano. */
+.ficha-details .is-empty dt,
+.ficha-details .is-empty dd,
+.no-data {
+  color: var(--muted);
+  font-weight: 400;
 }
 
 .ficha-hero-text h1 {
