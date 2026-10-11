@@ -41,6 +41,8 @@ model Perfume {
   remindsOf   PerfumeSimilar[] @relation("SimilarFrom")
   remindedBy  PerfumeSimilar[] @relation("SimilarTo")
   priceTier   PriceTier?
+  /// País de origen de la marca (columna Country de fra_cleaned.csv, normalizado con trim). Base del filtro "Origen árabe".
+  country     String?
 
   // Publicación y procedencia (RF-06): el catálogo público solo muestra PUBLISHED.
   status      PublicationStatus @default(PUBLISHED)
