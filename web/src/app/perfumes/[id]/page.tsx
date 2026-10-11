@@ -12,7 +12,7 @@ import { isAllowedImageUrl, isAllowedSourcePageUrl } from "@/lib/images";
 import { CommunityStats } from "../CommunityStats";
 import { CollectionSection, RemindsMeLoader, SimilarSection } from "./sections";
 import { AccordBars, NotePyramid } from "../PerfumeProfile";
-import { genderLabel, PRICE_TIER_LABELS, valueOrNoData } from "../types";
+import { genderLabel, NO_DATA, PRICE_TIER_LABELS } from "../types";
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
@@ -46,14 +46,21 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
   // Con las claims de la sesión (sin ida y vuelta a Supabase) alcanza para saber si hay sesión.
   const isAuthenticated = !!(await getCurrentUser());
 
-  const details: Array<[string, string]> = [
+  // Duración en horas si es un dato curado; si no, la votada por la comunidad.
+  const duration =
+    perfume.duration !== null ? `${perfume.duration} h` : perfume.longevity !== null ? scaleLabel(perfume.longevity, LONGEVITY_LABELS) : null;
+  const concentration = perfume.concentration ? perfume.concentration.toUpperCase() : null;
+
+  const allDetails: Array<[string, string | null]> = [
     ["Género", capitalize(perfume.gender)],
-    ["Concentración", valueOrNoData(perfume.concentration, (c) => c.toUpperCase())],
-    ["Año", valueOrNoData(perfume.releaseYear, String)],
-    ["Perfumista", valueOrNoData(perfume.perfumer, String)],
-    // Horas si es un dato curado; si no, la duración votada por la comunidad.
-    ["Duración", perfume.duration !== null ? `${perfume.duration} h` : perfume.longevity !== null ? scaleLabel(perfume.longevity, LONGEVITY_LABELS) : "Sin dato"],
+    ["Concentración", concentration],
+    ["Año", perfume.releaseYear !== null ? String(perfume.releaseYear) : null],
+    ["Perfumista", perfume.perfumer],
+    ["Duración", duration],
   ];
+  // Los datos presentes primero; los que faltan van al final y atenuados.
+  const details = [...allDetails.filter(([, v]) => v !== null), ...allDetails.filter(([, v]) => v === null)];
+  const heroFacts = [concentration, perfume.releaseYear !== null ? String(perfume.releaseYear) : null, duration && `Duración: ${duration}`].filter(Boolean);
 
   return (
     <main id="contenido" className="catalog ficha">
@@ -90,6 +97,18 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
             ))}
           </ul>
         )}
+        {heroFacts.length > 0 && (
+          <ul className="ficha-hero-facts" aria-label="Datos clave">
+            {heroFacts.map((fact) => (
+              <li key={fact}>{fact}</li>
+            ))}
+          </ul>
+        )}
+        <p className="ficha-hero-actions">
+          <a className="button" href="#ficha-acciones">
+            Guardar en mi colección
+          </a>
+        </p>
         </div>
       </header>
 
@@ -97,9 +116,9 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
         <h2 id="ficha-datos">Datos</h2>
         <dl className="ficha-details">
           {details.map(([label, value]) => (
-            <div key={label}>
+            <div key={label} className={value === null ? "is-empty" : undefined}>
               <dt>{label}</dt>
-              <dd>{value}</dd>
+              <dd>{value ?? NO_DATA}</dd>
             </div>
           ))}
         </dl>

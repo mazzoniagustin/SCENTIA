@@ -10,7 +10,7 @@ export const PHASES = [
 ] as const;
 
 export function AccordBars({ accords }: { accords: Array<{ name: string; intensity: number }> }) {
-  if (accords.length === 0) return <p>Sin dato</p>;
+  if (accords.length === 0) return <p className="no-data">Sin dato</p>;
   return (
     <ul className="ficha-accords">
       {accords.map(({ name, intensity }) => (
@@ -26,7 +26,7 @@ export function AccordBars({ accords }: { accords: Array<{ name: string; intensi
 }
 
 export function NotePyramid({ notes }: { notes: Array<{ noteType: string; name: string }> }) {
-  if (notes.length === 0) return <p>Sin dato</p>;
+  if (notes.length === 0) return <p className="no-data">Sin dato</p>;
   const hasTiers = notes.some((n) => n.noteType !== "flat");
   const hasFlat = notes.some((n) => n.noteType === "flat");
   // Los perfumes sin pirámide (solo lista de notas) muestran un único grupo; los demás, los tres pisos.
@@ -39,7 +39,7 @@ export function NotePyramid({ notes }: { notes: Array<{ noteType: string; name: 
           <div key={type}>
             <h3>{label}</h3>
             {names.length === 0 ? (
-              <p>Sin dato</p>
+              <p className="no-data">Sin dato</p>
             ) : (
               <ul className="perfume-badges">
                 {names.map((name) => (
