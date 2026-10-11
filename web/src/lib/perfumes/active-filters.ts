@@ -6,7 +6,6 @@ export type ActiveFilter = { key: string; label: string; removeHref: string }
 type Params = Record<string, string | string[] | undefined>
 
 const CONCENTRATION_LABELS: Record<string, string> = { parfum: 'Parfum', edp: 'EDP', edt: 'EDT', edc: 'EDC' }
-const PRICE_TIER_LABELS: Record<string, string> = { ARABIC: 'Árabe', DESIGNER: 'Diseñador', NICHE: 'Nicho' }
 const SORT_LABELS: Record<string, string> = {
   relevance: 'Relevancia',
   newest: 'Más nuevos',
@@ -28,7 +27,6 @@ const FILTERS: ReadonlyArray<{ key: string; label: (value: string) => string }> 
   { key: 'q', label: (v) => `Búsqueda: «${v}»` },
   { key: 'brand', label: (v) => `Marca: ${v}` },
   { key: 'accord', label: (v) => `Acorde: ${capitalize(v)}` },
-  { key: 'priceTier', label: (v) => `Categoría: ${fromMap(PRICE_TIER_LABELS)(v)}` },
   { key: 'concentration', label: (v) => `Concentración: ${fromMap(CONCENTRATION_LABELS)(v)}` },
   { key: 'gender', label: (v) => `Género: ${capitalize(v)}` },
   { key: 'season', label: (v) => `Estación: ${capitalize(v)}` },

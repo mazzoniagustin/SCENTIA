@@ -13,7 +13,6 @@ describe('buildActiveFilters', () => {
     const chips = buildActiveFilters({
       season: 'verano',
       q: 'dior',
-      priceTier: 'NICHE',
       concentration: 'edp',
       accord: 'vainilla',
     })
@@ -22,7 +21,6 @@ describe('buildActiveFilters', () => {
       [
         ['q', 'Búsqueda: «dior»'],
         ['accord', 'Acorde: Vainilla'],
-        ['priceTier', 'Categoría: Nicho'],
         ['concentration', 'Concentración: EDP'],
         ['season', 'Estación: Verano'],
       ],

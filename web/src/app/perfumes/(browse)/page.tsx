@@ -46,7 +46,6 @@ async function fetchPerfumes(
   for (const key of [
     "q",
     "accord",
-    "priceTier",
     "page",
     "brand",
     "concentration",
@@ -109,7 +108,6 @@ export default async function PerfumesPage({
   const selected = {
     q: first(params.q) ?? "",
     accord: first(params.accord) ?? "",
-    priceTier: first(params.priceTier) ?? "",
     brand: first(params.brand) ?? "",
     concentration: first(params.concentration) ?? "",
     gender: first(params.gender) ?? "",
@@ -173,12 +171,6 @@ export default async function PerfumesPage({
                   {name.charAt(0).toUpperCase() + name.slice(1)}
                 </option>
               ))}
-            </select>
-            <select name="priceTier" aria-label="Categoría" defaultValue={selected.priceTier}>
-              <option value="">Todas las categorías</option>
-              <option value="ARABIC">Árabe</option>
-              <option value="DESIGNER">Diseñador</option>
-              <option value="NICHE">Nicho</option>
             </select>
             <select name="concentration" aria-label="Concentración" defaultValue={selected.concentration}>
               <option value="">Concentración</option>
