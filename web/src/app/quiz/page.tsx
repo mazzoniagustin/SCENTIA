@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import { getUserProfile } from "@/lib/account/data";
 import { getAuthenticatedUserOrNull } from "@/lib/auth/require-user";
-import { answersToSearchParams } from "@/lib/quiz/params";
+import { answersFromSearchParams, answersToSearchParams } from "@/lib/quiz/params";
+import { validateAnswers } from "@/lib/quiz/profile";
 import { QUESTIONS } from "@/lib/quiz/questions";
 import { QuizWizard } from "./QuizWizard";
 
@@ -10,10 +11,13 @@ export const metadata = { title: "Quiz de perfil olfativo" };
 
 // Quiz paso a paso (QuizWizard) sobre un formulario GET: sin JavaScript también funciona. Las respuestas viajan en la URL
 // hacia /quiz/resultado, que las valida en el servidor.
-export default async function QuizPage() {
+export default async function QuizPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  // Respuestas en la URL (viene de "Editar respuestas" en los resultados): se precargan y mandan sobre el perfil guardado.
+  const fromUrl = validateAnswers(answersFromSearchParams(await searchParams));
   // Con sesión y un perfil guardado vigente, se precarga el formulario y se ofrece verlo directo.
   const user = await getAuthenticatedUserOrNull();
   const saved = user ? (await getUserProfile(user.id))?.answers ?? null : null;
+  const initial = fromUrl.ok ? fromUrl.answers : saved;
 
   return (
     <main id="contenido" className="catalog">
@@ -29,7 +33,7 @@ export default async function QuizPage() {
         </p>
       </header>
 
-      {saved && (
+      {saved && !fromUrl.ok && (
         <p className="notice" role="status">
           Tenés un perfil guardado.{" "}
           <Link href={`/quiz/resultado?${answersToSearchParams(saved).toString()}`}>Ver mis recomendaciones</Link> o
@@ -39,7 +43,7 @@ export default async function QuizPage() {
 
       <QuizWizard
         questions={QUESTIONS.map((q) => ({ id: q.id, label: q.label, kind: q.kind, options: q.options.map((o) => ({ id: o.id, label: o.label })) }))}
-        saved={saved}
+        saved={initial}
       />
     </main>
   );

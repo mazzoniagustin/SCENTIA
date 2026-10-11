@@ -5,9 +5,10 @@ import { saveQuizProfile } from "@/app/actions/account";
 import { PerfumeImage } from "@/app/perfumes/PerfumeImage";
 import { genderLabel } from "@/app/perfumes/types";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
-import { answersFromSearchParams } from "@/lib/quiz/params";
+import { answersFromSearchParams, answersToSearchParams } from "@/lib/quiz/params";
 import { validateAnswers } from "@/lib/quiz/profile";
 import { QUESTIONS, type QuizAnswers } from "@/lib/quiz/questions";
+import { summarizeAnswers } from "@/lib/quiz/summary";
 import { AffinityRing } from "@/components/AffinityRing";
 import { AnalyzingLoader } from "@/components/AnalyzingLoader";
 import { QUIZ_GENDERS, recommendFromAnswers, type QuizGender } from "@/lib/quiz/recommend";
@@ -66,29 +67,54 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
         </p>
       )}
 
-      <form className="catalog-filter-bar quiz-gender" action="/quiz/resultado" method="GET">
-        {hiddenFields.map((field, i) => (
-          <input key={i} type="hidden" name={field.name} value={field.value} />
-        ))}
-        <label>
-          Género
-          <select name="gender" defaultValue={gender ?? ""}>
-            <option value="">Todos</option>
-            {QUIZ_GENDERS.map((g) => (
-              <option key={g} value={g}>
-                {g.charAt(0).toUpperCase() + g.slice(1)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="catalog-filters-actions">
-          <button type="submit">Aplicar</button>
+      <section className="quiz-summary" aria-labelledby="quiz-summary-title">
+        <div className="quiz-summary-head">
+          <h2 id="quiz-summary-title">Tu perfil olfativo</h2>
+          <Link className="quiz-summary-edit" href={`/quiz?${answersToSearchParams(validated.answers).toString()}`}>
+            Editar respuestas
+          </Link>
         </div>
-      </form>
-
-      <Suspense fallback={null}>
-        <SaveProfile hiddenFields={hiddenFields} gender={gender} />
-      </Suspense>
+        <dl className="quiz-summary-list">
+          {summarizeAnswers(validated.answers).map((row) => (
+            <div key={row.id}>
+              <dt>{row.title}</dt>
+              <dd>
+                {row.labels.length === 0 ? (
+                  <span className="quiz-summary-none">Ninguna</span>
+                ) : (
+                  <ul className="perfume-badges" aria-label={row.title}>
+                    {row.labels.map((label) => (
+                      <li key={label}>{label}</li>
+                    ))}
+                  </ul>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <div className="quiz-summary-actions">
+          <form className="quiz-gender" action="/quiz/resultado" method="GET">
+            {hiddenFields.map((field, i) => (
+              <input key={i} type="hidden" name={field.name} value={field.value} />
+            ))}
+            <label>
+              Género
+              <select name="gender" defaultValue={gender ?? ""}>
+                <option value="">Todos</option>
+                {QUIZ_GENDERS.map((g) => (
+                  <option key={g} value={g}>
+                    {g.charAt(0).toUpperCase() + g.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit">Aplicar</button>
+          </form>
+          <Suspense fallback={null}>
+            <SaveProfile hiddenFields={hiddenFields} gender={gender} />
+          </Suspense>
+        </div>
+      </section>
 
       <Suspense fallback={<AnalyzingLoader />}>
         <Results answers={validated.answers} gender={gender} />

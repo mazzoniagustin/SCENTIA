@@ -3,6 +3,7 @@ import { PerfumeCard } from "../PerfumeCard";
 import type { Perfume } from "../types";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
+import { buildActiveFilters } from "@/lib/perfumes/active-filters";
 import { getAccordNames } from "@/lib/accord-stats";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserCollection } from "@/app/actions/collection";
@@ -114,7 +115,7 @@ export default async function PerfumesPage({
     sort: first(params.sort) ?? "",
   };
 
-  const filtersActive = Object.values(selected).some(Boolean);
+  const activeFilters = buildActiveFilters(params);
   // "Más filtros" arranca abierto si hay algún filtro aparte de la búsqueda.
   const moreActive = Object.entries(selected).some(([key, value]) => key !== "q" && Boolean(value));
 
@@ -207,10 +208,30 @@ export default async function PerfumesPage({
           </div>
           <div className="catalog-filters-actions">
             <button type="submit">Aplicar filtros</button>
-            {filtersActive && <Link href="/perfumes">Limpiar</Link>}
           </div>
         </details>
       </form>
+
+      {activeFilters.length > 0 && (
+        <nav className="active-filters" aria-label="Filtros activos">
+          <ul>
+            {activeFilters.map((filter) => (
+              <li key={filter.key}>
+                <Link href={filter.removeHref} className="active-filter-chip">
+                  <span>{filter.label}</span>
+                  <span className="active-filter-x" aria-hidden="true">
+                    ×
+                  </span>
+                  <span className="sr-only">, quitar filtro</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link href="/perfumes" className="active-filters-clear">
+            Limpiar todo
+          </Link>
+        </nav>
+      )}
 
       {error && (
         <p className="error-message" role="alert">
