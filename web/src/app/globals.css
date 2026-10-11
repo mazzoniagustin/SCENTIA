@@ -1650,6 +1650,58 @@ html {
   font-weight: 600;
 }
 
+/* Chips de filtros activos: enlaces que quitan un solo filtro */
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.active-filters ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.active-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--tap-size);
+  padding: 0 0.9rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.active-filter-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.active-filter-x {
+  color: var(--muted);
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+.active-filter-chip:hover .active-filter-x {
+  color: inherit;
+}
+
+.active-filters-clear {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
 .catalog-hint {
   color: var(--muted);
   font-size: var(--text-md);
