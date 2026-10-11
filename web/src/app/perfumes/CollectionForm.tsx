@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 
 import { saveCollectionEntryAction } from "@/app/actions/collection";
 import { IDLE_STATE } from "@/lib/collection/form";
@@ -15,9 +15,16 @@ export function CollectionForm({ perfumeId, initialData }: { perfumeId: string; 
   const [status, setStatus] = useState(initialData?.status ?? "");
   const [rating, setRating] = useState(initialData?.rating ? String(initialData.rating) : "");
   const [notes, setNotes] = useState(initialData?.personalNotes ?? "");
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Al guardar, se pliega la edición (<details>) que contiene el formulario en el catálogo y en Mi colección.
+  useEffect(() => {
+    if (state.status === "success") formRef.current?.closest("details")?.removeAttribute("open");
+  }, [state]);
 
   return (
     <form
+      ref={formRef}
       className="collection-form"
       onSubmit={(event) => {
         event.preventDefault();

@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth/require-user'
-import { revalidatePath } from 'next/cache'
+import { refresh, revalidatePath } from 'next/cache'
 import { collectionInputFromFormData, type CollectionFormState } from '@/lib/collection/form'
 import { logServerError } from '@/lib/log'
 import { getAuthenticatedUserOrNull } from '@/lib/auth/require-user'
@@ -88,5 +88,7 @@ export async function saveCollectionEntryAction(_previous: CollectionFormState, 
   revalidatePath('/marcas', 'layout')
   revalidatePath('/mi-coleccion')
   revalidatePath('/')
+  // Además de invalidar el caché, refresca la pantalla actual para que el cambio se vea sin recargar.
+  refresh()
   return { status: 'success', message: 'Guardado en tu colección.' }
 }
