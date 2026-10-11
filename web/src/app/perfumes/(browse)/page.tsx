@@ -5,6 +5,7 @@ import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
 import { buildActiveFilters } from "@/lib/perfumes/active-filters";
 import { getAccordNames } from "@/lib/accord-stats";
+import { getBrandIndex } from "@/lib/brands";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserCollection } from "@/app/actions/collection";
 
@@ -83,9 +84,14 @@ export default async function PerfumesPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const [{ perfumes, pagination, error }, accordOptions] = await Promise.all([
+  const [{ perfumes, pagination, error }, accordOptions, brandOptions] = await Promise.all([
     fetchPerfumes(params),
     getAccordNames(),
+    // Si falla el índice de marcas, el datalist queda vacío y el input sigue funcionando.
+    getBrandIndex().catch((err) => {
+      logServerError("perfumes.brand-index", err);
+      return [];
+    }),
   ]);
 
   // Con las claims de la sesión alcanza (sin ida y vuelta a Supabase).
@@ -146,7 +152,20 @@ export default async function PerfumesPage({
         <details className="catalog-more" open={moreActive}>
           <summary>Más filtros</summary>
           <div className="catalog-filter-grid">
-            <input type="text" name="brand" placeholder="Marca" aria-label="Marca" defaultValue={selected.brand} />
+            <input
+              type="text"
+              name="brand"
+              list="brand-options"
+              placeholder="Marca"
+              aria-label="Marca"
+              autoComplete="off"
+              defaultValue={selected.brand}
+            />
+            <datalist id="brand-options">
+              {brandOptions.map(({ brand }) => (
+                <option key={brand} value={brand} />
+              ))}
+            </datalist>
             <select name="accord" defaultValue={selected.accord} aria-label="Acorde">
               <option value="">Acorde</option>
               {accordOptions.map((name) => (
