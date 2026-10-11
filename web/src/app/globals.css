@@ -2819,6 +2819,12 @@ html {
     to { opacity: 1; transform: none; }
   }
 
+  /* Para lo que entra por scroll: nunca arranca invisible (Ctrl+F, capturas y lectores ven el contenido aunque aún no haya llegado). */
+  @keyframes rise-soft {
+    from { opacity: 0.4; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+
   @keyframes bar-grow {
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
@@ -2854,16 +2860,14 @@ html {
   .ficha-accords li:nth-child(5) .ficha-bar > span { animation-delay: 0.43s; }
   .ficha-accords li:nth-child(n + 6) .ficha-bar > span { animation-delay: 0.5s; }
 
-  /* Secciones: aparecen al entrar en pantalla (donde el navegador soporta animaciones por scroll; si no, quedan visibles). */
+  /* Secciones de la portada y tarjetas: aparecen al entrar en pantalla (donde el navegador soporta animaciones por scroll; si no, quedan visibles).
+     Parten de opacidad 0,4 (`rise-soft`). Ficha, estado vacío y racha no se animan: son contenido que se busca y se lee de inmediato. */
   @supports (animation-timeline: view()) {
     .home-section,
     .home-daily,
     .home-features,
-    .home-stats,
-    .streak-card,
-    .ficha-section,
-    .catalog-empty {
-      animation: rise linear both;
+    .home-stats {
+      animation: rise-soft linear both;
       animation-timeline: view();
       animation-range: entry 0% entry 30%;
     }
@@ -2871,7 +2875,7 @@ html {
     .catalog-grid > li,
     .home-tiles > *,
     .scroller-item {
-      animation: rise linear backwards;
+      animation: rise-soft linear backwards;
       animation-timeline: view();
       animation-range: entry 0% entry 35%;
       animation-delay: 0s;
@@ -2883,6 +2887,20 @@ html {
       animation-range: entry 0% entry 80%;
       animation-delay: 0s;
     }
+  }
+}
+
+/* Sin movimiento: ninguna entrada por scroll ni de tarjetas (la regla global de arriba solo acorta las animaciones por tiempo). */
+@media (prefers-reduced-motion: reduce) {
+  .home-section,
+  .home-daily,
+  .home-features,
+  .home-stats,
+  .catalog-grid > li,
+  .home-tiles > *,
+  .scroller-item,
+  .ficha-bar > span {
+    animation: none;
   }
 }
 
