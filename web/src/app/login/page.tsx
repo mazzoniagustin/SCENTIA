@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AuthSubmit } from "@/components/AuthSubmit";
+import { CheckEmailPanel } from "@/components/CheckEmailPanel";
+import { FocusFieldOnMount } from "@/components/FocusFieldOnMount";
 import { FocusOnMount } from "@/components/FocusOnMount";
 import { getCurrentUser } from "@/lib/auth/session";
 
@@ -28,6 +31,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   const { error, sent } = await searchParams;
+  const emailError = error === "email";
+  const generalError = error && !emailError ? error : null;
+  const fallback = "No pudimos completar la solicitud.";
 
   return (
     <main id="contenido" className="auth-shell">
@@ -36,34 +42,50 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       </Link>
       <section aria-labelledby="login-title" className="auth-card">
         <p className="eyebrow">Tu colección, en privado</p>
-        <h1 id="login-title">Ingresá con un enlace seguro</h1>
-        <p>
-          Te enviaremos un enlace de un solo uso. No almacenamos contraseñas en
-          esta aplicación.
-        </p>
+        <h1 id="login-title">Ingresar</h1>
+        <p>Sin contraseñas: te mandamos un enlace al correo</p>
         {sent === "1" ? (
-          <p className="notice" role="status">
-            Si tu correo está registrado, te enviamos un link. Si no,{" "}
-            <Link href="/registro">creá tu cuenta</Link>.
-          </p>
-        ) : null}
-        {error ? (
-          <FocusOnMount>{errors[error] ?? "No pudimos completar la solicitud."}</FocusOnMount>
-        ) : null}
-        <form action={requestMagicLink} className="auth-form">
-          <label htmlFor="email">Correo electrónico</label>
-          <input
-            autoComplete="email"
-            id="email"
-            name="email"
-            required
-            type="email"
-          />
-          <button type="submit">Enviar enlace</button>
-        </form>
-        <p>
-          ¿No tenés cuenta? <Link href="/registro">Crear cuenta</Link>
-        </p>
+          <CheckEmailPanel retryHref="/login">
+            <p>
+              Si tu correo está registrado, te enviamos un enlace. Si no,{" "}
+              <Link className="auth-link" href="/registro">
+                creá tu cuenta
+              </Link>
+              .
+            </p>
+          </CheckEmailPanel>
+        ) : (
+          <>
+            {generalError ? <FocusOnMount>{errors[generalError] ?? fallback}</FocusOnMount> : null}
+            <form action={requestMagicLink} className="auth-form">
+              <label htmlFor="email">Correo electrónico</label>
+              <input
+                aria-describedby={emailError ? "email-error" : undefined}
+                aria-invalid={emailError ? "true" : undefined}
+                autoComplete="email"
+                id="email"
+                name="email"
+                required
+                type="email"
+              />
+              {emailError ? (
+                <>
+                  <p className="error-message" id="email-error" role="alert">
+                    {errors.email}
+                  </p>
+                  <FocusFieldOnMount targetId="email" />
+                </>
+              ) : null}
+              <AuthSubmit label="Enviar enlace" />
+            </form>
+            <p>
+              ¿No tenés cuenta?{" "}
+              <Link className="auth-link" href="/registro">
+                Crear cuenta
+              </Link>
+            </p>
+          </>
+        )}
       </section>
     </main>
   );
