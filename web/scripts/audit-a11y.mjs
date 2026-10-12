@@ -8,7 +8,10 @@ import axe from 'axe-core'
 
 const BASE = (process.argv[2] ?? 'http://localhost:3000').replace(/\/$/, '')
 
-const getJson = async (path) => (await fetch(`${BASE}${path}`)).json()
+// Opcional: cookie de una sesión de prueba (ej. A11Y_COOKIE="sb-...-auth-token=...") para auditar /que-me-pongo.
+const A11Y_COOKIE = process.env.A11Y_COOKIE ?? ''
+
+const getJson =async (path) => (await fetch(`${BASE}${path}`)).json()
 
 async function pages() {
   const { data } = await getJson('/api/perfumes?pageSize=3')
@@ -31,11 +34,13 @@ async function pages() {
     ['Ficha de perfume', `/perfumes/${ids[0]}`],
     ['Comparador', `/perfumes/compare?ids=${ids.join(',')}`],
     ['Perfume inexistente (404)', '/perfumes/no-existe'],
+    ...(A11Y_COOKIE ? [['¿Qué me pongo hoy? (con sesión)', '/que-me-pongo']] : []),
   ]
 }
 
 async function audit(name, path) {
-  const response = await fetch(`${BASE}${path}`, { redirect: 'manual' })
+  // Las páginas privadas se auditan solo si se pasa una cookie de sesión (A11Y_COOKIE); si no, se omiten.
+  const response = await fetch(`${BASE}${path}`, { redirect: 'manual', headers: A11Y_COOKIE ? { cookie: A11Y_COOKIE } : {} })
   const html = await response.text()
   const dom = new JSDOM(html, { runScripts: 'outside-only', pretendToBeVisual: true, url: `${BASE}${path}` })
   dom.window.eval(axe.source)
