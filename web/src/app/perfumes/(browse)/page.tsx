@@ -3,7 +3,9 @@ import { PerfumeCard } from "../PerfumeCard";
 import type { Perfume } from "../types";
 import { logServerError } from "@/lib/log";
 import { listPerfumes } from "@/lib/perfumes/list";
-import { buildActiveFilters } from "@/lib/perfumes/active-filters";
+import { buildActiveFilters, suggestFiltersFromQuery } from "@/lib/perfumes/active-filters";
+import { GENDERS, GENDER_LABELS, SEASONS, SEASON_LABELS, normalizeGender, normalizeSeason } from "@/lib/perfumes/filter-labels";
+import { MoreFilters } from "./MoreFilters";
 import { getAccordNames } from "@/lib/accord-stats";
 import { getBrandIndex } from "@/lib/brands";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -11,7 +13,6 @@ import { getUserCollection } from "@/app/actions/collection";
 
 type Pagination = { total: number; page: number; totalPages: number };
 
-const SEASONS = ["primavera", "verano", "otoño", "invierno"] as const;
 const OCCASIONS = [
   "diario",
   "trabajo",
@@ -21,7 +22,6 @@ const OCCASIONS = [
   "noche",
 ] as const;
 const CONCENTRATIONS = ["parfum", "edp", "edt", "edc"] as const;
-const GENDERS = ["femenino", "masculino", "unisex"] as const;
 
 function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -110,8 +110,8 @@ export default async function PerfumesPage({
     accord: first(params.accord) ?? "",
     brand: first(params.brand) ?? "",
     concentration: first(params.concentration) ?? "",
-    gender: first(params.gender) ?? "",
-    season: first(params.season) ?? "",
+    gender: normalizeGender(first(params.gender)) ?? first(params.gender) ?? "",
+    season: normalizeSeason(first(params.season)) ?? first(params.season) ?? "",
     occasion: first(params.occasion) ?? "",
     minDuration: first(params.minDuration) ?? "",
     minLongevity: first(params.minLongevity) ?? "",
@@ -121,6 +121,7 @@ export default async function PerfumesPage({
 
   const activeFilters = buildActiveFilters(params);
   // "Más filtros" arranca abierto si hay algún filtro aparte de la búsqueda.
+  const suggestion = suggestFiltersFromQuery(params);
   const moreActive = Object.entries(selected).some(([key, value]) => key !== "q" && Boolean(value));
 
   return (
@@ -147,7 +148,7 @@ export default async function PerfumesPage({
           />
           <button type="submit">Buscar</button>
         </div>
-        <details className="catalog-more" open={moreActive}>
+        <MoreFilters defaultOpen={moreActive}>
           <summary>Más filtros</summary>
           <div className="catalog-filter-grid">
             <input
@@ -184,7 +185,7 @@ export default async function PerfumesPage({
               <option value="">Género</option>
               {GENDERS.map((g) => (
                 <option key={g} value={g}>
-                  {g.charAt(0).toUpperCase() + g.slice(1)}
+                  {GENDER_LABELS[g]}
                 </option>
               ))}
             </select>
@@ -192,7 +193,7 @@ export default async function PerfumesPage({
               <option value="">Estación</option>
               {SEASONS.map((s) => (
                 <option key={s} value={s}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {SEASON_LABELS[s]}
                 </option>
               ))}
             </select>
@@ -220,7 +221,7 @@ export default async function PerfumesPage({
           <div className="catalog-filters-actions">
             <button type="submit">Aplicar filtros</button>
           </div>
-        </details>
+        </MoreFilters>
       </form>
 
       {activeFilters.length > 0 && (
@@ -256,9 +257,26 @@ export default async function PerfumesPage({
             {error ? "No se pudo cargar el catálogo." : "No encontramos perfumes con esos filtros."}
           </p>
           {!error && (
-            <p>
-              Probá quitando alguno, o <Link href="/perfumes">volvé a ver todo el catálogo</Link>.
-            </p>
+            <>
+              {suggestion && (
+                <p className="catalog-empty-tip">
+                  Usá los filtros de género y estación en vez de escribirlos en la búsqueda.{" "}
+                  <Link href={suggestion.href}>Aplicar «{suggestion.words.join(" ")}» como filtro</Link>
+                </p>
+              )}
+              {activeFilters.length > 0 && (
+                <ul className="catalog-empty-remove" aria-label="Quitar filtros">
+                  {activeFilters.map((filter) => (
+                    <li key={filter.key}>
+                      <Link href={filter.removeHref}>Quitar filtro: {filter.label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p>
+                <Link href="/perfumes">Volvé a ver todo el catálogo</Link>.
+              </p>
+            </>
           )}
         </div>
       ) : (

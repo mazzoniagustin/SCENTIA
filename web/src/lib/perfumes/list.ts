@@ -1,6 +1,7 @@
 import type { Prisma, PriceTier } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { createTtlCache } from '@/lib/ttl-cache'
+import { normalizeGender, normalizeSeason } from './filter-labels'
 
 // Tipado estricto del where: solo los filtros que aplicamos
 type PerfumeWhere = Prisma.PerfumeWhereInput
@@ -148,13 +149,15 @@ function buildFilters(searchParams: URLSearchParams): FilterResult {
 
   const gender = searchParams.get('gender')
   if (gender) {
-    where.gender = { equals: gender, mode: 'insensitive' }
+    // Acepta alias (men, hombres, women...) y los lleva al valor guardado; el where canónico
+    // también evita duplicar la caché de conteos. Un valor desconocido no devuelve resultados.
+    where.gender = { equals: normalizeGender(gender) ?? gender, mode: 'insensitive' }
   }
 
   const season = searchParams.get('season')
   if (season) {
     // seasons es un array en el schema; hasSome busca coincidencia exacta dentro del array
-    where.seasons = { has: season }
+    where.seasons = { has: normalizeSeason(season) ?? season }
   }
 
   const occasion = searchParams.get('occasion')

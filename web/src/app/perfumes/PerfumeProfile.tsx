@@ -10,7 +10,8 @@ export const PHASES = [
 ] as const;
 
 export function AccordBars({ accords }: { accords: Array<{ name: string; intensity: number }> }) {
-  if (accords.length === 0) return <p className="no-data">Sin dato</p>;
+  // Sin datos no se muestra nada: quien lo use decide si oculta también su título.
+  if (accords.length === 0) return null;
   return (
     <ul className="ficha-accords">
       {accords.map(({ name, intensity }) => (
@@ -26,29 +27,30 @@ export function AccordBars({ accords }: { accords: Array<{ name: string; intensi
 }
 
 export function NotePyramid({ notes }: { notes: Array<{ noteType: string; name: string }> }) {
-  if (notes.length === 0) return <p className="no-data">Sin dato</p>;
+  if (notes.length === 0) return null;
   const hasTiers = notes.some((n) => n.noteType !== "flat");
   const hasFlat = notes.some((n) => n.noteType === "flat");
-  // Los perfumes sin pirámide (solo lista de notas) muestran un único grupo; los demás, los tres pisos.
-  const phases = [...(hasTiers ? PHASES : []), ...(hasFlat ? [{ type: "flat", label: "Notas" }] : [])];
+  // Los perfumes sin pirámide (solo lista de notas) muestran un único grupo, sin rótulo (el título de la sección ya dice "Notas");
+  // si conviven con pisos, las notas sueltas llevan "Otras notas". Los pisos sin notas se omiten.
+  const phases: ReadonlyArray<{ type: string; label: string | null }> = [
+    ...(hasTiers ? PHASES : []),
+    ...(hasFlat ? [{ type: "flat", label: hasTiers ? "Otras notas" : null }] : []),
+  ];
   return (
     <div className="ficha-phases">
       {phases.map(({ type, label }) => {
         const names = notes.filter((n) => n.noteType === type).map((n) => n.name);
+        if (names.length === 0) return null;
         return (
           <div key={type}>
-            <h3>{label}</h3>
-            {names.length === 0 ? (
-              <p className="no-data">Sin dato</p>
-            ) : (
-              <ul className="perfume-badges">
-                {names.map((name) => (
-                  <li key={name} lang="en">
-                    {name}
-                  </li>
-                ))}
-              </ul>
-            )}
+            {label && <h3>{label}</h3>}
+            <ul className="perfume-badges">
+              {names.map((name) => (
+                <li key={name} lang="en">
+                  {name}
+                </li>
+              ))}
+            </ul>
           </div>
         );
       })}

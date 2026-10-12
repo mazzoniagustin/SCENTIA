@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { buildActiveFilters } from './active-filters.ts'
+import { buildActiveFilters, suggestFiltersFromQuery } from './active-filters.ts'
 
 describe('buildActiveFilters', () => {
   it('sin parámetros no hay chips', () => {
@@ -65,5 +65,42 @@ describe('buildActiveFilters', () => {
       chips.map((c) => c.label),
       ['Duración: Larga o más', 'Duración mínima: 4 h', 'Duración máxima: 8 h'],
     )
+  })
+})
+
+describe('etiquetas de género y alias', () => {
+  it('muestra el género en es-AR', () => {
+    const label = (gender: string) => buildActiveFilters({ gender })[0].label
+    assert.equal(label('masculino'), 'Para hombres')
+    assert.equal(label('femenino'), 'Para mujeres')
+    assert.equal(label('unisex'), 'Unisex')
+  })
+
+  it('un alias en inglés se muestra y enlaza como el valor canónico', () => {
+    const chips = buildActiveFilters({ gender: 'Men', season: 'Verano', q: 'sauvage' })
+    assert.equal(chips.find((c) => c.key === 'gender')?.label, 'Para hombres')
+    assert.equal(chips.find((c) => c.key === 'q')?.removeHref, '/perfumes?gender=masculino&season=verano')
+  })
+})
+
+describe('suggestFiltersFromQuery', () => {
+  it('sin búsqueda o sin palabras de filtro no sugiere nada', () => {
+    assert.equal(suggestFiltersFromQuery({}), null)
+    assert.equal(suggestFiltersFromQuery({ q: 'sauvage dior' }), null)
+  })
+
+  it('convierte palabras de género y estación en filtros y deja el resto en q', () => {
+    const s = suggestFiltersFromQuery({ q: 'sauvage hombres verano' })
+    assert.deepEqual(s?.words, ['hombres', 'verano'])
+    assert.equal(s?.href, '/perfumes?q=sauvage&gender=masculino&season=verano')
+  })
+
+  it('si q son solo filtros, la búsqueda se quita; conserva otros filtros', () => {
+    const s = suggestFiltersFromQuery({ q: 'Mujeres', brand: 'Dior' })
+    assert.equal(s?.href, '/perfumes?brand=Dior&gender=femenino')
+  })
+
+  it('no pisa un filtro ya elegido', () => {
+    assert.equal(suggestFiltersFromQuery({ q: 'hombres', gender: 'unisex' }), null)
   })
 })

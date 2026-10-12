@@ -12,7 +12,7 @@ import { isAllowedImageUrl, isAllowedSourcePageUrl } from "@/lib/images";
 import { CommunityStats } from "../CommunityStats";
 import { CollectionSection, RemindsMeLoader, SimilarSection } from "./sections";
 import { AccordBars, NotePyramid } from "../PerfumeProfile";
-import { genderLabel, NO_DATA, PRICE_TIER_LABELS } from "../types";
+import { genderLabel, PRICE_TIER_LABELS } from "../types";
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
@@ -58,8 +58,10 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
     ["Perfumista", perfume.perfumer],
     ["Duración", duration],
   ];
-  // Los datos presentes primero; los que faltan van al final y atenuados.
-  const details = [...allDetails.filter(([, v]) => v !== null), ...allDetails.filter(([, v]) => v === null)];
+  // Los datos que faltan no se muestran; si no hay ninguno (ni descripción), se oculta la tarjeta entera.
+  const details = allDetails.filter((entry): entry is [string, string] => entry[1] !== null);
+  const accordBars = perfume.accords.map((a) => ({ name: a.accord.name, intensity: a.intensity }));
+  const noteList = perfume.notes.map((n) => ({ noteType: n.noteType, name: n.note.name }));
   const heroFacts = [concentration, perfume.releaseYear !== null ? String(perfume.releaseYear) : null, duration && `Duración: ${duration}`].filter(Boolean);
 
   return (
@@ -112,28 +114,36 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
         </div>
       </header>
 
-      <section className="ficha-section" aria-labelledby="ficha-datos">
-        <h2 id="ficha-datos">Datos</h2>
-        <dl className="ficha-details">
-          {details.map(([label, value]) => (
-            <div key={label} className={value === null ? "is-empty" : undefined}>
-              <dt>{label}</dt>
-              <dd>{value ?? NO_DATA}</dd>
-            </div>
-          ))}
-        </dl>
-        {perfume.description && <p>{perfume.description}</p>}
-      </section>
+      {(details.length > 0 || perfume.description) && (
+        <section className="ficha-section" aria-labelledby="ficha-datos">
+          <h2 id="ficha-datos">Datos</h2>
+          {details.length > 0 && (
+            <dl className="ficha-details">
+              {details.map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {perfume.description && <p>{perfume.description}</p>}
+        </section>
+      )}
 
-      <section className="ficha-section" aria-labelledby="ficha-acordes">
-        <h2 id="ficha-acordes">Acordes</h2>
-        <AccordBars accords={perfume.accords.map((a) => ({ name: a.accord.name, intensity: a.intensity }))} />
-      </section>
+      {accordBars.length > 0 && (
+        <section className="ficha-section" aria-labelledby="ficha-acordes">
+          <h2 id="ficha-acordes">Acordes</h2>
+          <AccordBars accords={accordBars} />
+        </section>
+      )}
 
-      <section className="ficha-section" aria-labelledby="ficha-notas">
-        <h2 id="ficha-notas">Notas</h2>
-        <NotePyramid notes={perfume.notes.map((n) => ({ noteType: n.noteType, name: n.note.name }))} />
-      </section>
+      {noteList.length > 0 && (
+        <section className="ficha-section" aria-labelledby="ficha-notas">
+          <h2 id="ficha-notas">Notas</h2>
+          <NotePyramid notes={noteList} />
+        </section>
+      )}
 
       <CommunityStats longevity={perfume.longevity} sillage={perfume.sillage} stats={perfume.stats} />
 
