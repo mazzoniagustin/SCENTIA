@@ -1,7 +1,5 @@
 import Link from 'next/link';
-import { revalidatePath } from 'next/cache';
 
-import { deleteCollectionEntry } from '@/app/actions/collection';
 import {
   STATUS_LABELS,
   STATUS_ORDER,
@@ -12,6 +10,7 @@ import {
 } from '@/lib/collection/overview';
 import { CollectionForm } from '../perfumes/CollectionForm';
 import { PerfumeImage } from '../perfumes/PerfumeImage';
+import { DeleteEntryForm } from './DeleteEntryForm';
 
 type Entry = {
   perfumeId: string;
@@ -82,17 +81,7 @@ export function CollectionView({ collection, statusFilter }: { collection: Entry
                     <summary>Editar</summary>
                     <CollectionForm perfumeId={entry.perfumeId} initialData={entry} />
                   </details>
-                  <form
-                    action={async () => {
-                      'use server';
-                      await deleteCollectionEntry(entry.perfumeId);
-                      revalidatePath('/mi-coleccion');
-                    }}
-                  >
-                    <button type="submit" className="button-danger">
-                      Eliminar
-                    </button>
-                  </form>
+                  <DeleteEntryForm perfumeId={entry.perfumeId} />
                 </div>
               </div>
             </li>

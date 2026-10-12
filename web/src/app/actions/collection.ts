@@ -71,6 +71,32 @@ export async function deleteCollectionEntry(perfumeId: string) {
   })
 }
 
+// Borrado desde Mi colección: nunca lanza; devuelve un estado para mostrar el error (por ejemplo, el límite de frecuencia) junto a la tarjeta.
+export async function deleteCollectionEntryAction(_previous: CollectionFormState, formData: FormData): Promise<CollectionFormState> {
+  const perfumeId = formData.get('perfumeId')
+  if (typeof perfumeId !== 'string' || !isValidPerfumeId(perfumeId)) return { status: 'error', message: 'No pudimos eliminarlo. Probá de nuevo en un momento.' }
+
+  try {
+    const user = await getAuthenticatedUserOrNull()
+    if (!user) return { status: 'error', message: 'Tu sesión venció. Volvé a ingresar para eliminarlo.' }
+
+    if (!collectionWriteAllowed(user.id)) return { status: 'error', message: RATE_LIMIT_MESSAGE }
+
+    // deleteMany: si ya no existe (otra pestaña), no es un error.
+    await prisma.userCollection.deleteMany({ where: { userId: user.id, perfumeId } })
+  } catch (error) {
+    logServerError('collection/delete', error)
+    return { status: 'error', message: 'No pudimos eliminarlo. Probá de nuevo en un momento.' }
+  }
+
+  revalidatePath('/perfumes', 'layout')
+  revalidatePath('/marcas', 'layout')
+  revalidatePath('/mi-coleccion')
+  revalidatePath('/')
+  refresh()
+  return { status: 'success', message: 'Eliminado de tu colección.' }
+}
+
 // Acción del formulario de la colección: nunca lanza; devuelve un estado para mostrar el resultado (guardado o error) en pantalla.
 // Es un endpoint público: se valida todo en el servidor y el usuario sale siempre de la sesión.
 export async function saveCollectionEntryAction(_previous: CollectionFormState, formData: FormData): Promise<CollectionFormState> {
