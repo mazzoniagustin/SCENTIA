@@ -3,7 +3,8 @@
 // momento del día por votos, duración y estela, y votos de la comunidad.
 //
 //   npx tsx scripts/import-kaggle-fragrantica.ts                 simulación (no escribe nada)
-//   npx tsx scripts/import-kaggle-fragrantica.ts --apply [--min-people 50] [--limit N]
+//   npx tsx scripts/import-kaggle-fragrantica.ts --apply [--min-people 50] [--limit N] [--as-draft]
+//   --as-draft: los perfumes NUEVOS entran como DRAFT (los existentes no cambian de estado); se publican con scripts/editorial.ts publish.
 //
 // 1) Enlaza los perfumes ya importados con su id de Fragrantica (por la URL de data/fra_cleaned.csv).
 // 2) Los enlazados se ENRIQUECEN (acordes, notas, estaciones, duración, estela, estadísticas, nombre y marca con acentos),
@@ -21,6 +22,7 @@ import { parse as parseSync } from 'csv-parse/sync'
 import fs from 'fs'
 import { ACCORD_TRANSLATIONS } from './accord-translations'
 import { humanize, humanizeBrand, parseConcentration } from './humanize'
+import { creationStatus } from '../src/lib/import/creation-status'
 import { finalSeasons, prepareRow, type Prepared, type RawRow } from '../src/lib/import/kaggle-fragrantica'
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL as string) })
@@ -31,6 +33,7 @@ const arg = (flag: string) => {
   return i >= 0 ? process.argv[i + 1] : undefined
 }
 const APPLY = process.argv.includes('--apply')
+const AS_DRAFT = process.argv.includes('--as-draft')
 const MIN_PEOPLE = parseInt(arg('--min-people') ?? '50', 10)
 const LIMIT = arg('--limit') ? parseInt(arg('--limit')!, 10) : Infinity
 const BATCH = 400
@@ -84,7 +87,8 @@ async function linkExisting(): Promise<Map<string, Existing>> {
 
 async function main() {
   console.log(APPLY ? '*** APLICANDO cambios ***' : '*** SIMULACIÓN: no se escribe nada (agregá --apply) ***')
-  console.log(`Mínimo de votos para crear perfumes nuevos: ${MIN_PEOPLE}\n`)
+  console.log(`Mínimo de votos para crear perfumes nuevos: ${MIN_PEOPLE}`)
+  console.log(`Estado de los perfumes nuevos: ${AS_DRAFT ? 'DRAFT (--as-draft)' : 'PUBLISHED (default del schema)'}\n`)
   const bySource = await linkExisting()
 
   // Claves (marca, nombre) ocupadas, para no chocar con el índice único al renombrar o crear.
@@ -174,6 +178,7 @@ async function main() {
           seasons: finalSeasons(p, null), occasions: p.occasions ?? [],
           stats: (p.stats as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull,
           sourceId: p.sourceId, source: SOURCE,
+          ...creationStatus(AS_DRAFT),
         })),
         skipDuplicates: true,
       })
@@ -235,6 +240,7 @@ async function main() {
 
   console.log('\nMuestra:'); sample.forEach((s) => console.log('  ' + s))
   console.log('\nResumen:', stats)
+  if (AS_DRAFT) console.log(`\n${APPLY ? 'Creados' : 'Entrarían'} como DRAFT: ${stats.created} perfumes nuevos. Para publicarlos: npx tsx scripts/editorial.ts publish --file <ids.txt> (revisalos antes con list --status draft).`)
   if (!APPLY) console.log('\n(Simulación: no se cambió nada. Agregá --apply para escribir; antes, un respaldo.)')
 }
 

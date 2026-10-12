@@ -1,5 +1,6 @@
 // Import por lotes de Fragrantica. Uso:
-//   npx tsx scripts/import-fragrantica-batch.ts --limit 500 [--offset 0] [--batch 500]
+//   npx tsx scripts/import-fragrantica-batch.ts --limit 500 [--offset 0] [--batch 500] [--as-draft]
+//   --as-draft: los perfumes NUEVOS entran como DRAFT (los existentes no cambian de estado); se publican con scripts/editorial.ts publish.
 //   npx tsx scripts/import-fragrantica-batch.ts --all        (importación completa; requiere aprobación)
 // Idempotente: upsert lógico por (brand, name) y relaciones reescritas. Nunca toca priceTier.
 // El CSV se decodifica como Windows-1252 y los perfumistas se humanizan (ver humanize.ts).
@@ -12,6 +13,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { parse } from 'csv-parse/sync'
 import fs from 'fs'
 import { ACCORD_TRANSLATIONS } from './accord-translations'
+import { creationStatus } from '../src/lib/import/creation-status'
 import { humanize, humanizeBrand, humanizePerfumers, parseConcentration } from './humanize'
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL as string) })
@@ -20,6 +22,7 @@ const GENDER_MAP: Record<string, string> = { women: 'femenino', men: 'masculino'
 const INTENSITY = [100, 80, 60, 40, 20]
 // Procedencia de los datos importados (RF-06).
 const SOURCE = 'fragrantica-csv'
+const AS_DRAFT = process.argv.includes('--as-draft')
 
 type CsvRow = Record<string, string>
 type NoteType = 'top' | 'heart' | 'base'
@@ -136,7 +139,7 @@ async function importBatch(batch: Prepared[], noteIds: Map<string, string>, acco
   })
   if (fresh.length) {
     await prisma.perfume.createMany({
-      data: fresh.map((p) => ({ brand: p.brand, name: p.name, ...data(p) })),
+      data: fresh.map((p) => ({ brand: p.brand, name: p.name, ...data(p), ...creationStatus(AS_DRAFT) })),
       skipDuplicates: true,
     })
     const created = await prisma.perfume.findMany({
@@ -213,6 +216,7 @@ async function run() {
   const noteIds = new Map((await prisma.note.findMany({ select: { id: true, name: true } })).map((n) => [n.name, n.id]))
   const accordIds = new Map((await prisma.accord.findMany({ select: { id: true, name: true } })).map((a) => [a.name, a.id]))
 
+  if (AS_DRAFT) console.log('--as-draft: los perfumes nuevos entran como DRAFT; los existentes no cambian de estado.')
   const t0 = Date.now()
   const totals = { created: 0, updated: 0, notes: 0, accords: 0 }
   for (const [i, batch] of chunk(prepared, batchSize).entries()) {
@@ -222,6 +226,7 @@ async function run() {
     console.log(`lote ${i + 1}: ${batch.length} filas en ${((Date.now() - tb) / 1000).toFixed(1)}s (nuevas ${r.created}, actualizadas ${r.updated})`)
   }
   const secs = (Date.now() - t0) / 1000
+  if (AS_DRAFT) console.log(`Creados como DRAFT: ${totals.created}. Para publicarlos: npx tsx scripts/editorial.ts publish --file <ids.txt> (revisalos con list --status draft).`)
   console.log({ ...totals, filas: prepared.length, omitidas: skipped, segundos: +secs.toFixed(1), filasPorSeg: +(prepared.length / secs).toFixed(1) })
 }
 
