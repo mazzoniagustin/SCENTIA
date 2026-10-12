@@ -1192,10 +1192,19 @@ textarea {
   white-space: nowrap;
 }
 
+/* "Crear cuenta" dentro del menú plegable: oculto por defecto (display:none lo saca del árbol de accesibilidad). */
+.site-nav a.nav-signup {
+  display: none;
+}
+
 @media (max-width: 30rem) {
   .header-link,
   .header-placeholder-extra {
     display: none;
+  }
+
+  .site-nav a.nav-signup {
+    display: flex;
   }
 
   .header-nickname {

@@ -7,8 +7,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { isActivePath, type NavLink } from "@/lib/nav";
 
 // Menú principal: marca el enlace de la página actual (`aria-current`) y en pantallas angostas se pliega detrás de un botón.
-// Sin JavaScript el menú se ve completo (ver <noscript>). `cta` es el botón "Ingresar", que queda visible fuera del menú plegado.
-export function SiteNav({ links, cta }: { links: readonly NavLink[]; cta: ReactNode }) {
+// Sin JavaScript el menú se ve completo (ver <noscript>). `cta` es el botón "Ingresar", que queda visible fuera del menú plegado; `extraLink` es un enlace extra al final del menú ("Crear cuenta" en el celular, sin sesión).
+export function SiteNav({ links, cta, extraLink }: { links: readonly NavLink[]; cta: ReactNode; extraLink?: ReactNode }) {
   const pathname = usePathname();
   // Se guarda en qué página se abrió el menú: al navegar deja de coincidir y queda cerrado, sin efectos que reseteen el estado.
   const [openOn, setOpenOn] = useState<string | null>(null);
@@ -42,6 +42,7 @@ export function SiteNav({ links, cta }: { links: readonly NavLink[]; cta: ReactN
             </Link>
           );
         })}
+        {extraLink}
       </nav>
       <div className="site-header-actions">
         {cta}

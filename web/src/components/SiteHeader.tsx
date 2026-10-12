@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { NavSignupLink } from "@/components/NavSignupLink";
 import { SiteNav } from "@/components/SiteNav";
 import { getSessionNickname } from "@/lib/auth/db-user";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -30,6 +31,12 @@ async function HeaderCta() {
   );
 }
 
+// Enlace "Crear cuenta" del menú plegable: solo sin sesión (getCurrentUser lee el JWT local, sin consulta a la base).
+async function MenuSignupLink() {
+  const user = await getCurrentUser().catch(() => null);
+  return user ? null : <NavSignupLink />;
+}
+
 // Cabecera fija con leve desenfoque. "Cuenta" lleva a /account, que redirige a /login si hace falta.
 export function SiteHeader() {
   return (
@@ -40,6 +47,11 @@ export function SiteHeader() {
         </Link>
         <SiteNav
           links={NAV_LINKS}
+          extraLink={
+            <Suspense fallback={null}>
+              <MenuSignupLink />
+            </Suspense>
+          }
           cta={
             <Suspense fallback={<span className="header-cta header-cta-placeholder" aria-hidden="true"><span className="header-placeholder-extra">Crear cuenta </span>Ingresar</span>}>
               <HeaderCta />
