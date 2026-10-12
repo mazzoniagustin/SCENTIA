@@ -7,6 +7,7 @@ import { DELETE_CONFIRMATION } from "@/lib/account/constants";
 import { getUserProfile } from "@/lib/account/data";
 import { LOCALES } from "@/lib/account/preferences";
 import { getAuthenticatedUserOrNull } from "@/lib/auth/require-user";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 
 import { deleteAccountAction, saveNicknameAction, savePreferencesAction } from "../actions/account";
 import { signOut } from "../login/actions";
@@ -49,6 +50,11 @@ export default async function AccountPage({
       {params.error === "preferences" && (
         <p className="error-message" role="alert">
           Revisá las preferencias: el país lleva 2 letras (AR) y la moneda 3 (ARS).
+        </p>
+      )}
+      {params.error === "rate" && (
+        <p className="error-message" role="alert">
+          {RATE_LIMIT_MESSAGE}
         </p>
       )}
       {params.error === "confirm" && (

@@ -4,12 +4,16 @@ import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth/require-user'
 import { refresh, revalidatePath } from 'next/cache'
 import { collectionInputFromFormData, type CollectionFormState } from '@/lib/collection/form'
+import { RATE_LIMIT_MESSAGE, limitAction } from '@/lib/rate-limit'
 import { logServerError } from '@/lib/log'
 import { getAuthenticatedUserOrNull } from '@/lib/auth/require-user'
 import { upsertCollectionForUser } from '@/lib/collection/data'
 import { isValidPerfumeId, validateCollectionEntry, type CollectionEntryInput } from '@/lib/collection/validation'
 
 const getAuthenticatedUser = requireUser
+
+// Escrituras de colección: 30 por minuto por persona (contador compartido entre las acciones).
+const collectionWriteAllowed = (userId: string) => limitAction('collection', userId, { limit: 30, windowMs: 60_000 }).ok
 
 export async function getUserCollection() {
   const user = await getAuthenticatedUser()
@@ -27,6 +31,7 @@ export async function upsertCollectionEntry(input: CollectionEntryInput) {
   const data = validated.value
 
   const user = await getAuthenticatedUser()
+  if (!collectionWriteAllowed(user.id)) throw new Error('rate')
 
   return await prisma.userCollection.upsert({
     where: {
@@ -53,6 +58,8 @@ export async function upsertCollectionEntry(input: CollectionEntryInput) {
 export async function deleteCollectionEntry(perfumeId: string) {
   if (!isValidPerfumeId(perfumeId)) throw new Error('perfumeId inválido')
   const user = await getAuthenticatedUser()
+  // Es un form action sin estado donde mostrar un mensaje: al exceder el límite no borra y deja la pantalla como está.
+  if (!collectionWriteAllowed(user.id)) return null
 
   return await prisma.userCollection.delete({
     where: {
@@ -76,6 +83,8 @@ export async function saveCollectionEntryAction(_previous: CollectionFormState, 
   try {
     const user = await getAuthenticatedUserOrNull()
     if (!user) return { status: 'error', message: 'Tu sesión venció. Volvé a ingresar para guardarlo.' }
+
+    if (!collectionWriteAllowed(user.id)) return { status: 'error', message: RATE_LIMIT_MESSAGE }
 
     await upsertCollectionForUser(user.id, validated.value)
   } catch (error) {

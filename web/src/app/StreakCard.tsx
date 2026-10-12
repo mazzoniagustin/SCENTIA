@@ -23,7 +23,7 @@ export function StreakCard({
   options: Option[];
   /** Perfumes en la colección (de cualquier estado): para explicar por qué no hay nada que elegir. */
   collectionTotal?: number;
-  notice?: "ok" | "error";
+  notice?: "ok" | "error" | "limite";
 }) {
   if (!summary) {
     return (
@@ -81,6 +81,11 @@ export function StreakCard({
         {notice === "ok" && (
           <p className="notice" role="status">
             ¡Listo! Registramos tu perfume de hoy.
+          </p>
+        )}
+        {notice === "limite" && (
+          <p className="error-message" role="alert">
+            Registraste muchos perfumes seguidos. Esperá un minuto y volvé a intentar.
           </p>
         )}
         {notice === "error" && (

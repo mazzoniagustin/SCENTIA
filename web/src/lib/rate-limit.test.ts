@@ -1,7 +1,7 @@
 import { beforeEach, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { clientIp, rateLimit, resetRateLimits } from './rate-limit.ts'
+import { clientIp, limitAction, rateLimit, resetRateLimits } from './rate-limit.ts'
 
 const opts = (now: number) => ({ limit: 3, windowMs: 60_000, now })
 
@@ -33,5 +33,28 @@ describe('clientIp', () => {
     assert.equal(clientIp(new Headers({ 'x-forwarded-for': '1.2.3.4, 10.0.0.1' })), '1.2.3.4')
     assert.equal(clientIp(new Headers({ 'x-real-ip': '5.6.7.8' })), '5.6.7.8')
     assert.equal(clientIp(new Headers()), 'unknown')
+  })
+})
+
+describe('limitAction', () => {
+  beforeEach(resetRateLimits)
+
+  it('permite bajo el límite y bloquea al excederlo', () => {
+    for (let i = 0; i < 3; i++) assert.equal(limitAction('saveNickname', 'u1', opts(0)).ok, true)
+    const blocked = limitAction('saveNickname', 'u1', opts(1000))
+    assert.deepEqual(blocked, { ok: false, retryAfterSeconds: 59 })
+  })
+
+  it('la ventana se reinicia', () => {
+    for (let i = 0; i < 3; i++) limitAction('wear', 'u1', opts(0))
+    assert.equal(limitAction('wear', 'u1', opts(59_999)).ok, false)
+    assert.equal(limitAction('wear', 'u1', opts(60_000)).ok, true)
+  })
+
+  it('claves independientes por acción y por usuario', () => {
+    for (let i = 0; i < 3; i++) limitAction('collection', 'u1', opts(0))
+    assert.equal(limitAction('collection', 'u1', opts(0)).ok, false)
+    assert.equal(limitAction('wear', 'u1', opts(0)).ok, true)
+    assert.equal(limitAction('collection', 'u2', opts(0)).ok, true)
   })
 })

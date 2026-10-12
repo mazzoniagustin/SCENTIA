@@ -75,7 +75,7 @@ export async function StatsSection() {
   );
 }
 
-export async function PersonalSection({ notice }: { notice?: "ok" | "error" }) {
+export async function PersonalSection({ notice }: { notice?: "ok" | "error" | "limite" }) {
   const user = await getCurrentUser();
   const dbUserId = user ? await getSessionDbUserId() : null;
   const [wear, wearOptions, overview] = await Promise.all([

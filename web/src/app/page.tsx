@@ -11,7 +11,7 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 // llega por separado, con un marcador mientras tanto.
 export default async function Home({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const racha = first((await searchParams).racha);
-  const notice = racha === "ok" || racha === "error" ? racha : undefined;
+  const notice = racha === "ok" || racha === "error" || racha === "limite" ? racha : undefined;
 
   return (
     <main id="contenido" className="home">

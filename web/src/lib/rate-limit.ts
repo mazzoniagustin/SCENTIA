@@ -33,6 +33,23 @@ export function rateLimit(
   return { ok: true, remaining: options.limit - current.count }
 }
 
+export const RATE_LIMIT_MESSAGE = 'Hiciste muchos cambios seguidos. Esperá un minuto y volvé a intentar.'
+
+/**
+ * Límite por acción y por persona para Server Actions: clave `action:<name>:<userId>`. Pasá el id de
+ * la sesión; solo si no hay usuario usá la IP (clientIp) como identificador. No lanza nunca.
+ * Limitación serverless: el contador vive en memoria de cada instancia, así que es un freno parcial.
+ * La protección real requiere el Firewall de Vercel o un contador compartido (Redis/tabla), que
+ * necesitaría una dependencia o cambio de schema y confirmación previa.
+ */
+export function limitAction(
+  name: string,
+  userId: string,
+  options: { limit: number; windowMs: number; now?: number },
+): RateLimitResult {
+  return rateLimit(`action:${name}:${userId}`, options)
+}
+
 /** IP del cliente según el proxy de la plataforma (primer valor de x-forwarded-for). */
 export function clientIp(headers: Headers): string {
   const forwarded = headers.get('x-forwarded-for')?.split(',')[0]?.trim()
