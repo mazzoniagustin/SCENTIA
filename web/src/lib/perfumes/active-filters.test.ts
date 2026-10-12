@@ -54,6 +54,12 @@ describe('buildActiveFilters', () => {
     assert.equal(chips[1].removeHref, '/perfumes?q=a+b%26c')
   })
 
+  it('una estación en inglés se muestra y se quita como la canónica', () => {
+    const chips = buildActiveFilters({ season: 'summer', q: 'sauvage' })
+    assert.equal(chips.find((c) => c.key === 'season')?.label, 'Estación: Verano')
+    assert.equal(chips.find((c) => c.key === 'q')?.removeHref, '/perfumes?season=verano')
+  })
+
   it('un valor desconocido se muestra tal cual en vez de perderse', () => {
     const [chip] = buildActiveFilters({ season: 'monzón' })
     assert.equal(chip.label, 'Estación: Monzón')

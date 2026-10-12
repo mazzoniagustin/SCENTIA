@@ -38,8 +38,22 @@ export function normalizeGender(value: string | null | undefined): (typeof GENDE
   return GENDER_ALIASES[value.trim().toLowerCase()] ?? null
 }
 
-/** Devuelve la estación canónica (insensible a mayúsculas); null si no la conoce. */
+// Alias aceptados para la estación, sin acentos y en minúsculas; en la base se guarda en español.
+const SEASON_ALIASES: Record<string, (typeof SEASONS)[number]> = {
+  summer: 'verano',
+  verano: 'verano',
+  winter: 'invierno',
+  invierno: 'invierno',
+  autumn: 'otoño',
+  fall: 'otoño',
+  otono: 'otoño',
+  spring: 'primavera',
+  primavera: 'primavera',
+}
+
+/** Devuelve la estación canónica (insensible a mayúsculas, acentos y alias en inglés); null si no la conoce. */
 export function normalizeSeason(value: string | null | undefined): (typeof SEASONS)[number] | null {
-  const season = value?.trim().toLowerCase()
-  return SEASONS.find((s) => s === season) ?? null
+  if (!value) return null
+  const key = value.trim().toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
+  return SEASON_ALIASES[key] ?? null
 }

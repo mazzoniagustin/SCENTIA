@@ -24,4 +24,20 @@ describe('normalizeSeason', () => {
     assert.equal(normalizeSeason('OTOÑO'), 'otoño')
     assert.equal(normalizeSeason('monzón'), null)
   })
+
+  it('acepta alias en inglés y variantes sin acento, con mayúsculas y espacios', () => {
+    for (const [input, expected] of [
+      ['summer', 'verano'],
+      ['Winter', 'invierno'],
+      ['autumn', 'otoño'],
+      ['FALL', 'otoño'],
+      ['otono', 'otoño'],
+      ['Otoño', 'otoño'],
+      ['  spring ', 'primavera'],
+    ] as const) {
+      assert.equal(normalizeSeason(input), expected, input)
+    }
+    assert.equal(normalizeSeason(''), null)
+    assert.equal(normalizeSeason(null), null)
+  })
 })
