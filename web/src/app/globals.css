@@ -3653,3 +3653,270 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   display: flex;
   align-items: center;
 }
+
+/* === TANDA 2: menú y cabecera === */
+
+/* "Cuenta" (solo con sesión): el marcador reserva su lugar en la barra ancha para que no salte la cabecera; en el celular no existe. */
+.nav-account-placeholder {
+  display: none;
+  visibility: hidden;
+}
+
+@media (min-width: 52rem) {
+  .nav-account-placeholder {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap-size);
+  }
+}
+
+/* "Ingresar" + "Crear cuenta" dentro del menú plegable (≤ 30rem, sin sesión), separados de los enlaces. */
+.site-nav .nav-auth {
+  display: none;
+}
+
+@media (max-width: 30rem) {
+  .site-nav .nav-auth {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .site-nav[data-open="true"] .nav-auth a {
+    justify-content: center;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+  }
+
+  .site-nav[data-open="true"] .nav-auth .nav-login {
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  .site-nav[data-open="true"] .nav-auth .nav-signup {
+    color: var(--accent);
+  }
+
+  .site-nav[data-open="true"] .nav-auth a:hover {
+    filter: brightness(1.08);
+  }
+
+  .site-nav[data-open="true"] .nav-auth a[aria-current="page"]::after {
+    display: none;
+  }
+
+  /* Sin sesión, las acciones de la cabecera pasan al menú; el botón hamburguesa queda. */
+  .header-guest {
+    display: none;
+  }
+}
+
+/* === TANDA 1: auth === */
+
+.auth-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.auth-link:hover {
+  color: var(--accent-hover);
+}
+
+.auth-link:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+.check-email-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.check-email-panel h2:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+.auth-form button[aria-disabled="true"] {
+  cursor: progress;
+  opacity: 0.85;
+  gap: 0.5rem;
+}
+
+.auth-form input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+/* === TANDA 4: portada, comparador, quiz === */
+
+/* Portada: un CTA primario (quiz) y un enlace secundario discreto. */
+.home .landing-actions {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-secondary-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.home-secondary-link:hover {
+  color: var(--accent);
+}
+
+/* Perfume del día más liviano: portada menos alta y botón claro a la ficha. */
+.home-daily .perfume-cover,
+.home-daily .perfume-media {
+  min-height: 11rem;
+}
+
+.home-daily-body {
+  gap: 0.7rem;
+  padding: clamp(1.25rem, 3.5vw, 2.25rem);
+}
+
+.home-daily-body h2 {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+}
+
+.home-daily-profile .ficha-accords li,
+.home-daily-profile .ficha-phases > div {
+  grid-template-columns: minmax(5.5rem, 9.5rem) 1fr;
+}
+
+.home-daily-link {
+  min-height: var(--tap-size);
+  padding: 0 1.1rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+}
+
+.home-daily-link:hover {
+  background: var(--accent-glow);
+}
+
+@media (min-width: 52rem) {
+  .home-daily .perfume-cover,
+  .home-daily .perfume-media {
+    min-height: 16rem;
+  }
+}
+
+/* Comparador vacío: tres pasos. */
+.compare-steps {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 28rem;
+  margin: 0 auto 1.5rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: compare-step;
+  text-align: left;
+}
+
+.compare-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  counter-increment: compare-step;
+}
+
+.compare-steps li::before {
+  content: counter(compare-step);
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.compare-empty-note {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* Quiz: "Siguiente" sin respuesta se ve legible (aria-disabled, no disabled). */
+.quiz-wizard-nav .button[aria-disabled="true"] {
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--control-border);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.quiz-wizard-nav .button[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--muted);
+}
+
+.quiz-next-help {
+  text-align: right;
+  color: var(--muted);
+}
+
+/* === TANDA 3: catálogo === */
+
+/* Estado vacío del catálogo: avisos y enlaces para quitar cada filtro */
+.catalog-empty-tip {
+  max-width: 36rem;
+}
+
+.catalog-empty-remove {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  list-style: none;
+}
+
+.catalog-empty-remove a,
+.catalog-empty-tip a,
+.catalog-empty p > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+}
+
+/* Objetivos táctiles de 44 px sin agrandar lo visual */
+.compare-toggle {
+  min-width: var(--tap-size);
+}
+
+.active-filters-clear {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+}
+
+.active-filter-chip {
+  min-width: var(--tap-size); /* el chip entero es el enlace: el "×" hereda su área */
+}
+
+.site-footer a {
+  position: relative;
+}
+
+.site-footer a::after {
+  content: "";
+  position: absolute;
+  inset: -0.8rem -0.6rem; /* amplía el área clicable a >= 44 px sin mover el texto */
+}
