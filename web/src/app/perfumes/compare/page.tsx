@@ -83,7 +83,7 @@ function RadarChart({ perfumes }: { perfumes: Perfume[] }) {
         aria-labelledby="compare-radar-title compare-radar-desc"
       >
         <title id="compare-radar-title">
-          Intensidad de acordes de {perfumes.map((p) => p.name).join(", ")}, escala 0 a 100
+          {`Intensidad de acordes de ${perfumes.map((p) => p.name).join(", ")}, escala 0 a 100`}
         </title>
         <desc id="compare-radar-desc">
           Cada polígono es un perfume; cada eje un acorde compartido. La tabla
