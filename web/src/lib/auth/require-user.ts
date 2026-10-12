@@ -13,7 +13,9 @@ export async function getAuthenticatedUserOrNull() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user || !data.user.email) return null;
 
-  return getOrCreateUser({ user: { id: data.user.id, email: data.user.email } });
+  return getOrCreateUser({
+    user: { id: data.user.id, email: data.user.email, nickname: data.user.user_metadata?.nickname },
+  });
 }
 
 export async function requireUser() {

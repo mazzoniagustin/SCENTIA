@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 
 import { DELETE_CONFIRMATION } from "@/lib/account/constants";
 import { deleteUserData, saveQuizAnswers, savePreferences } from "@/lib/account/data";
+import { validateNickname } from "@/lib/account/nickname";
+import { saveNickname } from "@/lib/account/nickname-data";
 import { validatePreferences } from "@/lib/account/preferences";
 import { requireUser } from "@/lib/auth/require-user";
 import { answersFromFormData, answersToSearchParams } from "@/lib/quiz/params";
@@ -36,6 +38,17 @@ export async function savePreferencesAction(formData: FormData) {
 
   await savePreferences(user.id, validated.value);
   redirect("/account?saved=preferences");
+}
+
+// Cambia el apodo (misma validación que el registro). Un apodo tomado se detecta con el índice único.
+export async function saveNicknameAction(formData: FormData) {
+  const user = await requireUser();
+  const validated = validateNickname(formData.get("nickname"));
+  if (!validated.ok) redirect(`/account?error=${validated.error === "reserved" ? "nickname-reserved" : "nickname"}`);
+
+  const result = await saveNickname(user.id, validated.nickname);
+  if (result === "taken") redirect("/account?error=nickname-taken");
+  redirect("/account?saved=nickname");
 }
 
 // Elimina los datos de la persona (colección y perfil, en cascada) y cierra la sesión.

@@ -81,6 +81,14 @@ if (url && key) {
     const rows = await r.json().catch(() => null)
     check(`RLS: lectura anónima de ${table} devuelve 0 filas`, Array.isArray(rows) ? rows.length === 0 : r.status >= 400, `http ${r.status}`)
   }
+  // Escritura anónima: sin políticas, ni un PATCH (filtro que no coincide con ninguna fila) puede modificar UserProfile
+  const patch = await fetch(`${url}/rest/v1/UserProfile?userId=eq.__smoke__`, {
+    method: 'PATCH',
+    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    body: JSON.stringify({ nickname: 'smoke-test' }),
+  })
+  const patched = await patch.json().catch(() => null)
+  check('RLS: escritura anónima en UserProfile rechazada o sin filas', Array.isArray(patched) ? patched.length === 0 : patch.status >= 400, `http ${patch.status}`)
 } else {
   console.log('(RLS no verificado: definí NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY para incluirlo)')
 }

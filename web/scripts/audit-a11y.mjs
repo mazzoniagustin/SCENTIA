@@ -17,6 +17,7 @@ async function pages() {
   return [
     ['Portada', '/'],
     ['Ingresar', '/login'],
+    ['Registro', '/registro'],
     ['Marcas', '/marcas'],
     ['Marca', '/marcas/Armaf'],
     ['Créditos', '/creditos'],

@@ -11,6 +11,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { getOrCreateUser } from '../src/lib/auth'
 import { deleteUserData, exportUserData, getUserProfile, savePreferences, saveQuizAnswers } from '../src/lib/account/data'
 import { validatePreferences } from '../src/lib/account/preferences'
+import { assignInitialNickname, isNicknameTaken, saveNickname } from '../src/lib/account/nickname-data'
 import { QUIZ_VERSION, type QuizAnswers } from '../src/lib/quiz/questions'
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL as string) })
@@ -26,7 +27,8 @@ async function main() {
   const other = await getOrCreateUser({ user: { id: `verify-other-${stamp}`, email: `verify-other-${stamp}@example.test` } })
   try {
     // Perfil del quiz: ida y vuelta, y una versión vieja se ignora.
-    assert.equal(await getUserProfile(user.id), null)
+    // Sin apodo en los metadatos, el primer ingreso asigna uno temporal (crea la fila de perfil), sin respuestas del quiz.
+    assert.equal((await getUserProfile(user.id))?.answers ?? null, null)
     await saveQuizAnswers(user.id, answers)
     assert.deepEqual((await getUserProfile(user.id))?.answers, answers)
     console.log('OK  perfil del quiz: guardar y leer')
@@ -43,6 +45,70 @@ async function main() {
     assert.deepEqual((await getUserProfile(user.id))?.preferences, { locale: 'en', country: 'AR', currency: 'ARS' })
     assert.deepEqual((await getUserProfile(user.id))?.answers, answers, 'guardar preferencias no pierde el quiz')
     console.log('OK  preferencias: guardar y leer sin perder el quiz')
+
+    // Apodo (registro con magic link): se valida de nuevo en el servidor; la unicidad la da el índice sobre lower("nickname").
+    const wanted = `Vfy${stamp}`
+    const nickUsers = await Promise.all(
+      ['a', 'b', 'c', 'd', 'e'].map((tag) => getOrCreateUser({ user: { id: `verify-nick-${tag}-${stamp}`, email: `verify-nick-${tag}-${stamp}@example.test` } })),
+    )
+    const [nickA, nickB, nickC, nickD, nickE] = nickUsers
+    try {
+      const nick = async (id: string) => prisma.userProfile.findUnique({ where: { userId: id }, select: { nickname: true, nicknameIsTemporary: true } })
+
+      assert.equal((await nick(nickA.id))?.nicknameIsTemporary, true, 'sin apodo en los metadatos → temporal')
+      await prisma.userProfile.deleteMany({ where: { userId: { in: nickUsers.map((u) => u.id) } } }) // partimos sin apodos
+      console.log('OK  sin apodo en los metadatos se asigna uno temporal')
+
+      await assignInitialNickname(nickA.id, wanted)
+      assert.deepEqual(await nick(nickA.id), { nickname: wanted, nicknameIsTemporary: false })
+      console.log('OK  primer ingreso: apodo válido guardado tal cual')
+
+      await assignInitialNickname(nickB.id, wanted.toLowerCase())
+      const b = await nick(nickB.id)
+      assert.equal(b?.nicknameIsTemporary, true, 'mismo apodo con otras mayúsculas → temporal')
+      assert.match(b?.nickname ?? '', /^perfumista-[a-z0-9]{6}$/)
+      assert.equal(await isNicknameTaken(wanted.toUpperCase()), true)
+      console.log('OK  apodo tomado (otra capitalización): se asigna uno temporal; isNicknameTaken no distingue mayúsculas')
+
+      for (const [target, bad] of [[nickC, 'x'], [nickD, 'ADMIN'], [nickE, { nickname: 'objeto' }]] as const) {
+        await assignInitialNickname(target.id, bad)
+        assert.equal((await nick(target.id))?.nicknameIsTemporary, true, `inválido o reservado → temporal: ${JSON.stringify(bad)}`)
+      }
+      console.log('OK  apodo inválido, reservado o que no es texto: temporal')
+
+      await assignInitialNickname(nickA.id, 'OtroApodo123')
+      assert.equal((await nick(nickA.id))?.nickname, wanted, 'no pisa un apodo existente')
+      console.log('OK  un segundo ingreso no pisa el apodo guardado')
+
+      // Carrera: dos personas piden el mismo apodo a la vez → una lo obtiene, la otra queda con uno temporal.
+      const race = `Race${stamp}`
+      await prisma.userProfile.deleteMany({ where: { userId: { in: [nickC.id, nickD.id] } } })
+      await Promise.all([assignInitialNickname(nickC.id, race), assignInitialNickname(nickD.id, race)])
+      const raced = [await nick(nickC.id), await nick(nickD.id)]
+      assert.equal(raced.filter((r) => r?.nickname === race && !r.nicknameIsTemporary).length, 1, 'exactamente una gana el apodo')
+      assert.equal(raced.filter((r) => r?.nicknameIsTemporary).length, 1, 'la otra recibe uno temporal')
+      console.log('OK  carrera por el mismo apodo: gana una sola persona; la otra recibe uno temporal')
+
+      // Edición desde Cuenta
+      assert.equal(await saveNickname(nickB.id, wanted.toUpperCase()), 'taken')
+      assert.equal(await saveNickname(nickB.id, `New${stamp}`), 'ok')
+      assert.deepEqual(await nick(nickB.id), { nickname: `New${stamp}`, nicknameIsTemporary: false })
+      assert.equal(await saveNickname(nickA.id, wanted.toUpperCase()), 'ok', 'cambiar solo las mayúsculas del propio apodo es válido')
+      console.log('OK  editar: apodo ajeno → taken, libre → ok, mismo apodo con otras mayúsculas → ok')
+
+      // La base también rechaza lo que el servidor no dejaría pasar
+      await assert.rejects(prisma.userProfile.update({ where: { userId: nickB.id }, data: { nickname: 'a b' } }), 'CHECK de formato')
+      console.log('OK  el CHECK de formato de la base rechaza un apodo inválido')
+
+      // Exportación y liberación al borrar
+      const exportedNick = await exportUserData(nickA.id)
+      assert.equal(exportedNick?.profile?.nickname, wanted.toUpperCase())
+      await deleteUserData(nickA.id)
+      assert.equal(await isNicknameTaken(wanted), false)
+      console.log('OK  la exportación incluye el apodo y al borrar la cuenta el apodo queda libre')
+    } finally {
+      await prisma.user.deleteMany({ where: { id: { in: nickUsers.map((u) => u.id) } } })
+    }
 
     // Exportación (RF-05): solo datos propios
     const perfume = await prisma.perfume.findFirstOrThrow({ select: { id: true, brand: true, name: true } })

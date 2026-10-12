@@ -1169,6 +1169,51 @@ textarea {
   visibility: hidden;
 }
 
+/* Enlace secundario de la cabecera ("Crear cuenta"); en pantallas muy angostas se oculta (queda en /login). */
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  padding: 0 0.5rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.header-link:hover {
+  color: var(--foreground);
+}
+
+.header-nickname {
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 30rem) {
+  .header-link,
+  .header-placeholder-extra {
+    display: none;
+  }
+
+  .header-nickname {
+    max-width: 8rem;
+  }
+}
+
+.form-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.error-message:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 2px;
+}
+
 /* Botón del menú plegable (solo en pantallas angostas). */
 .nav-toggle {
   display: grid;

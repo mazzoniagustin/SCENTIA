@@ -2,17 +2,31 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { SiteNav } from "@/components/SiteNav";
+import { getSessionNickname } from "@/lib/auth/db-user";
 import { getCurrentUser } from "@/lib/auth/session";
 import { NAV_LINKS } from "@/lib/nav";
 
-// Botón "Ingresar": solo si no hay sesión. Se resuelve aparte para no frenar el resto de la página.
+// Acciones de sesión: "Ingresar" y "Crear cuenta" sin sesión; con sesión, el apodo (o "Mi cuenta") lleva a /account.
+// Se resuelve aparte para no frenar el resto de la página.
 async function HeaderCta() {
   const user = await getCurrentUser().catch(() => null);
-  if (user) return null;
+  if (user) {
+    const nickname = await getSessionNickname().catch(() => null);
+    return (
+      <Link className="header-cta header-nickname" href="/account">
+        {nickname ?? "Mi cuenta"}
+      </Link>
+    );
+  }
   return (
-    <Link className="header-cta" href="/login">
-      Ingresar
-    </Link>
+    <>
+      <Link className="header-link" href="/registro">
+        Crear cuenta
+      </Link>
+      <Link className="header-cta" href="/login">
+        Ingresar
+      </Link>
+    </>
   );
 }
 
@@ -27,7 +41,7 @@ export function SiteHeader() {
         <SiteNav
           links={NAV_LINKS}
           cta={
-            <Suspense fallback={<span className="header-cta header-cta-placeholder" aria-hidden="true">Ingresar</span>}>
+            <Suspense fallback={<span className="header-cta header-cta-placeholder" aria-hidden="true"><span className="header-placeholder-extra">Crear cuenta </span>Ingresar</span>}>
               <HeaderCta />
             </Suspense>
           }

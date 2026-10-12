@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { FocusOnMount } from "@/components/FocusOnMount";
+import { NICKNAME_ERRORS, NICKNAME_HINT, NICKNAME_MAX, NICKNAME_MIN } from "@/lib/account/nickname";
 import { DELETE_CONFIRMATION } from "@/lib/account/constants";
 import { getUserProfile } from "@/lib/account/data";
 import { LOCALES } from "@/lib/account/preferences";
 import { getAuthenticatedUserOrNull } from "@/lib/auth/require-user";
 
-import { deleteAccountAction, savePreferencesAction } from "../actions/account";
+import { deleteAccountAction, saveNicknameAction, savePreferencesAction } from "../actions/account";
 import { signOut } from "../login/actions";
 
 export const metadata = { title: "Mi cuenta" };
@@ -24,6 +26,9 @@ export default async function AccountPage({
   const params = await searchParams;
   const profile = await getUserProfile(user.id);
   const preferences = profile?.preferences ?? { locale: "es", country: null, currency: null };
+
+  const nicknameMissing = !profile?.nickname || profile.nicknameIsTemporary;
+  const nicknameError = typeof params.error === "string" ? NICKNAME_ERRORS[params.error] : undefined;
 
   return (
     <main id="contenido" className="catalog account-page">
@@ -51,6 +56,42 @@ export default async function AccountPage({
           Para eliminar la cuenta escribí {DELETE_CONFIRMATION} en el campo de confirmación.
         </p>
       )}
+
+      <section className="ficha-section" aria-labelledby="acc-nickname">
+        <h2 id="acc-nickname">Apodo</h2>
+        {params.saved === "nickname" && (
+          <p className="notice" role="status">
+            Apodo guardado.
+          </p>
+        )}
+        {nicknameError && <FocusOnMount>{nicknameError}</FocusOnMount>}
+        {nicknameMissing && (
+          <p className="notice" role="status">
+            {profile?.nickname ? "Te asignamos un apodo temporal. Elegí uno propio." : "Todavía no tenés apodo. Elegí uno."}
+          </p>
+        )}
+        <form className="account-form" action={saveNicknameAction}>
+          <label htmlFor="nickname">Apodo (público)</label>
+          <input
+            id="nickname"
+            name="nickname"
+            type="text"
+            autoComplete="nickname"
+            required
+            minLength={NICKNAME_MIN}
+            maxLength={NICKNAME_MAX}
+            pattern="[A-Za-z0-9_\-]{3,20}"
+            aria-describedby="nickname-hint"
+            defaultValue={nicknameMissing ? "" : (profile?.nickname ?? "")}
+          />
+          <p className="form-hint" id="nickname-hint">
+            {NICKNAME_HINT}
+          </p>
+          <div className="catalog-filters-actions">
+            <button type="submit">Guardar apodo</button>
+          </div>
+        </form>
+      </section>
 
       <section className="ficha-section" aria-labelledby="acc-prefs">
         <h2 id="acc-prefs">Preferencias</h2>

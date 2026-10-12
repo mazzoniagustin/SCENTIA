@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { FocusOnMount } from "@/components/FocusOnMount";
 import { getCurrentUser } from "@/lib/auth/session";
 
 import { requestMagicLink } from "./actions";
@@ -11,6 +12,8 @@ type LoginPageProps = {
 
 const errors: Record<string, string> = {
   email: "Ingresá un correo electrónico válido.",
+  confirmation: "El enlace venció o ya se usó. Pedí uno nuevo.",
+  rate: "Hiciste muchos intentos. Esperá un minuto.",
   request: "No pudimos validar el origen de la solicitud. Volvé a intentarlo.",
   unavailable: "No pudimos enviar el enlace. Volvé a intentarlo más tarde.",
 };
@@ -40,13 +43,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
         {sent === "1" ? (
           <p className="notice" role="status">
-            Si el correo está habilitado, recibirás un enlace para ingresar.
+            Si tu correo está registrado, te enviamos un link. Si no,{" "}
+            <Link href="/registro">creá tu cuenta</Link>.
           </p>
         ) : null}
         {error ? (
-          <p className="error-message" role="alert">
-            {errors[error] ?? "No pudimos completar la solicitud."}
-          </p>
+          <FocusOnMount>{errors[error] ?? "No pudimos completar la solicitud."}</FocusOnMount>
         ) : null}
         <form action={requestMagicLink} className="auth-form">
           <label htmlFor="email">Correo electrónico</label>
@@ -59,6 +61,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           />
           <button type="submit">Enviar enlace</button>
         </form>
+        <p>
+          ¿No tenés cuenta? <Link href="/registro">Crear cuenta</Link>
+        </p>
       </section>
     </main>
   );

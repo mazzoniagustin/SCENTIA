@@ -9,7 +9,9 @@ import type { Preferences } from './preferences'
 // servidor, nunca un id enviado por el cliente.
 
 /** Perfil guardado, o null. Las respuestas de una versión vieja del quiz se ignoran. */
-export async function getUserProfile(userId: string): Promise<{ answers: QuizAnswers | null; preferences: Preferences } | null> {
+export async function getUserProfile(
+  userId: string,
+): Promise<{ answers: QuizAnswers | null; preferences: Preferences; nickname: string | null; nicknameIsTemporary: boolean } | null> {
   const profile = await prisma.userProfile.findUnique({ where: { userId } })
   if (!profile) return null
 
@@ -17,6 +19,8 @@ export async function getUserProfile(userId: string): Promise<{ answers: QuizAns
   return {
     answers: validated?.ok ? validated.answers : null,
     preferences: { locale: profile.locale, country: profile.country, currency: profile.currency },
+    nickname: profile.nickname,
+    nicknameIsTemporary: profile.nicknameIsTemporary,
   }
 }
 
@@ -62,6 +66,8 @@ export async function exportUserData(userId: string) {
           locale: profile.locale,
           country: profile.country,
           currency: profile.currency,
+          nickname: profile.nickname,
+          nicknameIsTemporary: profile.nicknameIsTemporary,
           updatedAt: profile.updatedAt,
         }
       : null,

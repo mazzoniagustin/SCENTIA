@@ -153,6 +153,12 @@ model UserProfile {
   currency    String?
   updatedAt   DateTime @updatedAt
 
+  // Apodo público (3-20, letras, números, guion y guion bajo). La unicidad sin distinguir mayúsculas
+  // (índice sobre lower("nickname")) y el CHECK de formato viven en prisma/sql/2026-10-12-user-nickname.sql:
+  // Prisma no los conoce, así que no hay que usar `db push` para modificar esta tabla sin revisar ese archivo.
+  nickname            String?
+  nicknameIsTemporary Boolean @default(false)
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 

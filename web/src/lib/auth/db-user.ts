@@ -20,3 +20,18 @@ export const getSessionDbUserId = cache(async (): Promise<string | null> => {
   });
   return dbUser?.id ?? null;
 });
+
+/**
+ * Apodo de la persona con sesión para la cabecera, o null (sin sesión, sin apodo o si la consulta falla).
+ * Una sola consulta por petición (`cache`), de solo lectura. Nunca devuelve el correo.
+ */
+export const getSessionNickname = cache(async (): Promise<string | null> => {
+  const sessionUser = await getCurrentUser();
+  if (!sessionUser) return null;
+
+  const row = await prisma.user.findUnique({
+    where: { supabaseId: sessionUser.id },
+    select: { profile: { select: { nickname: true } } },
+  });
+  return row?.profile?.nickname ?? null;
+});
