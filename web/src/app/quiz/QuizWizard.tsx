@@ -36,6 +36,8 @@ export function QuizWizard({ questions, saved }: { questions: WizardQuestion[]; 
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
+  const stepAnswered = isAnswered(questions[step]);
+
   const go = (next: number) => setStep(Math.max(0, Math.min(total - 1, next)));
 
   const choose = (q: WizardQuestion, optionId: string) => {
@@ -110,18 +112,38 @@ export function QuizWizard({ questions, saved }: { questions: WizardQuestion[]; 
         {last ? (
           // `key` distinto: si React reutilizara el mismo <button> y le cambiara el type a "submit" durante el clic,
           // el navegador enviaría el formulario con el clic que solo quería pasar de pregunta.
-          <button key="submit" type="submit" className="button" disabled={!allAnswered}>
+          <button
+            key="submit"
+            type="submit"
+            className="button"
+            aria-disabled={!allAnswered}
+            aria-describedby={!allAnswered ? "quiz-next-help" : undefined}
+            onClick={(event) => {
+              if (!allAnswered) event.preventDefault();
+            }}
+          >
             Ver mis recomendaciones
           </button>
         ) : (
-          <button key="next" type="button" className="button" onClick={() => go(step + 1)} disabled={!isAnswered(questions[step])}>
+          <button
+            key="next"
+            type="button"
+            className="button"
+            aria-disabled={!stepAnswered}
+            aria-describedby={!stepAnswered ? "quiz-next-help" : undefined}
+            onClick={() => {
+              if (stepAnswered) go(step + 1);
+            }}
+          >
             Siguiente →
           </button>
         )}
       </div>
-      {last && !allAnswered && (
-        <p className="quiz-hint" role="status">
-          Te faltan respuestas: volvé con “Anterior” y completá las preguntas de una sola opción.
+      {(last ? !allAnswered : !stepAnswered) && (
+        <p className="quiz-hint quiz-next-help" id="quiz-next-help">
+          {last && stepAnswered
+            ? "Te faltan respuestas: volvé con “Anterior” y completá las preguntas de una sola opción."
+            : "Elegí una opción para seguir"}
         </p>
       )}
 

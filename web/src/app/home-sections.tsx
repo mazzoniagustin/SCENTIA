@@ -25,21 +25,24 @@ const SEASON_LABELS = {
   invierno: "el invierno",
 } as const;
 
+/** Versión liviana del perfume del día: hasta 2 notas por piso (6 en total) o 6 si no hay pirámide. */
+function lightNotes(notes: Array<{ noteType: string; name: string }>) {
+  const hasTiers = notes.some((n) => n.noteType !== "flat");
+  const perGroup = hasTiers ? 2 : 6;
+  const counts = new Map<string, number>();
+  return notes.filter((n) => {
+    const c = counts.get(n.noteType) ?? 0;
+    counts.set(n.noteType, c + 1);
+    return c < perGroup;
+  });
+}
+
 const safe = <T,>(promise: Promise<T>, fallback: T) => promise.catch(() => fallback);
 
 const EMPTY_WEAR: WearSummary = { streak: { current: 0, best: 0, loggedToday: false, total: 0 }, recent: [], today: null, day: "" };
 
 /** El perfume del día se pide una sola vez por solicitud aunque lo usen varias secciones. */
 const getDaily = cache(async () => safe(getDailyPerfume({ userId: await getSessionDbUserId() }), null));
-
-export async function HeroAuthButton() {
-  if (await getCurrentUser()) return null;
-  return (
-    <Link className="button button-ghost" href="/login">
-      Ingresar
-    </Link>
-  );
-}
 
 /** Cantidad de perfumes del catálogo: el mismo dato (`getCatalogStats`) para el hero, la barra de cifras y las tarjetas de acciones. */
 export async function CatalogCount() {
@@ -109,9 +112,9 @@ export async function DailySection() {
           </p>
           <div className="home-daily-profile">
             <h3>Acordes principales</h3>
-            <AccordBars accords={daily.accordBars} />
+            <AccordBars accords={daily.accordBars.slice(0, 4)} />
             <h3>Notas</h3>
-            <NotePyramid notes={daily.notes} />
+            <NotePyramid notes={lightNotes(daily.notes)} />
           </div>
           <p className="perfume-meta">
             {daily.personalized
@@ -121,7 +124,7 @@ export async function DailySection() {
               : `Una elección para ${SEASON_LABELS[daily.season]}.`}
           </p>
           <Link className="home-daily-link" href={`/perfumes/${daily.perfumeId}`}>
-            Ver la ficha →
+            Ver la ficha completa →
           </Link>
         </div>
       </section>

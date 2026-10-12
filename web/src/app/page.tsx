@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { LoadingPanel } from "@/components/LoadBar";
 import { Skeleton } from "@/components/Skeleton";
-import { AccordsSection, CatalogCount, DailySection, FeaturedSection, HeroAuthButton, PersonalSection, StatsSection } from "./home-sections";
+import { AccordsSection, CatalogCount, DailySection, FeaturedSection, PersonalSection, StatsSection } from "./home-sections";
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 
@@ -43,15 +43,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
           <button type="submit">Buscar</button>
         </form>
         <div className="landing-actions">
-          <Link className="button button-ghost" href="/perfumes">
-            Ver todo el catálogo
-          </Link>
-          <Link className="button button-ghost" href="/quiz">
+          <Link className="button" href="/quiz">
             Descubrí tu perfil olfativo
           </Link>
-          <Suspense fallback={<Skeleton style={{ width: "6.5rem", height: "2.75rem" }} />}>
-            <HeroAuthButton />
-          </Suspense>
+          <Link className="home-secondary-link" href="/perfumes">
+            o explorá el catálogo completo →
+          </Link>
         </div>
       </section>
 
@@ -63,7 +60,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
         <PersonalSection notice={notice} />
       </Suspense>
 
-      <Suspense fallback={<LoadingPanel label="Eligiendo el perfume del día…" minHeight="30rem" />}>
+      <Suspense fallback={<LoadingPanel label="Eligiendo el perfume del día…" minHeight="24rem" />}>
         <DailySection />
       </Suspense>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CompareEmpty } from "./CompareEmpty";
 import { IdentityCard } from "./IdentityCard";
 import { NO_DATA, Perfume } from "../types";
 
@@ -309,29 +310,11 @@ export default async function ComparePage({
       </Link>
       <header className="compare-header">
         <p className="eyebrow">Comparador</p>
-        <h1>Comparando {ids.length > 0 ? ids.length : ""} perfumes</h1>
+        <h1>{ids.length >= 2 ? `Comparando ${ids.length} perfumes` : "Comparador"}</h1>
       </header>
 
-      {/* Sin ids o formato inválido: estado vacío con formato correcto. */}
-      {ids.length < 2 && (
-        <div className="compare-empty">
-          <p className="compare-empty-title">
-            {ids.length === 1
-              ? "Se necesitan al menos 2 perfumes para comparar."
-              : "Elegí entre 2 y 4 perfumes para comparar."}
-          </p>
-          <p>
-            Desde el catálogo, marcá los perfumes con el selector de comparación
-            y usá el botón “Comparar”. O compartí un link con el formato{" "}
-            <code>?ids=id1,id2</code>.
-          </p>
-          <p>
-            <Link className="button" href="/perfumes">
-              Volver al catálogo
-            </Link>
-          </p>
-        </div>
-      )}
+      {/* Sin ids o con uno solo: pasos para armar la comparación. */}
+      {ids.length < 2 && <CompareEmpty urlCount={ids.length} />}
 
       {ids.length > 4 && (
         <div className="compare-empty">
