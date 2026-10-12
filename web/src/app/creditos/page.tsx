@@ -61,6 +61,21 @@ export default function CreditsPage() {
         )}
       </section>
 
+      <section className="ficha-section" aria-labelledby="cr-clima">
+        <h2 id="cr-clima">Datos del clima</h2>
+        <p>
+          La página “¿Qué me pongo hoy?” consulta el clima y busca ciudades en{" "}
+          <a href="https://open-meteo.com/" rel="noopener noreferrer">
+            Open-Meteo.com
+          </a>
+          , bajo la licencia{" "}
+          <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener noreferrer">
+            Creative Commons Atribución 4.0 (CC BY 4.0)
+          </a>
+          . Les enviamos una ubicación aproximada, redondeada a unos 10 km; no la guardamos.
+        </p>
+      </section>
+
       <section className="ficha-section" aria-labelledby="cr-uso">
         <h2 id="cr-uso">Uso de los datos</h2>
         <p>

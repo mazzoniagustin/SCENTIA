@@ -12,9 +12,12 @@ export const NAV_LINKS: readonly NavLink[] = [
 /** "Cuenta" solo se muestra con sesión (sin sesión /account redirige a /login, que ya está en la cabecera). */
 export const ACCOUNT_LINK: NavLink = { href: "/account", label: "Cuenta" }
 
+/** "Qué me pongo" usa la colección privada: solo se muestra con sesión (sin sesión /que-me-pongo redirige a /login). */
+export const OUTFIT_LINK: NavLink = { href: "/que-me-pongo", label: "Qué me pongo" }
+
 /** Enlaces del menú según haya sesión o no. */
 export function navLinksFor(signedIn: boolean): readonly NavLink[] {
-  return signedIn ? [...NAV_LINKS, ACCOUNT_LINK] : NAV_LINKS
+  return signedIn ? [...NAV_LINKS, OUTFIT_LINK, ACCOUNT_LINK] : NAV_LINKS
 }
 
 /** Un enlace está activo en su propia ruta y en las que cuelgan de ella ("/perfumes/abc" activa "Catálogo"), pero no en prefijos parecidos. */

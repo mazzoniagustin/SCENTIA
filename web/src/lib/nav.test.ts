@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { isActivePath, NAV_LINKS, navLinksFor } from './nav.ts'
+import { isActivePath, NAV_LINKS, navLinksFor, OUTFIT_LINK } from './nav.ts'
 
 describe('isActivePath', () => {
   it('activa en la ruta exacta y en las anidadas', () => {
@@ -22,7 +22,7 @@ describe('isActivePath', () => {
     assert.equal(isActivePath('/perfumes', '/'), false)
   })
   it('a lo sumo un enlace del menú está activo en cada página', () => {
-    for (const path of ['/', '/perfumes', '/perfumes/x', '/marcas/Dior', '/quiz', '/mi-coleccion', '/account', '/creditos']) {
+    for (const path of ['/', '/perfumes', '/perfumes/x', '/marcas/Dior', '/quiz', '/mi-coleccion', '/account', '/que-me-pongo', '/creditos']) {
       assert.ok(NAV_LINKS.filter((l) => isActivePath(path, l.href)).length <= 1, path)
     }
   })
@@ -33,9 +33,14 @@ describe('navLinksFor', () => {
     assert.equal(navLinksFor(false).some((l) => l.href === '/account'), false)
     assert.equal(NAV_LINKS.some((l) => l.href === '/account'), false)
   })
-  it('con sesión suma "Cuenta" al final', () => {
+  it('sin sesión no incluye "Qué me pongo"', () => {
+    assert.equal(navLinksFor(false).some((l) => l.href === OUTFIT_LINK.href), false)
+    assert.equal(NAV_LINKS.some((l) => l.href === OUTFIT_LINK.href), false)
+  })
+  it('con sesión suma "Qué me pongo" y "Cuenta" al final', () => {
     const links = navLinksFor(true)
     assert.equal(links[links.length - 1].href, '/account')
-    assert.equal(links.length, NAV_LINKS.length + 1)
+    assert.equal(links[links.length - 2].href, '/que-me-pongo')
+    assert.equal(links.length, NAV_LINKS.length + 2)
   })
 })

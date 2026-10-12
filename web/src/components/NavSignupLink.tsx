@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ACCOUNT_LINK, isActivePath } from "@/lib/nav";
+import { ACCOUNT_LINK, isActivePath, OUTFIT_LINK } from "@/lib/nav";
 
 // Enlaces de sesión dentro del menú plegable. Los de "Ingresar"/"Crear cuenta" solo se ven a ≤ 30rem (el CSS los oculta con
 // display:none al resto, así nunca hay dos enlaces iguales anunciados); a más ancho viven en la cabecera. Se renderizan solo sin sesión.
@@ -38,13 +38,19 @@ export function NavAuthActions() {
   );
 }
 
-// "Cuenta": solo con sesión.
+// "Qué me pongo" y "Cuenta": solo con sesión.
 export function NavAccountLink() {
   const pathname = usePathname();
-  const active = isActivePath(pathname, ACCOUNT_LINK.href);
   return (
-    <Link href={ACCOUNT_LINK.href} aria-current={active ? "page" : undefined} data-active={active}>
-      {ACCOUNT_LINK.label}
-    </Link>
+    <>
+      {[OUTFIT_LINK, ACCOUNT_LINK].map((link) => {
+        const active = isActivePath(pathname, link.href);
+        return (
+          <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined} data-active={active}>
+            {link.label}
+          </Link>
+        );
+      })}
+    </>
   );
 }
