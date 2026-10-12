@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { isActivePath, NAV_LINKS } from './nav.ts'
+import { isActivePath, NAV_LINKS, navLinksFor } from './nav.ts'
 
 describe('isActivePath', () => {
   it('activa en la ruta exacta y en las anidadas', () => {
@@ -25,5 +25,17 @@ describe('isActivePath', () => {
     for (const path of ['/', '/perfumes', '/perfumes/x', '/marcas/Dior', '/quiz', '/mi-coleccion', '/account', '/creditos']) {
       assert.ok(NAV_LINKS.filter((l) => isActivePath(path, l.href)).length <= 1, path)
     }
+  })
+})
+
+describe('navLinksFor', () => {
+  it('sin sesión no incluye "Cuenta"', () => {
+    assert.equal(navLinksFor(false).some((l) => l.href === '/account'), false)
+    assert.equal(NAV_LINKS.some((l) => l.href === '/account'), false)
+  })
+  it('con sesión suma "Cuenta" al final', () => {
+    const links = navLinksFor(true)
+    assert.equal(links[links.length - 1].href, '/account')
+    assert.equal(links.length, NAV_LINKS.length + 1)
   })
 })

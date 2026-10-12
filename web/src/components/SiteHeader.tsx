@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { NavSignupLink } from "@/components/NavSignupLink";
+import { NavAccountLink, NavAuthActions } from "@/components/NavSignupLink";
 import { SiteNav } from "@/components/SiteNav";
 import { getSessionNickname } from "@/lib/auth/db-user";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -21,23 +21,24 @@ async function HeaderCta() {
   }
   return (
     <>
-      <Link className="header-link" href="/registro">
+      <Link className="header-link header-guest" href="/registro">
         Crear cuenta
       </Link>
-      <Link className="header-cta" href="/login">
+      <Link className="header-cta header-guest" href="/login">
         Ingresar
       </Link>
     </>
   );
 }
 
-// Enlace "Crear cuenta" del menú plegable: solo sin sesión (getCurrentUser lee el JWT local, sin consulta a la base).
-async function MenuSignupLink() {
+// Parte del menú que depende de la sesión: "Cuenta" con sesión; "Ingresar" + "Crear cuenta" (solo celular) sin sesión.
+// getCurrentUser lee el JWT local, sin consulta a la base.
+async function SessionNavItems() {
   const user = await getCurrentUser().catch(() => null);
-  return user ? null : <NavSignupLink />;
+  return user ? <NavAccountLink /> : <NavAuthActions />;
 }
 
-// Cabecera fija con leve desenfoque. "Cuenta" lleva a /account, que redirige a /login si hace falta.
+// Cabecera fija con leve desenfoque.
 export function SiteHeader() {
   return (
     <header className="site-header">
@@ -47,13 +48,13 @@ export function SiteHeader() {
         </Link>
         <SiteNav
           links={NAV_LINKS}
-          extraLink={
-            <Suspense fallback={null}>
-              <MenuSignupLink />
+          trailing={
+            <Suspense fallback={<span className="nav-account-placeholder" aria-hidden="true">Cuenta</span>}>
+              <SessionNavItems />
             </Suspense>
           }
           cta={
-            <Suspense fallback={<span className="header-cta header-cta-placeholder" aria-hidden="true"><span className="header-placeholder-extra">Crear cuenta </span>Ingresar</span>}>
+            <Suspense fallback={<span className="header-cta header-cta-placeholder header-guest" aria-hidden="true"><span className="header-placeholder-extra">Crear cuenta </span>Ingresar</span>}>
               <HeaderCta />
             </Suspense>
           }
