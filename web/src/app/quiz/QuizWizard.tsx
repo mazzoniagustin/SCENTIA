@@ -10,7 +10,7 @@ const AUTO_ADVANCE_MS = 260;
 
 // Quiz paso a paso: una pregunta por pantalla, con barra de progreso, tarjetas de opción y transición entre pasos.
 // Sigue siendo un formulario GET normal (los inputs conservan su `name`): sin JavaScript se ven todas las preguntas
-// juntas (ver <noscript>) y se envía igual a /quiz/resultado, que valida las respuestas en el servidor.
+// juntas (ver `@media (scripting: none)` en globals.css) y se envía igual a /quiz/resultado, que valida las respuestas en el servidor.
 export function QuizWizard({ questions, saved }: { questions: WizardQuestion[]; saved: WizardAnswers | null }) {
   const total = questions.length;
   const [step, setStep] = useState(0);
@@ -56,10 +56,6 @@ export function QuizWizard({ questions, saved }: { questions: WizardQuestion[]; 
 
   return (
     <form className="quiz-wizard" action="/quiz/resultado" method="GET">
-      <noscript>
-        <style>{`.quiz-step[hidden]{display:block!important}.quiz-wizard-nav,.quiz-progress{display:none!important}.quiz-submit-fallback{display:flex!important}`}</style>
-      </noscript>
-
       <div className="quiz-progress">
         <div
           className="quiz-progress-bar"

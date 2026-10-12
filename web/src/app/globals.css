@@ -3920,3 +3920,31 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   position: absolute;
   inset: -0.8rem -0.6rem; /* amplía el área clicable a >= 44 px sin mover el texto */
 }
+
+/* === pendientes: noscript y borrado === */
+
+/* Sin JavaScript: reemplaza a los <noscript><style> (que la CSP con nonces bloquearía).
+   `scripting: none` lo soportan los navegadores actuales (Chrome 120+, Safari 17+, Firefox 113+); en navegadores
+   viejos sin JS el menú quedaría plegado y el quiz paso a paso sin avance (degradación aceptada). */
+@media (scripting: none) {
+  .site-nav {
+    display: flex !important;
+  }
+
+  .nav-toggle {
+    display: none !important;
+  }
+
+  .quiz-step[hidden] {
+    display: block !important;
+  }
+
+  .quiz-wizard-nav,
+  .quiz-progress {
+    display: none !important;
+  }
+
+  .quiz-submit-fallback {
+    display: flex !important;
+  }
+}
