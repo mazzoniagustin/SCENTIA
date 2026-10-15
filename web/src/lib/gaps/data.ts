@@ -234,11 +234,31 @@ export function sharesFromCounts(counts: CatalogCounts): CatalogShareSet {
 }
 
 // Cambian solo al importar o publicar: caché en memoria detrás de la compartida entre instancias.
-const loadCatalogCounts = sharedCache(() => queryCatalogCounts(), 'gaps-catalog-counts')
+let sqlRan = false
+const loadCatalogCounts = sharedCache(async () => {
+  sqlRan = true
+  return queryCatalogCounts()
+}, 'gaps-catalog-counts')
 const catalogCountsCache = createTtlCache<CatalogCounts>({ ttlMs: CATALOG_TTL_MS })
 
+/** De dónde salieron las frecuencias: memoria de la instancia, caché compartida o la base (el caso lento). */
+export type CatalogSource = 'memory' | 'shared' | 'database'
+
+/** Frecuencias del catálogo con el origen y el tiempo, para medirlas (frío vs caché) en los logs de la plataforma. */
+export async function getCatalogSharesTimed(): Promise<{ shares: CatalogShareSet; source: CatalogSource; ms: number }> {
+  const started = Date.now()
+  let memoryMiss = false
+  sqlRan = false
+  const counts = await catalogCountsCache.getOrCompute('all', () => {
+    memoryMiss = true
+    return loadCatalogCounts()
+  })
+  const source: CatalogSource = !memoryMiss ? 'memory' : sqlRan ? 'database' : 'shared'
+  return { shares: sharesFromCounts(counts), source, ms: Date.now() - started }
+}
+
 export async function getCatalogShares(): Promise<CatalogShareSet> {
-  return sharesFromCounts(await catalogCountsCache.getOrCompute('all', loadCatalogCounts))
+  return (await getCatalogSharesTimed()).shares
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -362,6 +382,12 @@ export async function buildGapAnalysis(userId: string, shares: Promise<CatalogSh
   return { families, dimensions, needs, suggestions, complete: ranked.complete }
 }
 
-export async function getGapAnalysis(userId: string): Promise<GapAnalysis> {
-  return buildGapAnalysis(userId, getCatalogShares())
+export type GapAnalysisTimed = GapAnalysis & { timing: { catalogSource: CatalogSource; catalogMs: number; totalMs: number } }
+
+export async function getGapAnalysis(userId: string): Promise<GapAnalysisTimed> {
+  const started = Date.now()
+  const timed = getCatalogSharesTimed()
+  const analysis = await buildGapAnalysis(userId, timed.then((t) => t.shares))
+  const { source, ms } = await timed
+  return { ...analysis, timing: { catalogSource: source, catalogMs: ms, totalMs: Date.now() - started } }
 }

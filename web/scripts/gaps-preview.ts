@@ -5,6 +5,7 @@
 //   npx tsx --conditions=react-server scripts/gaps-preview.ts --list
 //   npx tsx --conditions=react-server scripts/gaps-preview.ts --nickname <apodo>
 //   npx tsx --conditions=react-server scripts/gaps-preview.ts --user-id <id>
+// Con --json imprime exactamente la respuesta pública que devolvería POST /api/collection/gaps.
 // Con --twice repite el cálculo para ver los tiempos en frío y con las cachés en memoria ya calientes.
 import { config } from 'dotenv'
 import path from 'path'
@@ -15,6 +16,7 @@ import { buildGapAnalysis, queryCatalogCounts, sharesFromCounts } from '../src/l
 import { FAMILY_LABELS } from '../src/lib/gaps/families'
 import { DIMENSION_LABELS, VALUE_LABELS } from '../src/lib/gaps/dimensions'
 import { WISHLIST_LABEL, type Covered } from '../src/lib/gaps/rank'
+import { buildGapsResponse } from '../src/lib/gaps/response'
 import type { FamilyCoverage } from '../src/lib/gaps/types'
 
 const args = process.argv.slice(2)
@@ -76,6 +78,8 @@ async function main() {
   const t1 = Date.now()
   const analysis = await buildGapAnalysis(userId, sharesFromCounts(counts))
   const t2 = Date.now()
+
+  if (args.includes('--json')) return console.log(JSON.stringify(buildGapsResponse(analysis), null, 2))
 
   const { families, dimensions } = analysis
   if (args.includes('--twice')) {

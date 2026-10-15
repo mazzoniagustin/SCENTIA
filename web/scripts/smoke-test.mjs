@@ -70,6 +70,10 @@ const outfitToday = await jsonPost('/api/outfit/today', { latitude: -31.4, longi
 check('POST /api/outfit/today sin sesión → 401', outfitToday.status === 401, `http ${outfitToday.status}`)
 const outfitPlaces = await jsonPost('/api/outfit/places', { query: 'Córdoba' })
 check('POST /api/outfit/places sin sesión → 401', outfitPlaces.status === 401, `http ${outfitPlaces.status}`)
+const gapsPost = await jsonPost('/api/collection/gaps', {})
+check('POST /api/collection/gaps sin sesión → 401', gapsPost.status === 401, `http ${gapsPost.status}`)
+const gapsGet = await get('/api/collection/gaps')
+check('GET /api/collection/gaps → 405', gapsGet.status === 405, `http ${gapsGet.status}`)
 
 // 6) Cabeceras de seguridad
 const home = await get('/')
