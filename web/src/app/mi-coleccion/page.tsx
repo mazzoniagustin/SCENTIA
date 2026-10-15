@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { redirect } from 'next/navigation';
 import { parseStatusFilter } from '@/lib/collection/overview';
 import { CollectionView } from './CollectionView';
+import { GapsPanel } from './GapsPanel';
 
 export const metadata = { title: "Mi colección" };
 
@@ -35,7 +36,10 @@ export default async function MyCollectionPage({
           </p>
         </div>
       ) : (
-        <CollectionView collection={collection} statusFilter={statusFilter} />
+        <>
+          <CollectionView collection={collection} statusFilter={statusFilter} />
+          <GapsPanel />
+        </>
       )}
     </main>
   );

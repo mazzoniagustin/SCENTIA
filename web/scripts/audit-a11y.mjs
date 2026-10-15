@@ -2,13 +2,13 @@
 // ejecutado en jsdom. Uso (con la app corriendo):  npm run a11y [-- http://localhost:3000]
 // Cobertura: reglas WCAG 2.0/2.1 A y AA y buenas prácticas de axe sobre estructura, nombres, etiquetas, ARIA,
 // encabezados y landmarks. NO cubre: contraste de color (jsdom no tiene layout; se calcula aparte, ver
-// docs/accesibilidad.md), foco visible, ni páginas que requieren sesión (/account, /mi-coleccion), ni lectores de pantalla reales.
+// docs/accesibilidad.md), foco visible, ni /account (requiere sesión y no está en la lista), ni lectores de pantalla reales.
 import { JSDOM } from 'jsdom'
 import axe from 'axe-core'
 
 const BASE = (process.argv[2] ?? 'http://localhost:3000').replace(/\/$/, '')
 
-// Opcional: cookie de una sesión de prueba (ej. A11Y_COOKIE="sb-...-auth-token=...") para auditar /que-me-pongo.
+// Opcional: cookie de una sesión de prueba (ej. A11Y_COOKIE="sb-...-auth-token=...") para auditar /que-me-pongo y /mi-coleccion.
 const A11Y_COOKIE = process.env.A11Y_COOKIE ?? ''
 
 const getJson =async (path) => (await fetch(`${BASE}${path}`)).json()
@@ -34,7 +34,7 @@ async function pages() {
     ['Ficha de perfume', `/perfumes/${ids[0]}`],
     ['Comparador', `/perfumes/compare?ids=${ids.join(',')}`],
     ['Perfume inexistente (404)', '/perfumes/no-existe'],
-    ...(A11Y_COOKIE ? [['¿Qué me pongo hoy? (con sesión)', '/que-me-pongo']] : []),
+    ...(A11Y_COOKIE ? [['¿Qué me pongo hoy? (con sesión)', '/que-me-pongo'], ['Mi colección (con sesión)', '/mi-coleccion']] : []),
   ]
 }
 

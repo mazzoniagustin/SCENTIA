@@ -4229,3 +4229,633 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
     display: none !important;
   }
 }
+
+/* === ¿Qué le falta a mi colección? (/mi-coleccion) === */
+
+.gaps,
+.gaps-result,
+.gaps-block,
+.gaps-group {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.gaps {
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+}
+
+.gaps-privacy {
+  max-width: 42rem;
+  line-height: 1.55;
+}
+
+.gaps-result-title:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 4px;
+}
+
+.gaps-headline {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  line-height: 1.4;
+  max-width: 44rem;
+  overflow-wrap: anywhere;
+}
+
+.gaps-group-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.gaps-tag {
+  border-color: var(--control-border);
+  color: var(--muted);
+}
+
+.gaps-findings,
+.gaps-notes,
+.gaps-dist,
+.gaps-links {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.gaps-findings li {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 0.75rem 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+/* "No explorado" es neutro: sin acento ni énfasis, solo un borde discreto. */
+.gaps-group-neutral .gaps-findings li {
+  border-left-color: var(--border-strong);
+}
+
+.gaps-finding-label {
+  font-weight: 700;
+}
+
+.gaps-dist-row {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.gaps-dist-label {
+  font-weight: 600;
+}
+
+.gaps-dist-values {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.gaps-bars {
+  display: grid;
+  gap: 3px;
+}
+
+.gaps-bar {
+  display: block;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+}
+
+.gaps-bar-mine {
+  background: var(--gaps-color, var(--foreground));
+}
+
+/* Punto de color de la familia: solo distingue filas; el dato está también en el texto. */
+.gaps-dist-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gaps-swatch {
+  flex: none;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--gaps-color, var(--muted));
+}
+
+.gaps-links li a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+}
+
+.gaps-covers {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.gaps-wish {
+  border-color: var(--control-border);
+  color: var(--foreground);
+}
+
+/* El rollo de sugerencias: tarjetas anchas y flechas centradas. */
+.gaps-reel .scroller-item {
+  flex: 0 0 min(21rem, 78vw);
+}
+
+.gaps-reel .scroller-button {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.gaps-reel .outfit-alt-link {
+  height: 100%;
+}
+
+/* Modo rollo: se mueve por código y se arrastra con el mouse, así que sin imán de scroll, y con la mano para agarrar. */
+.scroller-reel .scroller-viewport {
+  scroll-snap-type: none;
+  cursor: grab;
+}
+
+.scroller-reel .scroller-viewport.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.scroller-pause {
+  margin-top: 0.4rem;
+  min-height: var(--tap-size);
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.scroller-pause:hover {
+  color: var(--foreground);
+}
+
+.scroller-pause:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+.gaps-suggestions {
+  margin-top: 0;
+}
+
+.gaps-more-toggle {
+  display: grid;
+  justify-items: start;
+  gap: 0.4rem;
+}
+
+/*
+ * "Mostrar más": la altura se anima con filas de grid (0fr → 1fr), sin medir nada en JavaScript. Cerrado, el contenido queda
+ * con visibility:hidden (no se puede enfocar ni lo lee un lector de pantalla). Sin movimiento (estado base) el cambio es
+ * instantáneo; las animaciones están más abajo, solo para quien no pidió reducir el movimiento.
+ */
+.gaps-more {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+.gaps-more[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+
+.gaps-more-inner {
+  display: grid;
+  gap: 1.5rem;
+  min-height: 0;
+  overflow: hidden;
+  padding: 4px; /* deja lugar al anillo de foco de lo que está adentro */
+  margin: -4px;
+  visibility: hidden;
+}
+
+.gaps-more[data-open='true'] .gaps-more-inner {
+  visibility: visible;
+}
+
+/* === Estado base (sin movimiento): todo completo y legible. Lo que se anima está más abajo, solo con no-preference. === */
+
+.gaps-headline::before {
+  content: '';
+  display: block;
+  width: 3rem;
+  height: 2px;
+  margin-bottom: 0.9rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.gaps-word {
+  display: inline-block;
+}
+
+.gaps-bar {
+  transform-origin: left center;
+}
+
+.gaps-more-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gaps-chevron {
+  flex: none;
+}
+
+.gaps-more-button[aria-expanded='true'] .gaps-chevron {
+  rotate: 180deg;
+}
+
+/* El envoltorio del rollo es hijo de una grilla: sin min-width:0 crece hasta el ancho de todas las tarjetas y el rollo deja de desplazarse. */
+.gaps-reel-wrap {
+  min-width: 0;
+}
+
+/* Tarjetas del rollo: un poco de profundidad. */
+.gaps-reel .scroller-viewport {
+  padding-top: 0.6rem;
+  margin-top: -0.6rem;
+}
+
+.gaps-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(165deg, var(--surface-2), var(--surface) 70%);
+}
+
+.gaps-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(16rem circle at var(--mx, 50%) var(--my, 0%), rgba(230, 201, 138, 0.2), transparent 65%);
+}
+
+/* Barra de progreso del avance automático, puntos de posición y botón de pausa. */
+.scroller-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1rem;
+  margin-top: 0.25rem;
+}
+
+.scroller-footer .scroller-pause {
+  margin-top: 0;
+}
+
+.scroller-progress {
+  flex: 0 0 100%;
+  height: 2px;
+  margin-bottom: 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.scroller-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: scroller-progress linear forwards;
+}
+
+@keyframes scroller-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.scroller-dots {
+  display: flex;
+}
+
+.scroller-dot {
+  display: grid;
+  place-items: center;
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.scroller-dot-mark {
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--control-border);
+}
+
+.scroller-dot[aria-current='true'] .scroller-dot-mark {
+  width: 1.6rem;
+  background: var(--accent);
+}
+
+.scroller-dot:hover .scroller-dot-mark {
+  background: var(--accent-hover);
+}
+
+.scroller-dot:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: -4px;
+  border-radius: var(--radius-md);
+}
+
+/* Cargando: tres bloques que reemplazan al texto vacío (decorativos; el texto "Analizando…" sigue ahí). */
+.gaps-skeleton {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.gaps-skeleton span {
+  height: 5rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+/*
+ * Movimiento: solo con prefers-reduced-motion: no-preference. Todo se dispara por código (IntersectionObserver en
+ * reveal.tsx → data-reveal="pending|shown"), no por tiempo ni por scroll-timeline: así corre cuando el elemento entra en
+ * pantalla y no antes, aunque el panel se abra más abajo del borde de la ventana.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  /* Titular: las palabras suben una tras otra. */
+  .gaps-headline[data-reveal='pending'] .gaps-word {
+    opacity: 0;
+    translate: 0 0.6em;
+    filter: blur(6px);
+  }
+
+  .gaps-headline[data-reveal='shown'] .gaps-word {
+    animation: gaps-word-in 0.8s var(--ease-out) backwards;
+    animation-delay: calc(var(--w, 0) * 55ms);
+  }
+
+  .gaps-headline[data-reveal='pending']::before {
+    transform: scaleX(0);
+  }
+
+  .gaps-headline::before {
+    transform-origin: left center;
+  }
+
+  .gaps-headline[data-reveal='shown']::before {
+    animation: gaps-rule-in 0.9s var(--ease-out) backwards;
+  }
+
+  /* Tarjetas del rollo: entran escalonadas cuando el rollo aparece en pantalla (se pisa a propósito la entrada genérica de
+     .scroller-item, que usa animation-timeline: view() y no corre bien dentro de un carrusel). */
+  .gaps-reel-wrap[data-reveal='pending'] .gaps-suggestion {
+    animation: none;
+    opacity: 0;
+  }
+
+  .gaps-reel-wrap[data-reveal='shown'] .gaps-suggestion {
+    animation: gaps-card-in 0.9s var(--ease-out) backwards;
+    animation-timeline: auto;
+    animation-range: normal;
+    animation-delay: calc(var(--i, 0) * 140ms);
+  }
+
+  /* Las tarjetas cortadas por el borde del rollo se atenúan un poco. */
+  .gaps-reel .scroller-item {
+    transition:
+      opacity 0.5s ease,
+      scale 0.5s var(--ease-out);
+  }
+
+  .gaps-reel .scroller-item[data-edge='true'] {
+    opacity: 0.6;
+    scale: 0.97;
+  }
+
+  /* Hallazgos y bloques del detalle. */
+  .gaps-block[data-reveal='pending'] {
+    opacity: 0;
+    translate: 0 28px;
+  }
+
+  .gaps-block[data-reveal='shown'] {
+    animation: gaps-block-in 0.8s var(--ease-out) backwards;
+  }
+
+  .gaps-findings[data-reveal='pending'] > li {
+    opacity: 0;
+    translate: -18px 0;
+  }
+
+  .gaps-findings[data-reveal='shown'] > li {
+    animation: gaps-slide-in 0.7s var(--ease-out) backwards;
+    animation-delay: calc(var(--k, 0) * 110ms);
+  }
+
+  /* Punto de color de cada familia: aparece con un pulso cuando su barra empieza a llenarse. */
+  .gaps-swatch[data-on='false'] {
+    opacity: 0;
+    scale: 0.2;
+  }
+
+  .gaps-swatch[data-on='true'] {
+    animation: gaps-pop 0.9s var(--ease-out) backwards;
+  }
+
+  .gaps-bar.is-growing {
+    box-shadow: 0 0 14px -1px var(--gaps-color, var(--accent));
+  }
+
+  .gaps-count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* "Mostrar más": el detalle se abre con altura + fundido. */
+  .gaps-more {
+    transition: grid-template-rows 0.6s var(--ease-out);
+  }
+
+  .gaps-more-inner {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition:
+      opacity 0.4s ease,
+      transform 0.6s var(--ease-out),
+      visibility 0s linear 0.6s;
+  }
+
+  .gaps-more[data-open='true'] .gaps-more-inner {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0s;
+  }
+
+  /* Botón "Mostrar más": el chevron gira, el botón responde al pasar y al apretar. */
+  .gaps-chevron {
+    transition:
+      rotate 0.45s var(--ease-out),
+      translate 0.25s var(--ease-out);
+  }
+
+  .gaps-more-button {
+    transition:
+      transform 0.15s var(--ease-out),
+      border-color var(--dur-base),
+      background-color var(--dur-base);
+  }
+
+  .gaps-more-button:hover .gaps-chevron {
+    translate: 0 2px;
+  }
+
+  .gaps-more-button[aria-expanded='true']:hover .gaps-chevron {
+    translate: 0 -2px;
+  }
+
+  .gaps-more-button:active {
+    transform: scale(0.97);
+  }
+
+  /* Puntos del rollo. */
+  .scroller-dot-mark {
+    transition:
+      width 0.4s var(--ease-out),
+      background-color var(--dur-base);
+  }
+
+  /* Cargando: un brillo recorre los bloques. */
+  .gaps-skeleton span {
+    background: linear-gradient(100deg, var(--surface-2) 30%, var(--surface-3) 50%, var(--surface-2) 70%) 0 0 / 250% 100%;
+    animation: gaps-shimmer 1.6s linear infinite;
+  }
+
+  @keyframes gaps-word-in {
+    from {
+      opacity: 0;
+      translate: 0 0.6em;
+      filter: blur(6px);
+    }
+  }
+
+  @keyframes gaps-rule-in {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes gaps-card-in {
+    from {
+      opacity: 0;
+      translate: 0 34px;
+      scale: 0.92;
+      filter: blur(5px);
+    }
+  }
+
+  @keyframes gaps-block-in {
+    from {
+      opacity: 0;
+      translate: 0 28px;
+    }
+  }
+
+  @keyframes gaps-slide-in {
+    from {
+      opacity: 0;
+      translate: -18px 0;
+    }
+  }
+
+  @keyframes gaps-pop {
+    0% {
+      opacity: 0;
+      scale: 0.2;
+    }
+    55% {
+      opacity: 1;
+      scale: 1.5;
+      box-shadow: 0 0 0 0 var(--gaps-color, transparent);
+    }
+    100% {
+      scale: 1;
+      box-shadow: 0 0 0 9px transparent;
+    }
+  }
+
+  @keyframes gaps-shimmer {
+    to {
+      background-position: -150% 0;
+    }
+  }
+}
+
+/* Mouse (puntero fino con hover) y sin pedir menos movimiento: la tarjeta se eleva, se inclina hacia el cursor y un brillo la sigue. */
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .gaps-card {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition:
+      transform 0.2s ease-out,
+      translate 0.35s var(--ease-out),
+      box-shadow 0.35s ease,
+      border-color var(--dur-base);
+  }
+
+  .gaps-card:hover {
+    translate: 0 -5px;
+    box-shadow:
+      var(--shadow-md),
+      0 0 0 1px var(--accent-ring);
+  }
+
+  .gaps-card::after {
+    transition: opacity 0.35s ease;
+  }
+
+  .gaps-card:hover::after {
+    opacity: 1;
+  }
+
+  .gaps-card-media img,
+  .gaps-card-media .perfume-cover {
+    transition: scale 0.7s var(--ease-out);
+  }
+
+  .gaps-card:hover .gaps-card-media img,
+  .gaps-card:hover .gaps-card-media .perfume-cover {
+    scale: 1.08;
+  }
+}
+
+.gaps .button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

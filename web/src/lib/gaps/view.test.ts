@@ -1,0 +1,76 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+
+import type { Finding } from './response.ts'
+import { FAMILY_CODES } from './families.ts'
+import { announcementFor, familyColor, groupFindings, parseRetryAfter, percent, valueColor, viewFromResponse } from './view.ts'
+
+test('parseRetryAfter acepta enteros positivos y descarta el resto', () => {
+  assert.equal(parseRetryAfter('30'), 30)
+  assert.equal(parseRetryAfter(' 12 '), 12)
+  assert.equal(parseRetryAfter('0'), 0)
+  assert.equal(parseRetryAfter('-5'), 0)
+  assert.equal(parseRetryAfter('1.5'), 0)
+  assert.equal(parseRetryAfter('abc'), 0)
+  assert.equal(parseRetryAfter(null), 0)
+  assert.equal(parseRetryAfter('999999'), 3600)
+})
+
+test('viewFromResponse mapea códigos HTTP y cuerpos', () => {
+  assert.equal(viewFromResponse(401, null, { error: 'x' }).kind, 'unauthorized')
+  assert.deepEqual(viewFromResponse(429, '20', null), { kind: 'rate_limited', seconds: 20 })
+  assert.deepEqual(viewFromResponse(429, null, null), { kind: 'rate_limited', seconds: 0 })
+  assert.equal(viewFromResponse(500, null, { error: 'x' }).kind, 'error')
+  assert.equal(viewFromResponse(400, null, null).kind, 'error')
+  assert.equal(viewFromResponse(200, null, null).kind, 'error')
+  assert.equal(viewFromResponse(200, null, { status: 'raro' }).kind, 'error')
+  assert.equal(viewFromResponse(200, null, { status: 'ok', findings: [], families: [], dimensions: [] }).kind, 'ok')
+  assert.equal(viewFromResponse(200, null, { status: 'ok' }).kind, 'error')
+  assert.equal(viewFromResponse(200, null, { status: 'too_small', guide: { title: 't', text: 'x', links: [] } }).kind, 'guide')
+  assert.equal(viewFromResponse(200, null, { status: 'empty', guide: null }).kind, 'error')
+})
+
+test('groupFindings separa por tipo conservando el orden', () => {
+  const f = (kind: Finding['kind'], code: string): Finding => ({ kind, area: 'family', code, label: code, text: code })
+  const g = groupFindings([f('weak', 'a'), f('gap', 'b'), f('unexplored', 'c'), f('gap', 'd')])
+  assert.deepEqual(g.gap.map((x) => x.code), ['b', 'd'])
+  assert.deepEqual(g.weak.map((x) => x.code), ['a'])
+  assert.deepEqual(g.unexplored.map((x) => x.code), ['c'])
+})
+
+test('percent redondea y acota', () => {
+  assert.equal(percent(0.126), 13)
+  assert.equal(percent(-1), 0)
+  assert.equal(percent(2), 100)
+  assert.equal(percent(Number.NaN), 0)
+})
+
+test('announcementFor no anuncia nada en idle y no cuenta segundos', () => {
+  assert.equal(announcementFor({ kind: 'idle' }), '')
+  assert.ok(!/\d/.test(announcementFor({ kind: 'rate_limited', seconds: 33 })))
+})
+
+test('familyColor da un color propio a cada una de las 10 familias y ninguno a lo desconocido', () => {
+  const colors = FAMILY_CODES.map((code) => familyColor(code))
+  assert.ok(colors.every((c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)), 'todas las familias tienen color')
+  assert.equal(new Set(colors).size, FAMILY_CODES.length, 'ninguna repite color')
+  assert.equal(familyColor('inventada'), undefined)
+})
+
+test('valueColor: estación y día/noche tienen color; duración y estela quedan neutras', () => {
+  const luminance = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const contrastOnDark = (hex: string) => (luminance(hex) + 0.05) / (luminance('#0e0e10') + 0.05)
+  const colors = [
+    valueColor('season', 'primavera'), valueColor('season', 'verano'), valueColor('season', 'otoño'), valueColor('season', 'invierno'),
+    valueColor('dayNight', 'dia'), valueColor('dayNight', 'noche'),
+  ]
+  assert.ok(colors.every((c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)))
+  assert.equal(new Set(colors).size, colors.length)
+  assert.equal(valueColor('duration', 'larga'), undefined)
+  assert.equal(valueColor('sillage', 'suave'), undefined)
+  // La noche, la más oscura, tiene que verse sobre el fondo (≥ 3:1, mínimo de WCAG para gráficos).
+  assert.ok(contrastOnDark(valueColor('dayNight', 'noche')!) >= 3)
+})
