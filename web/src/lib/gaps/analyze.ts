@@ -5,7 +5,7 @@
 // Un perfume "tiene" una familia si alguno de sus acordes de esa familia llega a ACCORD_PRESENCE_MIN_INTENSITY.
 
 import { FAMILY_ORDER, familyOfAccord, type FamilyCode } from './families.ts'
-import type { CatalogShares, CollectionSample, FamilyCoverage, FamilyReport } from './types.ts'
+import type { CatalogShares, CollectionSample, FamilyCoverage, FamilyReport, ReportStatus } from './types.ts'
 
 /** Mismo umbral de presencia que el quiz y los filtros por acorde del catálogo. */
 export const ACCORD_PRESENCE_MIN_INTENSITY = 40
@@ -31,34 +31,57 @@ export function familiesOfAccords(accords: readonly { name: string; intensity: n
   return found
 }
 
+export type FamilyCounts = { total: number; counts: Record<FamilyCode, number> }
+
 /**
- * Parte del catálogo que tiene cada familia, a partir de los acordes de cada perfume. Función pura para probar
- * el criterio; la capa de datos calcula lo mismo con SQL y debe coincidir.
+ * Cuántos perfumes del catálogo tienen cada familia (enteros). Referencia pura de la capa de datos: el test que
+ * compara el SQL con esta función debe comparar estos conteos enteros, nunca proporciones decimales.
  */
-export function catalogFamilyShares(catalog: readonly (readonly { name: string; intensity: number }[])[]): CatalogShares {
+export function catalogFamilyCounts(catalog: readonly (readonly { name: string; intensity: number }[])[]): FamilyCounts {
   const counts = Object.fromEntries(FAMILY_ORDER.map((f) => [f, 0])) as Record<FamilyCode, number>
   for (const accords of catalog) for (const family of familiesOfAccords(accords)) counts[family] += 1
-  const total = catalog.length
+  return { total: catalog.length, counts }
+}
+
+/** Frecuencia (0-1) de cada familia a partir de los conteos. Con catálogo vacío, 0. */
+export function familySharesFromCounts({ total, counts }: FamilyCounts): CatalogShares {
   return Object.fromEntries(FAMILY_ORDER.map((f) => [f, total === 0 ? 0 : counts[f] / total])) as Record<FamilyCode, number>
 }
 
-function classify(count: number, used: number, catalogShare: number): FamilyCoverage['level'] {
+export function catalogFamilyShares(catalog: readonly (readonly { name: string; intensity: number }[])[]): CatalogShares {
+  return familySharesFromCounts(catalogFamilyCounts(catalog))
+}
+
+/**
+ * Nivel de una categoría (familia, estación, franja de duración...) según cuántos perfumes usables la tienen
+ * (`count` de `base`) y qué parte del catálogo la tiene. Los mismos criterios para todas las dimensiones.
+ */
+export function classifyCoverage(count: number, base: number, catalogShare: number): FamilyCoverage['level'] {
   if (catalogShare < UNEXPLORED_CATALOG_SHARE) return count === 0 ? 'unexplored' : 'covered'
   if (count === 0) return 'gap'
-  if (used >= WEAK_COVERAGE_MIN_ITEMS && count / used < WEAK_COVERAGE_RATIO * catalogShare) return 'weak'
+  if (base >= WEAK_COVERAGE_MIN_ITEMS && count / base < WEAK_COVERAGE_RATIO * catalogShare) return 'weak'
   return 'covered'
 }
 
-export function analyzeFamilies(samples: readonly CollectionSample[], shares: CatalogShares): FamilyReport {
+/**
+ * Base común de todos los análisis: solo OWNED/SAMPLED con al menos un acorde. WISHLIST y DISLIKED no cubren nada.
+ */
+export function summarizeUsable(samples: readonly CollectionSample[]) {
   const usable = samples.filter((s) => USABLE.has(s.status))
-  const withAccords = usable.filter((s) => s.accords.length > 0)
+  const base = usable.filter((s) => s.accords.length > 0)
   const coverage = {
-    used: withAccords.length,
-    skippedWithoutAccords: usable.length - withAccords.length,
+    used: base.length,
+    skippedWithoutAccords: usable.length - base.length,
     notUsable: samples.length - usable.length,
   }
+  const status: ReportStatus = coverage.used === 0 ? 'empty' : coverage.used < MIN_USABLE_ITEMS ? 'too_small' : 'ok'
+  return { base, coverage, status }
+}
 
-  if (coverage.used === 0) return { status: 'empty', coverage, families: [], gaps: [], weak: [], unexplored: [] }
+export function analyzeFamilies(samples: readonly CollectionSample[], shares: CatalogShares): FamilyReport {
+  const { base: withAccords, coverage, status } = summarizeUsable(samples)
+
+  if (status === 'empty') return { status, coverage, families: [], gaps: [], weak: [], unexplored: [] }
 
   const counts = Object.fromEntries(FAMILY_ORDER.map((f) => [f, 0])) as Record<FamilyCode, number>
   for (const sample of withAccords) for (const family of familiesOfAccords(sample.accords)) counts[family] += 1
@@ -70,11 +93,11 @@ export function analyzeFamilies(samples: readonly CollectionSample[], shares: Ca
       count: counts[family],
       presence: counts[family] / coverage.used,
       catalogShare,
-      level: classify(counts[family], coverage.used, catalogShare),
+      level: classifyCoverage(counts[family], coverage.used, catalogShare),
     }
   })
 
-  if (coverage.used < MIN_USABLE_ITEMS) return { status: 'too_small', coverage, families, gaps: [], weak: [], unexplored: [] }
+  if (status === 'too_small') return { status, coverage, families, gaps: [], weak: [], unexplored: [] }
 
   const order = (a: FamilyCoverage, b: FamilyCoverage) => FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family)
   const relative = (c: FamilyCoverage) => c.presence / c.catalogShare

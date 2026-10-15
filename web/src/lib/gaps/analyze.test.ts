@@ -8,6 +8,7 @@ import {
   WEAK_COVERAGE_MIN_ITEMS,
   WEAK_COVERAGE_RATIO,
   analyzeFamilies,
+  catalogFamilyCounts,
   catalogFamilyShares,
   familiesOfAccords,
 } from './analyze.ts'
@@ -156,6 +157,13 @@ describe('acordes ausentes en la base (pera, cremoso)', () => {
     assert.equal(result.dulce, 0)
     for (const family of FAMILY_ORDER) assert.ok(Number.isFinite(result[family]) && result[family] >= 0 && result[family] <= 1)
     assert.doesNotThrow(() => analyzeFamilies([owned('afrutado'), owned('floral'), owned('cítrico')], result))
+  })
+
+  it('los conteos de familia son enteros y los acordes ausentes no suman', () => {
+    const { total, counts } = catalogFamilyCounts(catalog)
+    assert.equal(total, 4)
+    assert.deepEqual(counts, { citrico: 1, afrutado: 1, verde: 0, floral: 1, empolvado: 0, dulce: 0, ambar: 1, amaderado: 0, cuero: 0, acuatico: 0 })
+    assert.ok(Object.values(counts).every(Number.isInteger))
   })
 
   it('(a) un catálogo vacío da frecuencia 0 y no divide por cero', () => {

@@ -11,6 +11,14 @@ export type CollectionSample = {
   perfumeId: string
   status: CollectionStatus
   accords: SampleAccord[]
+  /** Estaciones del perfume ('primavera' | 'verano' | 'otoño' | 'invierno'). Vacío o ausente: se infieren de los acordes. */
+  seasons?: readonly string[]
+  /** 'diario' (día) y 'noche', como los guarda la base. Vacío o ausente: sin dato. Otros valores se ignoran. */
+  occasions?: readonly string[]
+  /** Duración promedio votada (1-5). null o ausente: sin dato. */
+  longevity?: number | null
+  /** Estela promedio votada (1-4). null o ausente: sin dato. */
+  sillage?: number | null
 }
 
 /** Parte del catálogo que tiene cada familia (0-1). Lo calcula la capa de datos con `catalogFamilyShares`. */
