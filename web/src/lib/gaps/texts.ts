@@ -40,16 +40,18 @@ export function guideFor(status: 'empty' | 'too_small', used: number, notUsable:
   }
 }
 
-export function familyGapText(family: FamilyCode, used: number, catalogShare: number): string {
-  return `Ninguno de tus ${used} perfumes es de la familia «${FAMILY_LABELS[family]}», que está en el ${pct(catalogShare)} del catálogo.`
+// Los textos que ve la persona hablan de SU colección: qué parte todavía no exploró. No se compara con el catálogo
+// (el catálogo solo sirve por dentro para decidir qué cuenta como hueco).
+export function familyGapText(family: FamilyCode, used: number): string {
+  return `Ninguno de tus ${used} perfumes es de la familia «${FAMILY_LABELS[family]}».`
 }
 
-export function familyWeakText(family: FamilyCode, count: number, used: number, catalogShare: number): string {
-  return `Poca presencia de «${FAMILY_LABELS[family]}»: ${count} de tus ${used} perfumes (${pct(count / used)}), frente al ${pct(catalogShare)} del catálogo.`
+export function familyWeakText(family: FamilyCode, count: number, used: number): string {
+  return `Poca presencia de «${FAMILY_LABELS[family]}»: ${count} de tus ${used} perfumes (${pct(count / used)}).`
 }
 
-export function familyUnexploredText(family: FamilyCode, catalogShare: number): string {
-  return `Todavía no exploraste «${FAMILY_LABELS[family]}», una familia poco común (el ${pct(catalogShare)} del catálogo).`
+export function familyUnexploredText(family: FamilyCode): string {
+  return `Todavía no exploraste «${FAMILY_LABELS[family]}», un rincón para curiosear.`
 }
 
 const SEASON_PHRASE: Record<string, string> = {
@@ -70,27 +72,46 @@ export function dimensionGapText(dimension: Dimension, value: string, used: numb
   return `Ninguno de tus ${used} perfumes está entre los ${valueNoun(dimension, value)}.`
 }
 
-export function dimensionWeakText(dimension: Dimension, value: string, count: number, used: number, catalogShare: number): string {
-  return `Pocos perfumes ${valueNoun(dimension, value)}: ${count} de ${used} (${pct(count / used)}), frente al ${pct(catalogShare)} del catálogo.`
+export function dimensionWeakText(dimension: Dimension, value: string, count: number, used: number): string {
+  return `Pocos perfumes ${valueNoun(dimension, value)}: ${count} de ${used} (${pct(count / used)}).`
 }
 
-export function dimensionUnexploredText(dimension: Dimension, value: string, catalogShare: number): string {
-  return `Todavía no exploraste los perfumes ${valueNoun(dimension, value)}, poco comunes en el catálogo (${pct(catalogShare)}).`
+export function dimensionUnexploredText(dimension: Dimension, value: string): string {
+  return `Todavía no exploraste los perfumes ${valueNoun(dimension, value)}.`
 }
 
 export function insufficientDataText(dimension: Dimension, missingShare: number): string {
   return `No analizamos «${DIMENSION_LABELS[dimension]}»: falta el dato en el ${pct(missingShare)} de tus perfumes.`
 }
 
+/** Lo que cubre un candidato, en una etiqueta corta: la familia, o el valor ("Otoño", "Para la noche", "Duración larga"). */
 export function coveredLabel(covered: Covered): string {
-  return covered.kind === 'family' ? FAMILY_LABELS[covered.family] : `${DIMENSION_LABELS[covered.dimension]}: ${VALUE_LABELS[covered.dimension][covered.value] ?? covered.value}`
+  if (covered.kind === 'family') return FAMILY_LABELS[covered.family]
+  const label = VALUE_LABELS[covered.dimension][covered.value] ?? covered.value
+  if (covered.dimension === 'season') return `Estación: ${label}`
+  if (covered.dimension === 'dayNight') return covered.value === 'dia' ? 'Para el día' : 'Para la noche'
+  return label
 }
 
-export function headlineText(used: number, gaps: number, weak: number): string {
-  if (gaps === 0 && weak === 0) return `No encontramos huecos en tus ${used} perfumes con lo que podemos medir.`
-  const parts = [
-    gaps > 0 ? plural(gaps, 'hueco', 'huecos') : null,
-    weak > 0 ? `${plural(weak, 'área', 'áreas')} con poca presencia` : null,
-  ].filter(Boolean)
-  return `En tus ${used} perfumes encontramos ${parts.join(' y ')}.`
+/** Etiqueta de un hallazgo para el titular, entre comillas angulares para que "Empolvado y almizclado" no se confunda con una lista. */
+export function headlineLabel(area: 'family' | Dimension, code: string): string {
+  if (area === 'family') return `«${FAMILY_LABELS[code as FamilyCode] ?? code}»`
+  if (area === 'season') return `«perfumes de ${SEASON_PHRASE[code] ?? code}»`
+  if (area === 'dayNight') return code === 'dia' ? '«perfumes para el día»' : '«perfumes para la noche»'
+  return `«${(VALUE_LABELS[area][code] ?? code).toLowerCase()}»`
+}
+
+const MAX_HEADLINE_LABELS = 4
+
+/** "A", "A y B", "A, B y C"; con más de 4, "A, B, C, D y 2 más". */
+function listEs(items: readonly string[]): string {
+  if (items.length <= 1) return items.join('')
+  if (items.length <= MAX_HEADLINE_LABELS) return `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`
+  return `${items.slice(0, MAX_HEADLINE_LABELS).join(', ')} y ${items.length - MAX_HEADLINE_LABELS} más`
+}
+
+/** Titular del análisis: lo que menos exploró la persona (huecos y poca presencia), sin comparar con el catálogo. */
+export function headlineText(used: number, labels: readonly string[]): string {
+  if (labels.length === 0) return `No encontramos huecos en tus ${used} perfumes con lo que podemos medir.`
+  return `Lo que menos exploraste: ${listEs(labels)}.`
 }

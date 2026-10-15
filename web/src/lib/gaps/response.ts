@@ -15,6 +15,7 @@ import {
   familyUnexploredText,
   familyWeakText,
   guideFor,
+  headlineLabel,
   headlineText,
   insufficientDataText,
   type Guide,
@@ -39,7 +40,8 @@ export type Finding = {
   text: string
 }
 
-export type DistributionRow = { code: string; label: string; count: number; presence: number; catalogShare: number; level: FamilyLevel }
+/** Distribución de la colección. Sin porcentajes del catálogo: la respuesta habla solo de la colección de la persona. */
+export type DistributionRow = { code: string; label: string; count: number; presence: number; level: FamilyLevel }
 
 export type GapsResponse = {
   status: ReportStatus
@@ -96,17 +98,17 @@ export function buildGapsResponse(analysis: GapAnalysisInput): GapsResponse {
 
   const findings: Finding[] = []
   const used = coverage.used
-  for (const c of families.gaps) findings.push({ kind: 'gap', area: 'family', code: c.family, label: FAMILY_LABELS[c.family], text: familyGapText(c.family, used, c.catalogShare) })
+  for (const c of families.gaps) findings.push({ kind: 'gap', area: 'family', code: c.family, label: FAMILY_LABELS[c.family], text: familyGapText(c.family, used) })
   for (const d of dimensions.dimensions) {
     for (const c of d.gaps) findings.push({ kind: 'gap', area: d.dimension, code: c.value, label: VALUE_LABELS[d.dimension][c.value] ?? c.value, text: dimensionGapText(d.dimension, c.value, used) })
   }
-  for (const c of families.weak) findings.push({ kind: 'weak', area: 'family', code: c.family, label: FAMILY_LABELS[c.family], text: familyWeakText(c.family, c.count, used, c.catalogShare) })
+  for (const c of families.weak) findings.push({ kind: 'weak', area: 'family', code: c.family, label: FAMILY_LABELS[c.family], text: familyWeakText(c.family, c.count, used) })
   for (const d of dimensions.dimensions) {
-    for (const c of d.weak) findings.push({ kind: 'weak', area: d.dimension, code: c.value, label: VALUE_LABELS[d.dimension][c.value] ?? c.value, text: dimensionWeakText(d.dimension, c.value, c.count, d.withData, c.catalogShare) })
+    for (const c of d.weak) findings.push({ kind: 'weak', area: d.dimension, code: c.value, label: VALUE_LABELS[d.dimension][c.value] ?? c.value, text: dimensionWeakText(d.dimension, c.value, c.count, d.withData) })
   }
-  for (const c of families.unexplored) findings.push({ kind: 'unexplored', area: 'family', code: c.family, label: FAMILY_LABELS[c.family], text: familyUnexploredText(c.family, c.catalogShare) })
+  for (const c of families.unexplored) findings.push({ kind: 'unexplored', area: 'family', code: c.family, label: FAMILY_LABELS[c.family], text: familyUnexploredText(c.family) })
   for (const d of dimensions.dimensions) {
-    for (const c of d.unexplored) findings.push({ kind: 'unexplored', area: d.dimension, code: c.value, label: VALUE_LABELS[d.dimension][c.value] ?? c.value, text: dimensionUnexploredText(d.dimension, c.value, c.catalogShare) })
+    for (const c of d.unexplored) findings.push({ kind: 'unexplored', area: d.dimension, code: c.value, label: VALUE_LABELS[d.dimension][c.value] ?? c.value, text: dimensionUnexploredText(d.dimension, c.value) })
   }
 
   const notes = dimensions.dimensions.filter((d) => d.status === 'insufficient_data').map((d) => insufficientDataText(d.dimension, d.missingShare))
@@ -114,16 +116,19 @@ export function buildGapsResponse(analysis: GapAnalysisInput): GapsResponse {
 
   return {
     ...empty,
-    headline: headlineText(used, findings.filter((f) => f.kind === 'gap').length, findings.filter((f) => f.kind === 'weak').length),
+    headline: headlineText(
+      used,
+      findings.filter((f) => f.kind === 'gap' || f.kind === 'weak').map((f) => headlineLabel(f.area, f.code)),
+    ),
     findings,
-    families: families.families.map((c) => ({ code: c.family as FamilyCode, label: FAMILY_LABELS[c.family], count: c.count, presence: c.presence, catalogShare: c.catalogShare, level: c.level })),
+    families: families.families.map((c) => ({ code: c.family as FamilyCode, label: FAMILY_LABELS[c.family], count: c.count, presence: c.presence, level: c.level })),
     dimensions: dimensions.dimensions.map((d) => ({
       dimension: d.dimension,
       label: DIMENSION_LABELS[d.dimension],
       status: d.status,
       informational: !GAP_DIMENSIONS.includes(d.dimension),
       withData: d.withData,
-      rows: d.values.map((v) => ({ code: v.value, label: VALUE_LABELS[d.dimension][v.value] ?? v.value, count: v.count, presence: v.presence, catalogShare: v.catalogShare, level: v.level })),
+      rows: d.values.map((v) => ({ code: v.value, label: VALUE_LABELS[d.dimension][v.value] ?? v.value, count: v.count, presence: v.presence, level: v.level })),
     })),
     notes,
     // El puntaje interno del ranking no sale: la interfaz muestra qué cubre cada candidato, no un número.

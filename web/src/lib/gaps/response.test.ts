@@ -6,7 +6,7 @@ import { analyzeDimensions, type DimensionShares } from './dimensions.ts'
 import { FAMILY_ORDER } from './families.ts'
 import { buildGapsResponse, type GapAnalysisInput } from './response.ts'
 import { buildNeeds, WISHLIST_LABEL } from './rank.ts'
-import { DAY_NIGHT_NOTE, guideFor, headlineText } from './texts.ts'
+import { DAY_NIGHT_NOTE, guideFor } from './texts.ts'
 import type { CatalogShares, CollectionSample, CollectionStatus } from './types.ts'
 
 const famShares = Object.fromEntries(FAMILY_ORDER.map((f) => [f, 0.5])) as CatalogShares
@@ -97,9 +97,17 @@ describe('buildGapsResponse: con análisis', () => {
     assert.ok(!r.findings.some((f) => f.area === 'duration'))
   })
 
-  it('el titular cuenta huecos y áreas débiles', () => {
-    assert.equal(headlineText(6, 2, 1), 'En tus 6 perfumes encontramos 2 huecos y 1 área con poca presencia.')
-    assert.equal(headlineText(6, 0, 0), 'No encontramos huecos en tus 6 perfumes con lo que podemos medir.')
+  it('el titular nombra lo que menos exploró, sin porcentajes ni catálogo', () => {
+    assert.match(response.headline!, /^Lo que menos exploraste: /)
+    assert.match(response.headline!, /«Floral»/)
+    assert.doesNotMatch(response.headline!, /cat[aá]logo|%/i)
+  })
+
+  it('ni los hallazgos ni la distribución comparan con el catálogo', () => {
+    for (const f of response.findings) assert.doesNotMatch(f.text, /cat[aá]logo/i)
+    const rows = [...response.families, ...response.dimensions.flatMap((d) => d.rows)]
+    for (const r of rows) assert.ok(!('catalogShare' in r), 'la respuesta no debe traer la frecuencia del catálogo')
+    assert.ok(!JSON.stringify(response).includes('catalogShare'))
   })
 })
 
@@ -125,7 +133,7 @@ describe('buildGapsResponse: nada privado sale', () => {
     const r = buildGapsResponse(analysisFor(six(), suggestions))
     assert.deepEqual(r.suggestions.map((s) => s.perfumeId), ['cat-1', 'cat-2'])
     assert.deepEqual(r.suggestions[0].covers, ['Floral'])
-    assert.deepEqual(r.suggestions[1].covers, ['Duración: Duración larga'])
+    assert.deepEqual(r.suggestions[1].covers, ['Duración larga'])
     assert.equal(r.suggestions[0].wishlistNote, WISHLIST_LABEL)
     assert.equal(r.suggestions[1].wishlistNote, null)
     assert.equal(r.complete, false)
