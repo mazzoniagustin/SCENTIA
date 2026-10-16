@@ -18,7 +18,7 @@ const healthBody = await health.json().catch(() => ({}))
 check('/api/health responde y la base conecta', health.status === 200 && healthBody.db === true, `http ${health.status}`)
 
 // 2) Páginas públicas
-for (const [path, marker] of [['/', 'Saltar al contenido'], ['/perfumes', 'Buscar por nombre o marca'], ['/quiz', 'Tu perfil olfativo'], ['/login', 'Correo electrónico']]) {
+for (const [path, marker] of [['/', 'Saltar al contenido'], ['/perfumes', 'Buscar por nombre o marca'], ['/quiz', 'Tu perfil olfativo'], ['/login', 'Correo electrónico'], ['/registro', 'Contraseña'], ['/registro?metodo=enlace', 'Prefiero crear la cuenta con contraseña']]) {
   const r = await get(path)
   const html = await r.text()
   check(`GET ${path}`, r.status === 200 && html.includes(marker), `http ${r.status}`)
@@ -62,6 +62,8 @@ check('perfume del día', daily.status === 200, `http ${daily.status}`)
 const account = await get('/account')
 check('/account sin sesión redirige a /login', [307, 308].includes(account.status) && (account.headers.get('location') ?? '').includes('/login'), `http ${account.status}`)
 const exp = await get('/api/account/export')
+const choosePassword = await get('/elegir-contrasena')
+check('/elegir-contrasena sin sesión redirige a /login', [307, 308].includes(choosePassword.status) && (choosePassword.headers.get('location') ?? '').includes('/login'), `http ${choosePassword.status}`)
 check('exportación de datos sin sesión → 401', exp.status === 401)
 const outfitPage = await get('/que-me-pongo')
 check('/que-me-pongo sin sesión redirige a /login', [307, 308].includes(outfitPage.status) && (outfitPage.headers.get('location') ?? '').includes('/login'), `http ${outfitPage.status}`)

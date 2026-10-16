@@ -2,7 +2,7 @@
 // dependencias inyectadas, para probar ambos modos con node:test sin red ni base. Devuelve la ruta a
 // la que hay que redirigir; la Server Action la usa con `redirect()`.
 
-import { validateNickname } from '../account/nickname.ts'
+import { isNicknameOmitted, validateNickname } from '../account/nickname.ts'
 
 export type MagicLinkMode = 'login' | 'signup'
 
@@ -23,7 +23,7 @@ export type MagicLinkDeps = {
 
 const PAGE: Record<MagicLinkMode, string> = { login: '/login', signup: '/registro' }
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function pageUrl(mode: MagicLinkMode, parameters: Record<string, string>) {
   return `${PAGE[mode]}?${new URLSearchParams(parameters).toString()}`
@@ -52,7 +52,8 @@ export async function sendMagicLink(
   }
 
   let nickname: string | undefined
-  if (mode === 'signup') {
+  // El apodo es opcional: sin apodo no se valida ni se manda (el primer ingreso asigna uno temporal).
+  if (mode === 'signup' && !isNicknameOmitted(input.nickname)) {
     const validated = validateNickname(input.nickname)
     if (!validated.ok) {
       return pageUrl(mode, { error: validated.error === 'reserved' ? 'nickname-reserved' : 'nickname', ...keepNickname })

@@ -23,6 +23,9 @@ async function pages() {
     ['Registro', '/registro'],
     ['Login enviado', '/login?sent=1'],
     ['Registro enviado', '/registro?sent=1'],
+    ['Registro por enlace', '/registro?metodo=enlace'],
+    ['Registro con error de contraseña', '/registro?error=password-short'],
+    ['Ingreso con error', '/login?error=credentials'],
     ['Registro con error', '/registro?error=nickname-taken&nickname=luna'],
     ['Marcas', '/marcas'],
     ['Marca', '/marcas/Armaf'],
@@ -34,7 +37,7 @@ async function pages() {
     ['Ficha de perfume', `/perfumes/${ids[0]}`],
     ['Comparador', `/perfumes/compare?ids=${ids.join(',')}`],
     ['Perfume inexistente (404)', '/perfumes/no-existe'],
-    ...(A11Y_COOKIE ? [['¿Qué me pongo hoy? (con sesión)', '/que-me-pongo'], ['Mi colección (con sesión)', '/mi-coleccion']] : []),
+    ...(A11Y_COOKIE ? [['¿Qué me pongo hoy? (con sesión)', '/que-me-pongo'], ['Mi colección (con sesión)', '/mi-coleccion'], ['Elegir contraseña (con sesión sin contraseña)', '/elegir-contrasena']] : []),
   ]
 }
 

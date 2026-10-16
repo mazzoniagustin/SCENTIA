@@ -32,6 +32,14 @@ describe('sendMagicLink — registro', () => {
     })
   })
 
+  it('apodo omitido (vacío, solo espacios o ausente) es válido y no manda data.nickname', async () => {
+    for (const nickname of ['', '   ', undefined, null]) {
+      const { deps, calls } = makeDeps()
+      assert.equal(await sendMagicLink('signup', { email: 'a@b.co', nickname }, deps), '/registro?sent=1')
+      assert.deepEqual(calls[0].options, { shouldCreateUser: true, emailRedirectTo: 'https://scentia.example/auth/confirm' })
+    }
+  })
+
   it('apodo inválido o reservado: no envía nada y devuelve el apodo, nunca el correo', async () => {
     const { deps, calls } = makeDeps()
     assert.equal(await sendMagicLink('signup', { email: 'a@b.co', nickname: 'x' }, deps), '/registro?error=nickname&nickname=x')

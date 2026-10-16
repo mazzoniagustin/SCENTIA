@@ -7,6 +7,7 @@ import { deleteUserData, saveQuizAnswers, savePreferences } from "@/lib/account/
 import { validateNickname } from "@/lib/account/nickname";
 import { saveNickname } from "@/lib/account/nickname-data";
 import { validatePreferences } from "@/lib/account/preferences";
+import { changePassword } from "@/lib/auth/password-auth";
 import { getExistingUserOrNull, requireUser } from "@/lib/auth/require-user";
 import { logServerError } from "@/lib/log";
 import { answersFromFormData, answersToSearchParams } from "@/lib/quiz/params";
@@ -59,6 +60,27 @@ export async function saveNicknameAction(formData: FormData) {
   const result = await saveNickname(user.id, validated.nickname);
   if (result === "taken") redirect("/account?error=nickname-taken");
   redirect("/account?saved=nickname");
+}
+
+// Cambio de contraseña: exige la actual (se comprueba con el correo de la sesión) y respeta el límite de las acciones de cuenta.
+export async function changePasswordAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createClient();
+  // El correo de acceso es el de Supabase Auth (el que acepta signInWithPassword), no el de la fila de la base.
+  const authEmail = (await supabase.auth.getUser()).data.user?.email ?? user.email;
+  const toError = (error: { code?: string; status?: number; message?: string } | null) =>
+    error ? { code: error.code, status: error.status, message: error.message } : null;
+
+  const destination = await changePassword(
+    { current: formData.get("current"), password: formData.get("password"), repeat: formData.get("repeat") },
+    {
+      allowAction: () => !accountRateLimited("changePassword", user.id),
+      verifyCurrent: async (password) => !(await supabase.auth.signInWithPassword({ email: authEmail, password })).error,
+      updateUser: async (args) => ({ error: toError((await supabase.auth.updateUser(args)).error) }),
+      refreshSession: async () => ({ error: toError((await supabase.auth.refreshSession()).error) }),
+    },
+  );
+  redirect(destination);
 }
 
 // Elimina los datos de la persona (colección, perfil y racha, en cascada), guarda un resumen anónimo en la misma transacción

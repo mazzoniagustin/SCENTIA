@@ -43,6 +43,11 @@ export function nicknameKey(nickname: string): string {
   return nickname.toLowerCase()
 }
 
+/** El apodo es opcional al registrarse: ausente, `null` o texto vacío / solo espacios cuentan como "no escribió ninguno". */
+export function isNicknameOmitted(raw: unknown): boolean {
+  return raw === undefined || raw === null || (typeof raw === 'string' && raw.trim() === '')
+}
+
 /** `raw` puede ser cualquier valor (los metadatos del usuario son JSON arbitrario). */
 export function validateNickname(raw: unknown): NicknameResult {
   if (typeof raw !== 'string') return { ok: false, error: 'invalid' }

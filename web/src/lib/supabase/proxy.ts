@@ -22,7 +22,8 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
 
-  return response;
+  // Los claims salen del token ya validado; `response` lleva las cookies de sesión refrescadas.
+  return { response, claims: data?.claims ?? null };
 }

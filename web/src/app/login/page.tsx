@@ -3,11 +3,11 @@ import { redirect } from "next/navigation";
 
 import { AuthSubmit } from "@/components/AuthSubmit";
 import { CheckEmailPanel } from "@/components/CheckEmailPanel";
-import { FocusFieldOnMount } from "@/components/FocusFieldOnMount";
 import { FocusOnMount } from "@/components/FocusOnMount";
+import { PASSWORD_MAX } from "@/lib/auth/password";
 import { getCurrentUser } from "@/lib/auth/session";
 
-import { requestMagicLink } from "./actions";
+import { requestMagicLink, signInWithPasswordAction } from "./actions";
 
 type LoginPageProps = {
   searchParams: Promise<{ error?: string; sent?: string }>;
@@ -15,10 +15,11 @@ type LoginPageProps = {
 
 const errors: Record<string, string> = {
   email: "Ingresá un correo electrónico válido.",
+  credentials: "Correo o contraseña incorrectos.",
   confirmation: "El enlace venció o ya se usó. Pedí uno nuevo.",
   rate: "Hiciste muchos intentos. Esperá un minuto.",
   request: "No pudimos validar el origen de la solicitud. Volvé a intentarlo.",
-  unavailable: "No pudimos enviar el enlace. Volvé a intentarlo más tarde.",
+  unavailable: "No pudimos completar la solicitud ahora. Volvé a intentarlo en un rato.",
 };
 
 export const metadata = { title: "Ingresar" };
@@ -31,8 +32,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   const { error, sent } = await searchParams;
-  const emailError = error === "email";
-  const generalError = error && !emailError ? error : null;
   const fallback = "No pudimos completar la solicitud.";
 
   return (
@@ -43,7 +42,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <section aria-labelledby="login-title" className="auth-card">
         <p className="eyebrow">Tu colección, en privado</p>
         <h1 id="login-title">Ingresar</h1>
-        <p>Sin contraseñas: te mandamos un enlace al correo</p>
         {sent === "1" ? (
           <CheckEmailPanel retryHref="/login">
             <p>
@@ -51,32 +49,25 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <Link className="auth-link" href="/registro">
                 creá tu cuenta
               </Link>
-              .
+              . Al entrar con el enlace vas a poder elegir una contraseña nueva.
             </p>
           </CheckEmailPanel>
         ) : (
           <>
-            {generalError ? <FocusOnMount>{errors[generalError] ?? fallback}</FocusOnMount> : null}
-            <form action={requestMagicLink} className="auth-form">
+            {error ? <FocusOnMount>{errors[error] ?? fallback}</FocusOnMount> : null}
+            <form action={signInWithPasswordAction} className="auth-form">
               <label htmlFor="email">Correo electrónico</label>
-              <input
-                aria-describedby={emailError ? "email-error" : undefined}
-                aria-invalid={emailError ? "true" : undefined}
-                autoComplete="email"
-                id="email"
-                name="email"
-                required
-                type="email"
-              />
-              {emailError ? (
-                <>
-                  <p className="error-message" id="email-error" role="alert">
-                    {errors.email}
-                  </p>
-                  <FocusFieldOnMount targetId="email" />
-                </>
-              ) : null}
-              <AuthSubmit label="Enviar enlace" />
+              <input autoComplete="email" id="email" name="email" required type="email" />
+              <label htmlFor="password">Contraseña</label>
+              <input autoComplete="current-password" id="password" maxLength={PASSWORD_MAX} name="password" required type="password" />
+              <AuthSubmit label="Ingresar" />
+            </form>
+            <h2>¿Olvidaste tu contraseña?</h2>
+            <p>Te mandamos un enlace al correo; al entrar elegís una contraseña nueva.</p>
+            <form action={requestMagicLink} className="auth-form">
+              <label htmlFor="link-email">Correo electrónico para el enlace</label>
+              <input autoComplete="email" id="link-email" name="email" required type="email" />
+              <AuthSubmit label="Enviarme un enlace" />
             </form>
             <p>
               ¿No tenés cuenta?{" "}

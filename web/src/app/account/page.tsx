@@ -6,10 +6,11 @@ import { NICKNAME_ERRORS, NICKNAME_HINT, NICKNAME_MAX, NICKNAME_MIN } from "@/li
 import { DELETE_CONFIRMATION } from "@/lib/account/constants";
 import { getUserProfile } from "@/lib/account/data";
 import { LOCALES } from "@/lib/account/preferences";
+import { PASSWORD_ERRORS, PASSWORD_HINT, PASSWORD_MAX, PASSWORD_MIN } from "@/lib/auth/password";
 import { getAuthenticatedUserOrNull } from "@/lib/auth/require-user";
 import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 
-import { deleteAccountAction, saveNicknameAction, savePreferencesAction } from "../actions/account";
+import { changePasswordAction, deleteAccountAction, saveNicknameAction, savePreferencesAction } from "../actions/account";
 import { signOut } from "../login/actions";
 
 export const metadata = { title: "Mi cuenta" };
@@ -29,6 +30,7 @@ export default async function AccountPage({
   const preferences = profile?.preferences ?? { locale: "es", country: null, currency: null };
 
   const nicknameMissing = !profile?.nickname || profile.nicknameIsTemporary;
+  const passwordChangeError = typeof params.error === "string" && (params.error in PASSWORD_ERRORS || params.error === "password-unavailable");
   const nicknameError = typeof params.error === "string" ? NICKNAME_ERRORS[params.error] : undefined;
 
   return (
@@ -155,6 +157,38 @@ export default async function AccountPage({
             Descargar mis datos (JSON)
           </a>
         </p>
+      </section>
+
+      <section className="ficha-section" aria-labelledby="acc-password">
+        <h2 id="acc-password">Cambiar contraseña</h2>
+        {params.password === "ok" && (
+          <p className="notice" role="status">
+            Listo, cambiamos tu contraseña.
+          </p>
+        )}
+        {typeof params.error === "string" && (PASSWORD_ERRORS[params.error] || params.error === "password-unavailable") && (
+          <p className="error-message" id="password-change-error" role="alert">
+            {PASSWORD_ERRORS[params.error] ?? "No pudimos cambiar tu contraseña. Volvé a intentarlo."}
+          </p>
+        )}
+        <form className="account-form" action={changePasswordAction}>
+          <label>
+            Contraseña actual
+            <input name="current" type="password" autoComplete="current-password" maxLength={PASSWORD_MAX} required aria-describedby={passwordChangeError ? "password-change-error" : undefined} aria-invalid={passwordChangeError ? "true" : undefined} />
+          </label>
+          <label>
+            Contraseña nueva
+            <input name="password" type="password" autoComplete="new-password" minLength={PASSWORD_MIN} maxLength={PASSWORD_MAX} required aria-describedby="password-change-hint" />
+          </label>
+          <label>
+            Repetí la contraseña nueva
+            <input name="repeat" type="password" autoComplete="new-password" minLength={PASSWORD_MIN} maxLength={PASSWORD_MAX} required aria-describedby="password-change-hint" />
+          </label>
+          <p className="form-hint" id="password-change-hint">{PASSWORD_HINT}</p>
+          <div className="catalog-filters-actions">
+            <button type="submit">Cambiar contraseña</button>
+          </div>
+        </form>
       </section>
 
       <section className="ficha-section account-danger" aria-labelledby="acc-delete">
