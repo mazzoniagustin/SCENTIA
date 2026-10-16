@@ -77,7 +77,7 @@ function cleanReference(value: unknown): string | null {
 }
 
 /** Saca el objeto JSON de la respuesta del modelo (con o sin ```json). null si no hay un objeto. */
-function extractJson(raw: string): unknown {
+export function extractJson(raw: string): unknown {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)
   const body = (fenced ? fenced[1] : raw).trim()
   const start = body.indexOf('{')

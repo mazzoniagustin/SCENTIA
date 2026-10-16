@@ -2,10 +2,12 @@
 //
 //   fit      = Σ intensidad · afinidad(acorde, banda) / Σ intensidad       ∈ [0, 1]
 //   adjusted = fit · (1 − penalización · cloyingShare)
-//   score    = adjusted · peso del estado (OWNED 1, SAMPLED 0.9)
+//   score    = adjusted · peso del estado (OWNED 1, SAMPLED 0.9) · factor de contexto
+// El factor de contexto (context.ts, ADR-011) vale 1 sin contexto; con "discreción alta" baja el puntaje de los perfumes invasivos.
 // cloyingShare = fracción de la intensidad que aportan los acordes empalagosos.
 // DISLIKED se excluye siempre; WISHLIST no se recomienda (no está en la colección usable).
 
+import { contextMultiplier, contextReasons, type OutfitContext } from './context.ts'
 import { accordAffinity, HOT_ACCORDS, isCloyingAccord } from './rules.ts'
 import type { OutfitCandidate, OutfitPick, OutfitResult, ReasonCode, WeatherProfile } from './types.ts'
 
@@ -42,7 +44,7 @@ function wearableStatus(status: string): WearableStatus | null {
   return upper === 'OWNED' || upper === 'SAMPLED' ? upper : null
 }
 
-function scoreCandidate(c: OutfitCandidate, status: WearableStatus, profile: WeatherProfile): Scored | null {
+function scoreCandidate(c: OutfitCandidate, status: WearableStatus, profile: WeatherProfile, context: OutfitContext | null): Scored | null {
   const accords = c.accords.filter((a) => a.intensity > 0)
   const total = accords.reduce((sum, a) => sum + a.intensity, 0)
   if (total === 0) return null
@@ -58,13 +60,14 @@ function scoreCandidate(c: OutfitCandidate, status: WearableStatus, profile: Wea
   const fit = weighted / total
   const cloyingShare = cloying / total
   const penalty = cloyingPenalty(profile)
-  const score = round6(fit * (1 - penalty * cloyingShare) * STATUS_WEIGHTS[status])
+  const score = round6(fit * (1 - penalty * cloyingShare) * STATUS_WEIGHTS[status] * contextMultiplier(accords, c.sillage, context))
 
   const reasons: ReasonCode[] = []
   if (profile.band === 'hot' && fit >= GOOD_FIT_MIN) reasons.push('fresh_for_heat')
   if (profile.band === 'cold' && fit >= GOOD_FIT_MIN) reasons.push('warm_for_cold')
   if ((profile.humid || profile.wet) && fresh / total >= LIGHT_SHARE_MIN) reasons.push('light_for_humidity')
   if (penalty > 0 && cloyingShare < NOT_CLOYING_BELOW) reasons.push('avoids_cloying')
+  reasons.push(...contextReasons(accords, c.sillage, context))
   if (status === 'OWNED') reasons.push('owned')
 
   const topAccords = [...accords]
@@ -100,7 +103,7 @@ function compare(a: Scored, b: Scored): number {
   return a.pick.perfumeId < b.pick.perfumeId ? -1 : a.pick.perfumeId > b.pick.perfumeId ? 1 : 0
 }
 
-export function recommendOutfit(candidates: OutfitCandidate[], profile: WeatherProfile): OutfitResult {
+export function recommendOutfit(candidates: OutfitCandidate[], profile: WeatherProfile, context: OutfitContext | null = null): OutfitResult {
   if (candidates.length === 0) return { status: 'empty_collection' }
 
   const eligible = candidates.flatMap((c) => {
@@ -112,7 +115,7 @@ export function recommendOutfit(candidates: OutfitCandidate[], profile: WeatherP
   const scored: Scored[] = []
   let skippedWithoutAccords = 0
   for (const { c, status } of eligible) {
-    const result = scoreCandidate(c, status, profile)
+    const result = scoreCandidate(c, status, profile, context)
     if (result) scored.push(result)
     else skippedWithoutAccords++
   }

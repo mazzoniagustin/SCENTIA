@@ -28,9 +28,20 @@ export type OutfitCandidate = {
   status: OutfitStatus
   rating: number | null
   accords: ReadonlyArray<{ name: string; intensity: number }>
+  /** Estela votada por la comunidad (1-4); null o ausente si no hay. Solo se usa con un contexto (ADR-011). */
+  sillage?: number | null
 }
 
-export type ReasonCode = 'fresh_for_heat' | 'warm_for_cold' | 'light_for_humidity' | 'avoids_cloying' | 'owned'
+export type ReasonCode =
+  | 'fresh_for_heat'
+  | 'warm_for_cold'
+  | 'light_for_humidity'
+  | 'avoids_cloying'
+  | 'owned'
+  | 'discreet_for_context'
+  | 'light_for_context'
+  | 'strong_for_context'
+  | 'intense_for_context'
 
 export type OutfitPick = {
   perfumeId: string

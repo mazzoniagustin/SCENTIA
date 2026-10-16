@@ -182,3 +182,46 @@ describe('recommendOutfit: desempate determinista', () => {
     assert.deepEqual(list, copy)
   })
 })
+
+describe('recommendOutfit: contexto (ADR-011)', () => {
+  // Con frío gana el cálido e invasivo; el liviano y discreto es peor para el clima pero apto para un lugar cerrado.
+  const invasive = perfume('invasivo', [['oud', 100], ['ámbar', 100]], { sillage: 4 })
+  const discreet = perfume('discreto', [['cítrico', 60], ['ámbar', 40]], { sillage: 1.2 })
+  const high = { discretion: 'alta', lightness: null, projection: null } as const
+
+  it('sin contexto no cambia nada: gana el mejor para el clima', () => {
+    assert.equal(ok(recommendOutfit([discreet, invasive], COLD)).primary.perfumeId, 'invasivo')
+    assert.equal(ok(recommendOutfit([discreet, invasive], COLD, null)).primary.perfumeId, 'invasivo')
+    assert.deepEqual(ok(recommendOutfit([discreet, invasive], COLD, null)), ok(recommendOutfit([discreet, invasive], COLD)))
+  })
+
+  it('discreción alta: el invasivo deja de ser la primera opción y pasa a alternativa', () => {
+    const r = ok(recommendOutfit([invasive, discreet], COLD, high))
+    assert.equal(r.primary.perfumeId, 'discreto')
+    assert.deepEqual(r.alternatives.map((a) => a.perfumeId), ['invasivo'])
+    assert.ok(r.primary.reasons.includes('discreet_for_context'))
+  })
+
+  it('si todos son invasivos, igual hay recomendación (no se queda sin respuesta)', () => {
+    const other = perfume('otro', [['oud', 100], ['vainilla', 100]], { sillage: 4 })
+    const r = ok(recommendOutfit([invasive, other], COLD, high))
+    assert.ok(['invasivo', 'otro'].includes(r.primary.perfumeId))
+  })
+
+  it('sin estela votada se arregla con la densidad de los acordes', () => {
+    const denseNoSillage = perfume('denso', [['oud', 100], ['ámbar', 100]], { sillage: null })
+    assert.equal(ok(recommendOutfit([denseNoSillage, discreet], COLD, high)).primary.perfumeId, 'discreto')
+  })
+
+  it('proyección marcada favorece al invasivo cuando el clima casi empata', () => {
+    const strong = { discretion: null, lightness: null, projection: 'marcada' } as const
+    assert.equal(ok(recommendOutfit([discreet, invasive], COLD, strong)).primary.perfumeId, 'invasivo')
+    assert.ok(ok(recommendOutfit([discreet, invasive], COLD, strong)).primary.reasons.includes('strong_for_context'))
+  })
+
+  it('el desempate sigue siendo determinista con contexto y no depende del orden', () => {
+    const a = ok(recommendOutfit([invasive, discreet], COLD, high))
+    const b = ok(recommendOutfit([discreet, invasive], COLD, high))
+    assert.deepEqual(a, b)
+  })
+})
