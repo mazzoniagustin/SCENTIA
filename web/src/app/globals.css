@@ -4420,6 +4420,16 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   margin-top: 0;
 }
 
+/* Cuadro de contexto de "¿Qué me pongo hoy?" (ADR-011): reutiliza los estilos del cuadro de afinar de la colección. */
+.outfit-context {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  min-width: 0;
+}
+
 /* Cuadro para afinar con IA. */
 .gaps-refine {
   display: grid;

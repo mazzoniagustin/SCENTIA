@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 
 import { PerfumeImage } from '../perfumes/PerfumeImage';
+import { ContextBox, type ContextState } from './ContextBox';
 
 type Pick = {
   perfumeId: string;
@@ -35,7 +36,7 @@ type View =
   | { kind: 'locating' }
   | { kind: 'loading' }
   | { kind: 'denied'; reason: 'denied' | 'unsupported' | 'unavailable' }
-  | { kind: 'ok'; weather: Weather; primary: Pick; alternatives: Pick[]; phrase: { text: string; source: string } }
+  | { kind: 'ok'; weather: Weather; primary: Pick; alternatives: Pick[]; phrase: { text: string; source: string }; context: ContextState }
   | { kind: 'empty_collection' | 'no_wearable' | 'no_accords'; weather: Weather }
   | { kind: 'unauthorized' }
   | { kind: 'rate_limited'; seconds: number }
@@ -48,6 +49,10 @@ const REASON_LABELS: Record<string, string> = {
   light_for_humidity: 'Liviano con la humedad',
   avoids_cloying: 'Sin notas empalagosas',
   owned: 'Lo tenés en tu colección',
+  discreet_for_context: 'Discreto para tu plan',
+  light_for_context: 'Liviano para tu plan',
+  strong_for_context: 'Se nota, como pediste',
+  intense_for_context: 'Con cuerpo, como pediste',
 };
 
 const STATUS_LABELS = { OWNED: 'Lo tengo', SAMPLED: 'Probado' } as const;
@@ -122,6 +127,7 @@ export function OutfitToday() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Solo en memoria (nunca en storage, cookies ni URL) para poder reintentar; se pierde al salir de la página.
   const lastCoords = useRef<Coords | null>(null);
+  const [contextBusy, setContextBusy] = useState(false);
 
   const busy = view.kind === 'locating' || view.kind === 'loading';
 
@@ -130,14 +136,17 @@ export function OutfitToday() {
     if (view.kind !== 'idle' && !busy) headingRef.current?.focus();
   }, [view, busy]);
 
-  async function fetchOutfit(coords: Coords) {
+  // `context`: texto del plan (ADR-011). Con un resultado a la vista, se vuelve a pedir sin taparlo con el "cargando".
+  async function fetchOutfit(coords: Coords, context?: string) {
     lastCoords.current = coords;
-    setView({ kind: 'loading' });
+    const keepResult = context !== undefined && view.kind === 'ok';
+    if (keepResult) setContextBusy(true);
+    else setView({ kind: 'loading' });
     try {
       const res = await fetch('/api/outfit/today', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(coords),
+        body: JSON.stringify(context ? { ...coords, context } : coords),
       });
       if (res.status === 401) return setView({ kind: 'unauthorized' });
       if (res.status === 429) {
@@ -148,7 +157,14 @@ export function OutfitToday() {
       if (!res.ok) return setView({ kind: 'error' });
       const data = await res.json();
       if (data.status === 'ok') {
-        return setView({ kind: 'ok', weather: data.weather, primary: data.primary, alternatives: data.alternatives ?? [], phrase: data.phrase });
+        return setView({
+          kind: 'ok',
+          weather: data.weather,
+          primary: data.primary,
+          alternatives: data.alternatives ?? [],
+          phrase: data.phrase,
+          context: data.context ?? { enabled: false, status: 'none' },
+        });
       }
       if (data.status === 'empty_collection' || data.status === 'no_wearable' || data.status === 'no_accords') {
         return setView({ kind: data.status, weather: data.weather });
@@ -156,6 +172,8 @@ export function OutfitToday() {
       setView({ kind: 'error' });
     } catch {
       setView({ kind: 'error' });
+    } finally {
+      setContextBusy(false);
     }
   }
 
@@ -366,6 +384,15 @@ export function OutfitToday() {
                   ))}
                 </ul>
               </section>
+            )}
+
+            {view.context.enabled && (
+              <ContextBox
+                state={view.context}
+                busy={contextBusy}
+                onSubmit={(text) => lastCoords.current && void fetchOutfit(lastCoords.current, text)}
+                onClear={() => lastCoords.current && void fetchOutfit(lastCoords.current)}
+              />
             )}
           </>
         )}
