@@ -5,10 +5,11 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 import type { Finding, GapsResponse } from '@/lib/gaps/response';
 import type { GenderFilter } from '@/lib/gaps/gender';
-import { announcementFor, familyColor, genderHint, groupFindings, valueColor, viewFromResponse, type GapsView } from '@/lib/gaps/view';
+import { announcementFor, familyColor, genderHint, groupFindings, valueColor, viewFromResponse, type GapsView, type RefinedList } from '@/lib/gaps/view';
 import { HorizontalScroller } from '@/components/HorizontalScroller';
 import { DistributionList } from './Distribution';
 import { Headline } from './Headline';
+import { RefineBox } from './RefineBox';
 import { Reveal } from './reveal';
 import { SuggestionCard } from './SuggestionCard';
 
@@ -55,15 +56,24 @@ function GenderPicker({ gender, busy, onPick }: { gender: GapsResponse['gender']
 
 function Suggestions({
   data,
+  refined,
   refreshing,
   refreshNote,
   onPickGender,
+  onRefined,
+  onClearRefined,
 }: {
   data: GapsResponse;
+  refined: RefinedList | null;
   refreshing: boolean;
   refreshNote: string | null;
   onPickGender: (value: GenderFilter) => void;
+  onRefined: (refined: RefinedList) => void;
+  onClearRefined: () => void;
 }) {
+  // Afinadas con IA o las del análisis: el rollo es el mismo.
+  const suggestions = refined ? refined.suggestions : data.suggestions;
+  const complete = refined ? refined.complete : data.complete;
   return (
     <section className="gaps-block" aria-labelledby="gaps-sugg-title">
       <h3 id="gaps-sugg-title" className="outfit-subtitle">
@@ -75,18 +85,32 @@ function Suggestions({
           {refreshNote}
         </p>
       )}
-      {data.suggestions.length === 0 ? (
-        <p className="form-hint">Por ahora no encontramos perfumes del catálogo para sugerirte con ese género.</p>
+      {refined && (
+        <div className="gaps-refined-note">
+          <p>
+            <span className="outfit-chip gaps-tag">Interpretado con IA</span> {refined.summary}
+          </p>
+          <button type="button" className="gaps-link-button" onClick={onClearRefined}>
+            Volver a las sugerencias del análisis
+          </button>
+        </div>
+      )}
+      {suggestions.length === 0 ? (
+        <p className="form-hint">
+          {refined && !refined.hadCriteria
+            ? 'No encontramos ese perfume en el catálogo. Probá con otro nombre o contá el estilo que buscás.'
+            : 'Por ahora no encontramos perfumes del catálogo para sugerirte con ese género.'}
+        </p>
       ) : (
         <>
-          <p className="form-hint">Para empezar por ahí, estos perfumes del catálogo van en esa dirección.</p>
-          {!data.complete && <p className="notice">La lista es corta: no hay muchos perfumes que encajen con lo que vimos.</p>}
+          {!refined && <p className="form-hint">Para empezar por ahí, estos perfumes del catálogo van en esa dirección.</p>}
+          {!complete && <p className="notice">La lista es corta: no hay muchos perfumes que encajen con lo que pediste.</p>}
           {/* Rollo: avanza solo y despacio, se frena al pasar el mouse o con el foco, y se puede arrastrar o usar las flechas.
               Las tarjetas entran una tras otra cuando el rollo aparece en pantalla (no antes). */}
-          <Reveal key={data.gender.applied} className={refreshing ? 'gaps-reel-wrap is-refreshing' : 'gaps-reel-wrap'} threshold={0.35}>
+          <Reveal key={`${data.gender.applied}-${refined ? refined.summary : 'base'}`} className={refreshing ? 'gaps-reel-wrap is-refreshing' : 'gaps-reel-wrap'} threshold={0.35}>
             <HorizontalScroller label="Perfumes para explorar" autoAdvanceMs={5000} className="gaps-reel">
               <ul className="scroller-track gaps-suggestions">
-                {data.suggestions.map((s, i) => (
+                {suggestions.map((s, i) => (
                   <SuggestionCard key={s.perfumeId} s={s} index={i} />
                 ))}
               </ul>
@@ -94,6 +118,7 @@ function Suggestions({
           </Reveal>
         </>
       )}
+      {data.refine.enabled && <RefineBox maxChars={data.refine.maxChars} gender={data.gender.applied} onRefined={onRefined} />}
     </section>
   );
 }
@@ -206,6 +231,13 @@ function Results({
   onPickGender: (value: GenderFilter) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  // Sugerencias afinadas con el texto de la persona (null: las del análisis). Cambiar el género trae datos nuevos y las descarta.
+  const [refined, setRefined] = useState<RefinedList | null>(null);
+  const [seenGender, setSeenGender] = useState(data.gender.applied);
+  if (seenGender !== data.gender.applied) {
+    setSeenGender(data.gender.applied);
+    setRefined(null);
+  }
   // Cuántas veces se abrió el detalle: cada apertura monta el detalle de nuevo, así las barras y los números vuelven a llenarse.
   const [opens, setOpens] = useState(0);
 
@@ -218,7 +250,15 @@ function Results({
     <>
       {data.headline && <Headline text={data.headline} />}
 
-      <Suggestions data={data} refreshing={refreshing} refreshNote={refreshNote} onPickGender={onPickGender} />
+      <Suggestions
+        data={data}
+        refined={refined}
+        refreshing={refreshing}
+        refreshNote={refreshNote}
+        onPickGender={onPickGender}
+        onRefined={setRefined}
+        onClearRefined={() => setRefined(null)}
+      />
 
       <div className="gaps-more-toggle">
         <button

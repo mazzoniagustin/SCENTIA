@@ -2,7 +2,7 @@
 // Sin React, para poder probarla con node:test.
 
 import { accordDotColor, NEUTRAL_DOT_COLOR } from '../cover.ts'
-import type { Finding, GapsResponse } from './response.ts'
+import type { Finding, GapsResponse, RefineResponse, SuggestionOut } from './response.ts'
 
 export type GapsView =
   | { kind: 'idle' }
@@ -114,3 +114,60 @@ export function genderHint(gender: GapsResponse['gender']): string {
   const scope = withUnisex ? `${label.toLowerCase()} y unisex` : label.toLowerCase()
   return gender.chosen ? `Mostrando perfumes ${scope}.` : `Mostramos perfumes ${scope} porque es lo que predomina en tu colección. Podés cambiarlo.`
 }
+
+// ---------------------------------------------------------------------------------------------
+// Cuadro para afinar con IA (ADR-010)
+
+export type RefinedList = { summary: string; suggestions: SuggestionOut[]; complete: boolean; hadCriteria: boolean }
+
+export type RefineView =
+  | { kind: 'idle' }
+  | { kind: 'loading' }
+  | { kind: 'ok'; refined: RefinedList }
+  | { kind: 'not_understood'; message: string }
+  | { kind: 'unauthorized' }
+  | { kind: 'rate_limited'; seconds: number }
+  | { kind: 'unavailable' }
+  | { kind: 'error' }
+  | { kind: 'network' }
+
+/** Traduce la respuesta HTTP de `/api/collection/gaps/refine` a un estado de la interfaz. */
+export function refineViewFromResponse(status: number, retryAfter: string | null, body: unknown): RefineView {
+  if (status === 401) return { kind: 'unauthorized' }
+  if (status === 429) return { kind: 'rate_limited', seconds: parseRetryAfter(retryAfter) }
+  if (status === 503) return { kind: 'unavailable' }
+  if (status < 200 || status >= 300) return { kind: 'error' }
+  const data = body as Partial<RefineResponse> | null
+  if (!data || typeof data !== 'object') return { kind: 'error' }
+  if (data.status === 'not_understood' && typeof data.message === 'string') return { kind: 'not_understood', message: data.message }
+  if (data.status === 'ok' && typeof data.summary === 'string' && Array.isArray(data.suggestions)) {
+    return { kind: 'ok', refined: { summary: data.summary, suggestions: data.suggestions, complete: data.complete === true, hadCriteria: data.hadCriteria === true } }
+  }
+  return { kind: 'error' }
+}
+
+export function refineAnnouncement(view: RefineView): string {
+  switch (view.kind) {
+    case 'loading':
+      return 'Interpretando tu pedido.'
+    case 'ok':
+      return view.refined.suggestions.length > 0 ? `Listo: ${view.refined.suggestions.length} sugerencias afinadas.` : 'No encontramos perfumes con ese pedido.'
+    case 'not_understood':
+      return view.message
+    case 'unauthorized':
+      return 'Tu sesión venció. Volvé a ingresar.'
+    case 'rate_limited':
+      return 'Hiciste muchas consultas seguidas. Esperá unos segundos y probá de nuevo.'
+    case 'unavailable':
+      return 'No pudimos interpretar tu pedido ahora. Probá de nuevo en un rato.'
+    case 'error':
+      return 'Algo salió mal. Probá de nuevo.'
+    case 'network':
+      return 'No pudimos conectarnos. Revisá tu conexión y probá de nuevo.'
+    default:
+      return ''
+  }
+}
+
+/** Ejemplos que rellenan el cuadro (la persona igual tiene que enviarlos). */
+export const REFINE_EXAMPLES = ['Lo necesito para una ocasión especial', 'Algo fresco para el verano', 'Me gusta el estilo de Sauvage'] as const

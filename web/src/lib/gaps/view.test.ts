@@ -3,7 +3,7 @@ import { test } from 'node:test'
 
 import type { Finding } from './response.ts'
 import { FAMILY_CODES } from './families.ts'
-import { announcementFor, familyColor, genderHint, groupFindings, parseRetryAfter, percent, valueColor, viewFromResponse } from './view.ts'
+import { announcementFor, familyColor, genderHint, groupFindings, parseRetryAfter, percent, REFINE_EXAMPLES, refineAnnouncement, refineViewFromResponse, valueColor, viewFromResponse } from './view.ts'
 
 test('parseRetryAfter acepta enteros positivos y descarta el resto', () => {
   assert.equal(parseRetryAfter('30'), 30)
@@ -88,4 +88,29 @@ test('genderHint explica qué género se muestra y si lo deducimos o lo eligió 
   assert.equal(genderHint(g('unisex', true)), 'Mostrando perfumes unisex.')
   assert.equal(genderHint(g('todos', true)), 'Mostrando perfumes de todos los géneros.')
   assert.equal(genderHint(g('todos', false)), 'Mostrando perfumes de todos los géneros.')
+})
+
+test('refineViewFromResponse mapea códigos HTTP y cuerpos', () => {
+  assert.equal(refineViewFromResponse(401, null, null).kind, 'unauthorized')
+  assert.deepEqual(refineViewFromResponse(429, '15', null), { kind: 'rate_limited', seconds: 15 })
+  assert.equal(refineViewFromResponse(503, null, { code: 'disabled' }).kind, 'unavailable')
+  assert.equal(refineViewFromResponse(500, null, null).kind, 'error')
+  assert.equal(refineViewFromResponse(400, null, { error: 'x' }).kind, 'error')
+  assert.equal(refineViewFromResponse(200, null, null).kind, 'error')
+  assert.deepEqual(refineViewFromResponse(200, null, { status: 'not_understood', message: 'No entendí' }), { kind: 'not_understood', message: 'No entendí' })
+  assert.equal(refineViewFromResponse(200, null, { status: 'not_understood' }).kind, 'error')
+  const ok = refineViewFromResponse(200, null, { status: 'ok', summary: 'Busqué…', suggestions: [], complete: false, hadCriteria: true })
+  assert.deepEqual(ok, { kind: 'ok', refined: { summary: 'Busqué…', suggestions: [], complete: false, hadCriteria: true } })
+  assert.equal(refineViewFromResponse(200, null, { status: 'ok', summary: 5, suggestions: [] }).kind, 'error')
+})
+
+test('refineAnnouncement no anuncia nada en idle y cuenta las sugerencias', () => {
+  assert.equal(refineAnnouncement({ kind: 'idle' }), '')
+  assert.equal(refineAnnouncement({ kind: 'ok', refined: { summary: 's', suggestions: [{}, {}] as never, complete: false, hadCriteria: true } }), 'Listo: 2 sugerencias afinadas.')
+  assert.equal(refineAnnouncement({ kind: 'ok', refined: { summary: 's', suggestions: [], complete: false, hadCriteria: true } }), 'No encontramos perfumes con ese pedido.')
+  assert.ok(!/\d/.test(refineAnnouncement({ kind: 'rate_limited', seconds: 33 })))
+})
+
+test('los ejemplos del cuadro entran en el largo máximo', () => {
+  assert.ok(REFINE_EXAMPLES.every((e) => e.length >= 3 && e.length <= 200))
 })
