@@ -27,7 +27,7 @@ export type RefineResult =
   | { status: 'not_understood' }
   | { status: 'unavailable'; reason: 'disabled' | 'cooldown' | 'error' }
 
-const TIMEOUT_MS = 4000
+const TIMEOUT_MS = 8000
 const CACHE_TTL_MS = 60 * 60 * 1000
 
 const cache = createTtlCache<Refinement>({ ttlMs: CACHE_TTL_MS, maxEntries: 200 })

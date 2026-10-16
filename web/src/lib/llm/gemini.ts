@@ -19,7 +19,7 @@ export class LlmError extends Error {
 
 const DEFAULT_COOLDOWN_S = 60
 const MAX_COOLDOWN_S = 300
-const DEFAULT_TIMEOUT_MS = 2500
+const DEFAULT_TIMEOUT_MS = 8000
 
 let cooldownUntil = 0
 

@@ -17,7 +17,7 @@ export type OutfitPhraseDeps = {
   env?: Record<string, string | undefined>
 }
 
-const TIMEOUT_MS = 2500
+const TIMEOUT_MS = 8000
 const CACHE_TTL_MS = 30 * 60 * 1000
 
 const SYSTEM_PROMPT = [
