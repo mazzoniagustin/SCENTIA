@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { analyzeFamilies } from './analyze.ts'
 import { analyzeDimensions, type DimensionShares } from './dimensions.ts'
 import { FAMILY_ORDER } from './families.ts'
-import { buildGapsResponse, type GapAnalysisInput } from './response.ts'
+import { buildGapsResponse, buildRefineResponse, NOT_UNDERSTOOD_MESSAGE, type GapAnalysisInput } from './response.ts'
 import { buildNeeds, WISHLIST_LABEL } from './rank.ts'
 import { resolveGender } from './gender.ts'
 import { DAY_NIGHT_NOTE, guideFor } from './texts.ts'
@@ -155,5 +155,33 @@ describe('buildGapsResponse: género', () => {
   it('lo elegido por la persona se marca como elegido', () => {
     const r = buildGapsResponse({ ...analysisFor(six()), gender: resolveGender('masculino', 'todos') })
     assert.deepEqual([r.gender.applied, r.gender.inferred, r.gender.chosen], ['todos', 'masculino', true])
+  })
+})
+
+describe('buildGapsResponse: cuadro de afinar', () => {
+  it('informa si está habilitado (apagado por defecto) y el largo máximo', () => {
+    assert.deepEqual(buildGapsResponse(analysisFor(six())).refine, { enabled: false, maxChars: 200 })
+    assert.deepEqual(buildGapsResponse(analysisFor(six()), { refineEnabled: true }).refine, { enabled: true, maxChars: 200 })
+    assert.equal(buildGapsResponse(analysisFor([]), { refineEnabled: true }).refine.enabled, true)
+  })
+})
+
+describe('buildRefineResponse', () => {
+  const suggestion = { perfumeId: 'cat-9', brand: 'Casa', name: 'Nueve', gender: 'masculino', imageUrl: null, score: 0.91234, covers: [{ kind: 'dimension' as const, dimension: 'dayNight' as const, value: 'noche' }], inWishlist: true }
+
+  it('devuelve el resumen y los candidatos con etiquetas legibles, sin el puntaje interno', () => {
+    const r = buildRefineResponse({ summary: 'Busqué perfumes nocturnos.', suggestions: [suggestion], complete: false, hadCriteria: true })
+    assert.deepEqual(r, {
+      status: 'ok',
+      summary: 'Busqué perfumes nocturnos.',
+      suggestions: [{ perfumeId: 'cat-9', brand: 'Casa', name: 'Nueve', gender: 'masculino', imageUrl: null, covers: ['Para la noche'], inWishlist: true, wishlistNote: 'Ya lo tenés en tu lista de deseados' }],
+      complete: false,
+      hadCriteria: true,
+    })
+    assert.ok(!JSON.stringify(r).includes('score') && !JSON.stringify(r).includes('0.91234'))
+  })
+
+  it('el mensaje de "no entendí" da ejemplos y no culpa a la persona', () => {
+    assert.match(NOT_UNDERSTOOD_MESSAGE, /Probá contándolo de otra forma/)
   })
 })

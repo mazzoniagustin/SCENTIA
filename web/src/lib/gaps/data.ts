@@ -34,6 +34,7 @@ import {
 } from './dimensions'
 import { FAMILY_ACCORDS, FAMILY_ORDER, type FamilyCode } from './families'
 import { allowedGenders, inferGender, resolveGender, type GenderFilter, type GenderState } from './gender'
+import { describeRefinement, refinementNeeds, type Refinement } from './refine'
 import {
   EXCLUDED_FROM_SUGGESTIONS,
   buildNeeds,
@@ -169,6 +170,17 @@ function familySql(family: FamilyCode): Prisma.Sql {
       AND pa.intensity >= ${ACCORD_PRESENCE_MIN_INTENSITY})`
 }
 
+/**
+ * El perfume p NO tiene ningún acorde de la familia con intensidad suficiente. Con NOT EXISTS correlacionado: negar el
+ * `IN (subconsulta)` de familySql hacía un NOT IN que Postgres resolvía en minutos (117 s medidos).
+ */
+function familyAbsentSql(family: FamilyCode): Prisma.Sql {
+  return Prisma.sql`NOT EXISTS (
+    SELECT 1 FROM "PerfumeAccord" pa
+    WHERE pa."perfumeId" = p.id AND pa.intensity >= ${ACCORD_PRESENCE_MIN_INTENSITY}
+      AND pa."accordId" IN (SELECT a.id FROM "Accord" a WHERE lower(btrim(a.name)) = ANY(${familyNames(family)}::text[])))`
+}
+
 // ---------------------------------------------------------------------------------------------
 // Frecuencias del catálogo (enteros). `scopeIds` acota a un conjunto de perfumes: sirve para el test que las compara
 // con catalogFamilyCounts / catalogDimensionCounts. Sin `scopeIds`, todo el catálogo publicado.
@@ -301,16 +313,22 @@ export async function getCandidates(
   needs: readonly Need[],
   maxRatingCount: number,
   gender: GenderFilter = 'todos',
+  avoidFamilies: readonly FamilyCode[] = [],
+  excludeIds: readonly string[] = [],
 ): Promise<{ candidates: RankCandidate[]; meta: Map<string, CandidateMeta> }> {
   if (needs.length === 0) return { candidates: [], meta: new Map() }
   const excluded = [...EXCLUDED_FROM_SUGGESTIONS]
   const genders = allowedGenders(gender)
   const genderClause = genders ? Prisma.sql`AND p.gender = ANY(${genders}::text[])` : Prisma.empty
+  // Lo que la persona dijo que no quiere: se excluyen los perfumes que tengan esa familia (mismo criterio de presencia que el análisis).
+  const avoidClause =
+    avoidFamilies.length > 0 ? Prisma.join(avoidFamilies.map((family) => Prisma.sql`AND ${familyAbsentSql(family)}`), ' ') : Prisma.empty
+  const excludeClause = excludeIds.length > 0 ? Prisma.sql`AND p.id <> ALL(${[...excludeIds]}::text[])` : Prisma.empty
 
   const pools = needs.map(
     (need) => Prisma.sql`(
       SELECT p.id FROM "Perfume" p
-      WHERE p.status = 'PUBLISHED' AND ${needSql(need)} ${genderClause}
+      WHERE p.status = 'PUBLISHED' AND ${needSql(need)} ${genderClause} ${avoidClause} ${excludeClause}
         AND NOT EXISTS (
           SELECT 1 FROM "UserCollection" x
           WHERE x."userId" = ${userId} AND x."perfumeId" = p.id AND x.status::text = ANY(${excluded}::text[]))
@@ -410,4 +428,79 @@ export async function getGapAnalysis(userId: string, options: GapOptions = {}): 
   )
   const { source, ms } = await timed
   return { ...analysis, timing: { catalogSource: source, catalogMs: ms, totalMs: Date.now() - started } }
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Afinar con un texto (ADR-010)
+
+type ReferenceRow = { id: string; brand: string; name: string; accord: string | null; intensity: number | null }
+
+/** Cuántas familias, como mucho, se toman del perfume de referencia ("algo parecido a X"). */
+export const MAX_REFERENCE_FAMILIES = 3
+
+/**
+ * Busca en el catálogo publicado el perfume que la persona nombró (todas las palabras en marca o nombre; el más valorado) y
+ * devuelve su etiqueta y las familias que lo definen. El texto va como parámetro, nunca dentro del SQL.
+ */
+export async function resolveReference(
+  text: string,
+): Promise<{ id: string; label: string; needs: Need[] } | null> {
+  const words = text.split(/\s+/).filter((w) => w.length >= 2).slice(0, 5)
+  if (words.length === 0) return null
+  const conditions = words.map((w) => Prisma.sql`(p.brand ILIKE ${'%' + w.replace(/[%_\\]/g, '') + '%'} OR p.name ILIKE ${'%' + w.replace(/[%_\\]/g, '') + '%'})`)
+  const rows = await prisma.$queryRaw<ReferenceRow[]>`
+    WITH hit AS (
+      SELECT p.id, p.brand, p.name FROM "Perfume" p
+      WHERE p.status = 'PUBLISHED' AND ${Prisma.join(conditions, ' AND ')}
+      ORDER BY p."ratingCount" DESC NULLS LAST, p.id LIMIT 1)
+    SELECT hit.id, hit.brand, hit.name, a.name AS accord, pa.intensity::int AS intensity
+    FROM hit LEFT JOIN "PerfumeAccord" pa ON pa."perfumeId" = hit.id LEFT JOIN "Accord" a ON a.id = pa."accordId"`
+  if (rows.length === 0) return null
+  const { id, brand, name } = rows[0]
+  const byFamily = new Map<FamilyCode, number>()
+  for (const row of rows) {
+    if (row.accord === null || row.intensity === null || row.intensity < ACCORD_PRESENCE_MIN_INTENSITY) continue
+    for (const family of FAMILY_ORDER) {
+      if ((FAMILY_ACCORDS[family] as readonly string[]).includes(row.accord.trim().toLowerCase())) {
+        byFamily.set(family, Math.max(byFamily.get(family) ?? 0, row.intensity))
+      }
+    }
+  }
+  const needs: Need[] = [...byFamily]
+    .sort((a, b) => b[1] - a[1] || FAMILY_ORDER.indexOf(a[0]) - FAMILY_ORDER.indexOf(b[0]))
+    .slice(0, MAX_REFERENCE_FAMILIES)
+    .map(([family]) => ({ kind: 'family', family, weight: 1 }))
+  return { id, label: `${brand} ${name}`, needs }
+}
+
+export type RefinedResult = {
+  summary: string
+  suggestions: SuggestionView[]
+  complete: boolean
+  gender: GenderFilter
+  /** false si lo que la persona pidió no dejó ningún criterio con el que buscar (p. ej. una referencia que no existe). */
+  hadCriteria: boolean
+}
+
+/**
+ * Sugerencias afinadas por el texto de la persona (ya interpretado y validado). Reemplaza a las necesidades del análisis por
+ * las del texto; el catálogo, el ranking, las exclusiones y el género son los mismos de siempre.
+ */
+export async function getRefinedSuggestions(userId: string, refinement: Refinement, gender: GenderFilter): Promise<RefinedResult> {
+  const [reference, stats] = await Promise.all([refinement.reference ? resolveReference(refinement.reference) : null, getAccordStats()])
+  const needs = [...refinementNeeds(refinement)]
+  for (const need of reference?.needs ?? []) {
+    if (!needs.some((n) => n.kind === 'family' && need.kind === 'family' && n.family === need.family)) needs.push(need)
+  }
+  const summary = describeRefinement(refinement, reference?.label ?? null)
+  if (needs.length === 0) return { summary, suggestions: [], complete: false, gender, hadCriteria: false }
+
+  const { candidates, meta } = await getCandidates(userId, needs, stats.maxRatingCount, gender, refinement.avoidFamilies, reference ? [reference.id] : [])
+  const ranked = rankSuggestions(needs, candidates, buildIdf(stats.dfByName, stats.total))
+  const suggestions = ranked.suggestions.flatMap((s) => {
+    const row = meta.get(s.perfumeId)
+    return row ? [{ ...s, ...row }] : []
+  })
+  return { summary, suggestions, complete: ranked.complete, gender, hadCriteria: true }
 }

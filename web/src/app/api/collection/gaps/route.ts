@@ -1,5 +1,6 @@
 import { getGapAnalysis } from '@/lib/gaps/data'
 import { parseGenderChoice } from '@/lib/gaps/gender'
+import { isRefineEnabled } from '@/lib/gaps/refine-llm'
 import { buildGapsResponse } from '@/lib/gaps/response'
 import { logServerError } from '@/lib/log'
 import { guardOutfitRequest, outfitJson } from '@/lib/outfit/request-guard'
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     console.info(
       `[api/collection/gaps] status=${analysis.families.status} catalog=${timing.catalogSource} catalogMs=${timing.catalogMs} totalMs=${timing.totalMs}`,
     )
-    return outfitJson(buildGapsResponse(analysis))
+    return outfitJson(buildGapsResponse(analysis, { refineEnabled: isRefineEnabled() }))
   } catch (error) {
     logServerError('api/collection/gaps', error)
     return outfitJson({ error: 'Error interno del servidor' }, 500)

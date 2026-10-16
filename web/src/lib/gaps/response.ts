@@ -5,6 +5,7 @@
 import { GENDER_FILTERS, GENDER_LABELS, type GenderFilter, type GenderState } from './gender.ts'
 import { DIMENSION_LABELS, GAP_DIMENSIONS, VALUE_LABELS, type Dimension } from './dimensions.ts'
 import { FAMILY_LABELS, type FamilyCode } from './families.ts'
+import { REFINE_MAX_CHARS } from './refine.ts'
 import { WISHLIST_LABEL, type Need, type Suggestion } from './rank.ts'
 import {
   DAY_NIGHT_NOTE,
@@ -45,6 +46,43 @@ export type Finding = {
 /** Distribución de la colección. Sin porcentajes del catálogo: la respuesta habla solo de la colección de la persona. */
 export type DistributionRow = { code: string; label: string; count: number; presence: number; level: FamilyLevel }
 
+export type SuggestionOut = {
+  perfumeId: string
+  brand: string
+  name: string
+  gender: string
+  imageUrl: string | null
+  covers: string[]
+  inWishlist: boolean
+  wishlistNote: string | null
+}
+
+type SuggestionIn = Suggestion & { brand: string; name: string; gender: string; imageUrl: string | null }
+
+// El puntaje interno del ranking no sale: la interfaz muestra qué cubre cada candidato, no un número.
+export function toSuggestionOut(s: SuggestionIn): SuggestionOut {
+  return {
+    perfumeId: s.perfumeId,
+    brand: s.brand,
+    name: s.name,
+    gender: s.gender,
+    imageUrl: s.imageUrl,
+    covers: s.covers.map(coveredLabel),
+    inWishlist: s.inWishlist,
+    wishlistNote: s.inWishlist ? WISHLIST_LABEL : null,
+  }
+}
+
+export type RefineResponse =
+  | { status: 'ok'; summary: string; suggestions: SuggestionOut[]; complete: boolean; hadCriteria: boolean }
+  | { status: 'not_understood'; message: string }
+
+export const NOT_UNDERSTOOD_MESSAGE = 'No pudimos interpretar qué buscás. Probá contándolo de otra forma, por ejemplo: «algo fresco para el verano» o «parecido a Sauvage».'
+
+export function buildRefineResponse(result: { summary: string; suggestions: readonly SuggestionIn[]; complete: boolean; hadCriteria: boolean }): RefineResponse {
+  return { status: 'ok', summary: result.summary, suggestions: result.suggestions.map(toSuggestionOut), complete: result.complete, hadCriteria: result.hadCriteria }
+}
+
 export type GapsResponse = {
   status: ReportStatus
   coverage: { used: number; skippedWithoutAccords: number; notUsable: number }
@@ -65,16 +103,9 @@ export type GapsResponse = {
   }>
   /** Notas de contexto (p. ej. qué significa día/noche). */
   notes: string[]
-  suggestions: Array<{
-    perfumeId: string
-    brand: string
-    name: string
-    gender: string
-    imageUrl: string | null
-    covers: string[]
-    inWishlist: boolean
-    wishlistNote: string | null
-  }>
+  suggestions: SuggestionOut[]
+  /** Cuadro para afinar con IA (ADR-010): solo se muestra si está habilitado. */
+  refine: { enabled: boolean; maxChars: number }
   /** false si hay menos sugerencias que el mínimo: la interfaz avisa que la lista es corta. */
   complete: boolean
   /** Filtro de género de las sugerencias: el aplicado, el deducido de la colección y las opciones del selector. */
@@ -95,7 +126,7 @@ function genderView(state: GenderState): GapsResponse['gender'] {
   }
 }
 
-export function buildGapsResponse(analysis: GapAnalysisInput): GapsResponse {
+export function buildGapsResponse(analysis: GapAnalysisInput, options: { refineEnabled?: boolean } = {}): GapsResponse {
   const { families, dimensions } = analysis
   const { status, coverage } = families
   const empty: GapsResponse = {
@@ -109,6 +140,7 @@ export function buildGapsResponse(analysis: GapAnalysisInput): GapsResponse {
     dimensions: [],
     notes: [],
     suggestions: [],
+    refine: { enabled: options.refineEnabled === true, maxChars: REFINE_MAX_CHARS },
     complete: false,
     gender: genderView(analysis.gender),
   }
@@ -150,17 +182,7 @@ export function buildGapsResponse(analysis: GapAnalysisInput): GapsResponse {
       rows: d.values.map((v) => ({ code: v.value, label: VALUE_LABELS[d.dimension][v.value] ?? v.value, count: v.count, presence: v.presence, level: v.level })),
     })),
     notes,
-    // El puntaje interno del ranking no sale: la interfaz muestra qué cubre cada candidato, no un número.
-    suggestions: analysis.suggestions.map((s) => ({
-      perfumeId: s.perfumeId,
-      brand: s.brand,
-      name: s.name,
-      gender: s.gender,
-      imageUrl: s.imageUrl,
-      covers: s.covers.map(coveredLabel),
-      inWishlist: s.inWishlist,
-      wishlistNote: s.inWishlist ? WISHLIST_LABEL : null,
-    })),
+    suggestions: analysis.suggestions.map(toSuggestionOut),
     complete: analysis.complete,
   }
 }

@@ -15,7 +15,7 @@ import { catalogFamilyCounts } from '../src/lib/gaps/analyze'
 import { catalogDimensionCounts, DIMENSION_VALUES, profileOf } from '../src/lib/gaps/dimensions'
 import { familiesOfAccords } from '../src/lib/gaps/analyze'
 import { SEASONS } from '../src/lib/seasons'
-import { getCandidates, getCollectionSamples, queryCatalogCounts } from '../src/lib/gaps/data'
+import { getCandidates, getCollectionSamples, getRefinedSuggestions, queryCatalogCounts, resolveReference } from '../src/lib/gaps/data'
 import { familyOfAccord } from '../src/lib/gaps/families'
 import type { Need } from '../src/lib/gaps/rank'
 
@@ -164,6 +164,34 @@ describe('candidatos y colección: SQL contra las funciones puras', { skip }, ()
       for (const m of meta.values()) assert.ok((allowed as readonly string[]).includes(m.gender), `${filter}: apareció uno ${m.gender}`)
     }
     assert.ok(all.size > 0)
+  })
+
+  it('afinar: una referencia que existe da familias, una que no existe no rompe, y las sugerencias respetan género y exclusiones', async () => {
+    const entry = await prisma.userCollection.findFirst({ select: { userId: true } })
+    if (!entry) return
+    const known = await resolveReference('Sauvage')
+    assert.ok(known && known.needs.length > 0 && known.needs.length <= 3, 'Sauvage debería existir con familias')
+    assert.equal(await resolveReference('zzqxjk perfume inexistente'), null)
+    assert.equal(await resolveReference('   '), null)
+
+    const refined = await getRefinedSuggestions(
+      entry.userId,
+      { families: [], avoidFamilies: ['dulce'], seasons: [], dayNight: null, duration: null, sillage: null, occasion: 'especial', reference: 'Sauvage' },
+      'masculino',
+    )
+    assert.equal(refined.hadCriteria, true)
+    assert.ok(refined.suggestions.length > 0)
+    assert.match(refined.summary, /^Busqué perfumes /)
+    const excluded = new Set(
+      (await prisma.userCollection.findMany({ where: { userId: entry.userId, status: { in: ['OWNED', 'SAMPLED', 'DISLIKED'] } }, select: { perfumeId: true } })).map((r) => r.perfumeId),
+    )
+    for (const s of refined.suggestions) {
+      assert.ok(['masculino', 'unisex'].includes(s.gender), `género ${s.gender}`)
+      assert.ok(!excluded.has(s.perfumeId))
+    }
+    const none = await getRefinedSuggestions(entry.userId, { families: [], avoidFamilies: [], seasons: [], dayNight: null, duration: null, sillage: null, occasion: null, reference: 'zzqxjk inexistente' }, 'todos')
+    assert.equal(none.hadCriteria, false)
+    assert.deepEqual(none.suggestions, [])
   })
 
   it('la colección leída no trae notas privadas ni puntajes', async () => {
