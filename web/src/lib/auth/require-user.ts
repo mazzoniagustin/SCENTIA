@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getOrCreateUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -22,4 +23,15 @@ export async function requireUser() {
   const user = await getAuthenticatedUserOrNull();
   if (!user) throw new Error("No autenticado");
   return user;
+}
+
+/**
+ * Fila `User` de la persona con sesión SIN crearla (a diferencia de `getAuthenticatedUserOrNull`). Para eliminar la cuenta:
+ * un doble envío no debe recrear un usuario vacío que genere un segundo resumen anónimo. Null si no hay sesión o ya no existe.
+ */
+export async function getExistingUserOrNull() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return null;
+  return prisma.user.findUnique({ where: { supabaseId: data.user.id } });
 }

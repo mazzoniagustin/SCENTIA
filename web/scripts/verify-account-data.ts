@@ -25,6 +25,8 @@ async function main() {
   const stamp = Date.now()
   const user = await getOrCreateUser({ user: { id: `verify-${stamp}`, email: `verify-${stamp}@example.test` } })
   const other = await getOrCreateUser({ user: { id: `verify-other-${stamp}`, email: `verify-other-${stamp}@example.test` } })
+  // deleteUserData ahora guarda un resumen anónimo: esta prueba borra los que genera (los que no existían al empezar).
+  const knownAudits = new Set((await prisma.deletedAccountAudit.findMany({ select: { id: true } })).map((a) => a.id))
   try {
     // Perfil del quiz: ida y vuelta, y una versión vieja se ignora.
     // Sin apodo en los metadatos, el primer ingreso asigna uno temporal (crea la fila de perfil), sin respuestas del quiz.
@@ -135,6 +137,8 @@ async function main() {
     console.log('OK  eliminación: cuenta, colección y perfil borrados en cascada; los datos de otra persona intactos')
   } finally {
     await prisma.user.deleteMany({ where: { id: { in: [user.id, other.id] } } }) // limpieza del usuario de prueba
+    const created = (await prisma.deletedAccountAudit.findMany({ select: { id: true } })).filter((a) => !knownAudits.has(a.id))
+    await prisma.deletedAccountAudit.deleteMany({ where: { id: { in: created.map((a) => a.id) } } })
     await prisma.$disconnect()
   }
 }

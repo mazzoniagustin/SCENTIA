@@ -7,7 +7,8 @@ import { deleteUserData, saveQuizAnswers, savePreferences } from "@/lib/account/
 import { validateNickname } from "@/lib/account/nickname";
 import { saveNickname } from "@/lib/account/nickname-data";
 import { validatePreferences } from "@/lib/account/preferences";
-import { requireUser } from "@/lib/auth/require-user";
+import { getExistingUserOrNull, requireUser } from "@/lib/auth/require-user";
+import { logServerError } from "@/lib/log";
 import { answersFromFormData, answersToSearchParams } from "@/lib/quiz/params";
 import { validateAnswers } from "@/lib/quiz/profile";
 import { limitAction } from "@/lib/rate-limit";
@@ -60,13 +61,23 @@ export async function saveNicknameAction(formData: FormData) {
   redirect("/account?saved=nickname");
 }
 
-// Elimina los datos de la persona (colección y perfil, en cascada) y cierra la sesión.
+// Elimina los datos de la persona (colección, perfil y racha, en cascada), guarda un resumen anónimo en la misma transacción
+// (docs/retencion-eliminacion-cuenta.md) y cierra la sesión. Si la eliminación falla no se borra nada.
 export async function deleteAccountAction(formData: FormData) {
-  const user = await requireUser();
+  const user = await getExistingUserOrNull();
+  if (!user) redirect("/login"); // sin sesión, o la cuenta ya se eliminó (doble envío): no crear un usuario vacío
   if (accountRateLimited("deleteAccount", user.id)) redirect("/account?error=rate");
   if (formData.get("confirm") !== DELETE_CONFIRMATION) redirect("/account?error=confirm");
 
-  await deleteUserData(user.id);
+  let failed = false;
+  try {
+    await deleteUserData(user.id);
+  } catch (error) {
+    logServerError("account/delete", error);
+    failed = true;
+  }
+  if (failed) redirect("/account?error=delete"); // fuera del try: redirect() lanza
+
   await deleteAuthIdentity(user.supabaseId);
 
   const supabase = await createClient();

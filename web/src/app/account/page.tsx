@@ -62,6 +62,11 @@ export default async function AccountPage({
           Para eliminar la cuenta escribí {DELETE_CONFIRMATION} en el campo de confirmación.
         </p>
       )}
+      {params.error === "delete" && (
+        <p className="error-message" role="alert">
+          No pudimos eliminar tu cuenta ahora. No se borró nada: probá de nuevo en un rato.
+        </p>
+      )}
 
       <section className="ficha-section" aria-labelledby="acc-nickname">
         <h2 id="acc-nickname">Apodo</h2>
@@ -157,6 +162,10 @@ export default async function AccountPage({
         <p>
           Borra tu colección, tus notas, tu perfil y tus preferencias. No se puede deshacer. Para confirmar, escribí{" "}
           <strong>{DELETE_CONFIRMATION}</strong>.
+        </p>
+        <p>
+          Guardamos un resumen anónimo para estadística (cuántos perfumes tenías, cuántas valoraciones y tu racha más larga). No incluye
+          tu correo, tu apodo ni tus notas, y no se puede relacionar con vos.
         </p>
         <form className="account-form" action={deleteAccountAction}>
           <label>

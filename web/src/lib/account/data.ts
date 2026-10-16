@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { validateAnswers } from '@/lib/quiz/profile'
 import { QUIZ_VERSION, type QuizAnswers } from '@/lib/quiz/questions'
+import { buildDeletionSummary } from './deletion-summary'
 import type { Preferences } from './preferences'
 
 // Datos personales por usuario (cuid de la tabla User): perfil del quiz, preferencias,
@@ -76,12 +77,34 @@ export async function exportUserData(userId: string) {
   }
 }
 
-/** Elimina la fila User; la colección y el perfil se borran en cascada. Devuelve cuántas filas se llevó. */
-export async function deleteUserData(userId: string) {
-  const [collection, profile] = await Promise.all([
-    prisma.userCollection.count({ where: { userId } }),
-    prisma.userProfile.count({ where: { userId } }),
-  ])
-  await prisma.user.delete({ where: { id: userId } })
-  return { collection, profile }
+/**
+ * Elimina la fila User (la colección, el perfil y la racha se borran en cascada) y, en la misma transacción, guarda un resumen
+ * anónimo para estadística (RF-05, docs/retencion-eliminacion-cuenta.md): sin correo, notas ni nada que identifique a la persona.
+ * Si algo falla no se borra nada. `afterArchive` es solo un punto de inserción para probar esa atomicidad.
+ * Devuelve cuántas filas de colección y perfil se llevó.
+ */
+export async function deleteUserData(userId: string, options: { afterArchive?: () => Promise<void> } = {}) {
+  return prisma.$transaction(async (tx) => {
+    // En secuencia: una transacción usa una sola conexión.
+    const user = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { createdAt: true } })
+    const collection = await tx.userCollection.findMany({ where: { userId }, select: { perfumeId: true, status: true, rating: true } })
+    const wearLogs = await tx.wearLog.findMany({ where: { userId }, select: { day: true } })
+    const profile = await tx.userProfile.findUnique({ where: { userId }, select: { quizAnswers: true } })
+
+    const summary = buildDeletionSummary({
+      createdAt: user.createdAt,
+      deletedAt: new Date(),
+      hasQuizProfile: profile?.quizAnswers != null,
+      collection,
+      wearDays: wearLogs.map((w) => w.day),
+    })
+    const { collection: archivedCollection, ...audit } = summary
+    const archived = await tx.deletedAccountAudit.create({ data: audit, select: { id: true } })
+    // Un solo INSERT para toda la colección (el `create` anidado haría uno por fila y agotaría el tiempo con colecciones grandes).
+    await tx.deletedAccountCollection.createMany({ data: archivedCollection.map((c) => ({ ...c, auditId: archived.id })) })
+    await options.afterArchive?.()
+
+    await tx.user.delete({ where: { id: userId } })
+    return { collection: collection.length, profile: profile ? 1 : 0 }
+  }, { timeout: 20_000 })
 }

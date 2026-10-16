@@ -117,6 +117,41 @@ enum CollectionStatus {
   DISLIKED
 }
 
+// Resumen anónimo de una cuenta eliminada (RF-05, docs/retencion-eliminacion-cuenta.md). Sin datos personales: id propio
+// (no el de User), fechas solo como mes, sin correo, notas ni quiz. Se crean con prisma/sql/2026-10-16-deleted-account-audit.sql
+// (no con `db push`). Sin relación con Perfume a propósito: el histórico no debe perderse si un perfume sale del catálogo.
+model DeletedAccountAudit {
+  // uuid v4 (todo aleatorio): un cuid v1 lleva la hora exacta de creación y revelaría la de la baja.
+  id              String @id @default(uuid(4))
+  signedUpMonth   String
+  deletedMonth    String
+  collectionTotal Int
+  ownedCount      Int
+  sampledCount    Int
+  wishlistCount   Int
+  dislikedCount   Int
+  ratingsCount    Int
+  ratingsSum      Int
+  longestStreak   Int
+  wearDaysTotal   Int
+  hadQuizProfile  Boolean
+  policyVersion   Int
+
+  collection DeletedAccountCollection[]
+}
+
+model DeletedAccountCollection {
+  auditId   String
+  perfumeId String
+  status    CollectionStatus
+  rating    Int?
+
+  audit DeletedAccountAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@id([auditId, perfumeId])
+  @@index([perfumeId])
+}
+
 enum PublicationStatus {
   DRAFT
   PUBLISHED

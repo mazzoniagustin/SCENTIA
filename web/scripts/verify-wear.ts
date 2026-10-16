@@ -20,6 +20,8 @@ async function main() {
   const stamp = Date.now()
   const user = await getOrCreateUser({ user: { id: `verify-${stamp}`, email: `verify-${stamp}@example.test` } })
   const other = await getOrCreateUser({ user: { id: `verify-other-${stamp}`, email: `verify-other-${stamp}@example.test` } })
+  // deleteUserData guarda un resumen anónimo: se borran al final los que genera esta prueba (los que no existían al empezar).
+  const knownAudits = new Set((await prisma.deletedAccountAudit.findMany({ select: { id: true } })).map((a) => a.id))
   try {
     const [a, b, c] = await prisma.perfume.findMany({ where: { status: 'PUBLISHED' }, select: { id: true }, take: 3, orderBy: { id: 'asc' } })
     await prisma.userCollection.createMany({
@@ -109,6 +111,8 @@ async function main() {
     console.log('OK  eliminar la cuenta borra sus registros en cascada y no toca a otra persona')
   } finally {
     await prisma.user.deleteMany({ where: { id: { in: [user.id, other.id] } } })
+    const created = (await prisma.deletedAccountAudit.findMany({ select: { id: true } })).filter((a) => !knownAudits.has(a.id))
+    await prisma.deletedAccountAudit.deleteMany({ where: { id: { in: created.map((a) => a.id) } } })
     const left = await prisma.user.count({ where: { email: { contains: `${stamp}@example.test` } } })
     console.log(left === 0 ? 'Usuarios de prueba eliminados.' : `ATENCIÓN: quedaron ${left} usuarios de prueba`)
     await prisma.$disconnect()
