@@ -150,11 +150,27 @@ describe('candidatos y colección: SQL contra las funciones puras', { skip }, ()
     assert.equal(familyOfAccord('pachuli'), 'cuero') // sanidad de la familia usada arriba
   })
 
+  it('el filtro de género deja solo los géneros permitidos (el unisex entra con masculino y femenino)', async () => {
+    const entry = await prisma.userCollection.findFirst({ select: { userId: true } })
+    if (!entry) return
+    const { meta: all } = await getCandidates(entry.userId, NEEDS, 30000, 'todos')
+    for (const [filter, allowed] of [
+      ['masculino', ['masculino', 'unisex']],
+      ['femenino', ['femenino', 'unisex']],
+      ['unisex', ['unisex']],
+    ] as const) {
+      const { meta } = await getCandidates(entry.userId, NEEDS, 30000, filter)
+      assert.ok(meta.size > 0, `sin candidatos con ${filter}`)
+      for (const m of meta.values()) assert.ok((allowed as readonly string[]).includes(m.gender), `${filter}: apareció uno ${m.gender}`)
+    }
+    assert.ok(all.size > 0)
+  })
+
   it('la colección leída no trae notas privadas ni puntajes', async () => {
     const entry = await prisma.userCollection.findFirst({ select: { userId: true } })
     if (!entry) return
     const samples = await getCollectionSamples(entry.userId)
-    const allowed = new Set(['perfumeId', 'status', 'accords', 'seasons', 'occasions', 'longevity', 'sillage'])
+    const allowed = new Set(['perfumeId', 'status', 'accords', 'gender', 'seasons', 'occasions', 'longevity', 'sillage'])
     for (const s of samples) assert.deepEqual(Object.keys(s).filter((k) => !allowed.has(k)), [])
     assert.ok(!JSON.stringify(samples).includes('personalNotes'))
     void Prisma // import usado por el tipo de consulta del conjunto fijo

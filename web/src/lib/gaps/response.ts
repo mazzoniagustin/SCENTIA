@@ -2,6 +2,7 @@
 // navegador: conteos y porcentajes agregados, textos de plantilla y candidatos del catálogo público. Nunca sale:
 // el id de la persona, ids de perfumes de su colección, notas privadas, sus puntajes ni el puntaje interno del ranking.
 
+import { GENDER_FILTERS, GENDER_LABELS, type GenderFilter, type GenderState } from './gender.ts'
 import { DIMENSION_LABELS, GAP_DIMENSIONS, VALUE_LABELS, type Dimension } from './dimensions.ts'
 import { FAMILY_LABELS, type FamilyCode } from './families.ts'
 import { WISHLIST_LABEL, type Need, type Suggestion } from './rank.ts'
@@ -30,6 +31,7 @@ export type GapAnalysisInput = {
   needs: readonly Need[]
   suggestions: ReadonlyArray<Suggestion & { brand: string; name: string; gender: string; imageUrl: string | null }>
   complete: boolean
+  gender: GenderState
 }
 
 export type Finding = {
@@ -75,6 +77,22 @@ export type GapsResponse = {
   }>
   /** false si hay menos sugerencias que el mínimo: la interfaz avisa que la lista es corta. */
   complete: boolean
+  /** Filtro de género de las sugerencias: el aplicado, el deducido de la colección y las opciones del selector. */
+  gender: {
+    applied: GenderFilter
+    inferred: GenderFilter
+    chosen: boolean
+    options: Array<{ value: GenderFilter; label: string; includesUnisex: boolean }>
+  }
+}
+
+function genderView(state: GenderState): GapsResponse['gender'] {
+  return {
+    applied: state.applied,
+    inferred: state.inferred,
+    chosen: state.chosen,
+    options: GENDER_FILTERS.map((value) => ({ value, label: GENDER_LABELS[value], includesUnisex: value === 'masculino' || value === 'femenino' })),
+  }
 }
 
 export function buildGapsResponse(analysis: GapAnalysisInput): GapsResponse {
@@ -92,6 +110,7 @@ export function buildGapsResponse(analysis: GapAnalysisInput): GapsResponse {
     notes: [],
     suggestions: [],
     complete: false,
+    gender: genderView(analysis.gender),
   }
   // Sin datos suficientes: solo la guía. No se devuelve ningún análisis, ni siquiera descriptivo.
   if (status !== 'ok') return { ...empty, guide: guideFor(status, coverage.used, coverage.notUsable) }

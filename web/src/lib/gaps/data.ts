@@ -33,6 +33,7 @@ import {
   type DimensionsReport,
 } from './dimensions'
 import { FAMILY_ACCORDS, FAMILY_ORDER, type FamilyCode } from './families'
+import { allowedGenders, inferGender, resolveGender, type GenderFilter, type GenderState } from './gender'
 import {
   EXCLUDED_FROM_SUGGESTIONS,
   buildNeeds,
@@ -63,6 +64,7 @@ export async function getCollectionSamples(userId: string): Promise<CollectionSa
     Array<{
       perfumeId: string
       status: CollectionStatus
+      gender: string
       seasons: string[]
       occasions: string[]
       longevity: number | null
@@ -71,7 +73,7 @@ export async function getCollectionSamples(userId: string): Promise<CollectionSa
       intensity: number | null
     }>
   >`
-    SELECT c."perfumeId", c.status::text AS status, p.seasons, p.occasions, p.longevity, p.sillage,
+    SELECT c."perfumeId", c.status::text AS status, p.gender, p.seasons, p.occasions, p.longevity, p.sillage,
            a.name AS accord, pa.intensity::int AS intensity
     FROM (
       SELECT uc."perfumeId", uc.status FROM "UserCollection" uc
@@ -89,6 +91,7 @@ export async function getCollectionSamples(userId: string): Promise<CollectionSa
         perfumeId: row.perfumeId,
         status: row.status,
         accords: [],
+        gender: row.gender,
         seasons: row.seasons,
         occasions: row.occasions,
         longevity: row.longevity,
@@ -290,20 +293,24 @@ export type CandidateMeta = { brand: string; name: string; gender: string; image
  * Candidatos para las necesidades: por cada una, los POOL_PER_NEED perfumes publicados más valorados que la cubren,
  * sin lo que la persona tiene, probó o descartó (se excluye en SQL, sin depender del tope de la colección leída).
  * Los de la lista de deseados vienen con su estado. Una sola consulta, que también trae marca, nombre e imagen para
- * no pedirlos aparte. `maxRatingCount` normaliza la popularidad (viene de getAccordStats).
+ * no pedirlos aparte. `maxRatingCount` normaliza la popularidad (viene de getAccordStats). `gender` filtra por género
+ * (el unisex entra con masculino y con femenino).
  */
 export async function getCandidates(
   userId: string,
   needs: readonly Need[],
   maxRatingCount: number,
+  gender: GenderFilter = 'todos',
 ): Promise<{ candidates: RankCandidate[]; meta: Map<string, CandidateMeta> }> {
   if (needs.length === 0) return { candidates: [], meta: new Map() }
   const excluded = [...EXCLUDED_FROM_SUGGESTIONS]
+  const genders = allowedGenders(gender)
+  const genderClause = genders ? Prisma.sql`AND p.gender = ANY(${genders}::text[])` : Prisma.empty
 
   const pools = needs.map(
     (need) => Prisma.sql`(
       SELECT p.id FROM "Perfume" p
-      WHERE p.status = 'PUBLISHED' AND ${needSql(need)}
+      WHERE p.status = 'PUBLISHED' AND ${needSql(need)} ${genderClause}
         AND NOT EXISTS (
           SELECT 1 FROM "UserCollection" x
           WHERE x."userId" = ${userId} AND x."perfumeId" = p.id AND x.status::text = ANY(${excluded}::text[]))
@@ -359,6 +366,8 @@ export type GapAnalysis = {
   suggestions: SuggestionView[]
   /** false si hay menos sugerencias que MIN_CANDIDATES. */
   complete: boolean
+  /** Género aplicado a las sugerencias, el deducido de la colección y si lo eligió la persona. */
+  gender: GenderState
 }
 
 /**
@@ -366,28 +375,39 @@ export type GapAnalysis = {
  * ida y vuelta a la base cuesta ~250 ms desde acá); los candidatos, una sola consulta después. Sin caché propia: las
  * frecuencias llegan por parámetro, así el script de vista previa puede pasar las suyas.
  */
-export async function buildGapAnalysis(userId: string, shares: Promise<CatalogShareSet> | CatalogShareSet): Promise<GapAnalysis> {
+export type GapOptions = { gender?: GenderFilter }
+
+export async function buildGapAnalysis(
+  userId: string,
+  shares: Promise<CatalogShareSet> | CatalogShareSet,
+  options: GapOptions = {},
+): Promise<GapAnalysis> {
   const [samples, stats, catalogShares] = await Promise.all([getCollectionSamples(userId), getAccordStats(), shares])
   const families = analyzeFamilies(samples, catalogShares.families)
   const dimensions = analyzeDimensions(samples, catalogShares.dimensions)
   const needs = buildNeeds(families, dimensions)
-  if (needs.length === 0) return { families, dimensions, needs, suggestions: [], complete: false }
+  const gender = resolveGender(inferGender(samples), options.gender)
+  if (needs.length === 0) return { families, dimensions, needs, suggestions: [], complete: false, gender }
 
-  const { candidates, meta } = await getCandidates(userId, needs, stats.maxRatingCount)
+  const { candidates, meta } = await getCandidates(userId, needs, stats.maxRatingCount, gender.applied)
   const ranked = rankSuggestions(needs, candidates, buildIdf(stats.dfByName, stats.total))
   const suggestions = ranked.suggestions.flatMap((s) => {
     const row = meta.get(s.perfumeId)
     return row ? [{ ...s, ...row }] : []
   })
-  return { families, dimensions, needs, suggestions, complete: ranked.complete }
+  return { families, dimensions, needs, suggestions, complete: ranked.complete, gender }
 }
 
 export type GapAnalysisTimed = GapAnalysis & { timing: { catalogSource: CatalogSource; catalogMs: number; totalMs: number } }
 
-export async function getGapAnalysis(userId: string): Promise<GapAnalysisTimed> {
+export async function getGapAnalysis(userId: string, options: GapOptions = {}): Promise<GapAnalysisTimed> {
   const started = Date.now()
   const timed = getCatalogSharesTimed()
-  const analysis = await buildGapAnalysis(userId, timed.then((t) => t.shares))
+  const analysis = await buildGapAnalysis(
+    userId,
+    timed.then((t) => t.shares),
+    options,
+  )
   const { source, ms } = await timed
   return { ...analysis, timing: { catalogSource: source, catalogMs: ms, totalMs: Date.now() - started } }
 }

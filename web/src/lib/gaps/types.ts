@@ -15,6 +15,8 @@ export type CollectionSample = {
   seasons?: readonly string[]
   /** 'diario' (día) y 'noche', como los guarda la base. Vacío o ausente: sin dato. Otros valores se ignoran. */
   occasions?: readonly string[]
+  /** 'masculino' | 'femenino' | 'unisex' (como lo guarda la base). Solo sirve para deducir el género de las sugerencias. */
+  gender?: string | null
   /** Duración promedio votada (1-5). null o ausente: sin dato. */
   longevity?: number | null
   /** Estela promedio votada (1-4). null o ausente: sin dato. */

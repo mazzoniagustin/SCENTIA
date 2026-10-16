@@ -6,6 +6,7 @@ import { analyzeDimensions, type DimensionShares } from './dimensions.ts'
 import { FAMILY_ORDER } from './families.ts'
 import { buildGapsResponse, type GapAnalysisInput } from './response.ts'
 import { buildNeeds, WISHLIST_LABEL } from './rank.ts'
+import { resolveGender } from './gender.ts'
 import { DAY_NIGHT_NOTE, guideFor } from './texts.ts'
 import type { CatalogShares, CollectionSample, CollectionStatus } from './types.ts'
 
@@ -28,7 +29,7 @@ const sample = (status: CollectionStatus, extra: Partial<CollectionSample> = {})
 function analysisFor(samples: CollectionSample[], suggestions: GapAnalysisInput['suggestions'] = []): GapAnalysisInput {
   const families = analyzeFamilies(samples, famShares)
   const dimensions = analyzeDimensions(samples, dimShares)
-  return { families, dimensions, needs: buildNeeds(families, dimensions), suggestions, complete: suggestions.length >= 3 }
+  return { families, dimensions, needs: buildNeeds(families, dimensions), suggestions, complete: suggestions.length >= 3, gender: resolveGender('masculino', undefined) }
 }
 
 const six = () => Array.from({ length: 6 }, () => sample('OWNED', { seasons: ['verano'], occasions: ['diario'], longevity: 3, sillage: 2.5 }))
@@ -137,5 +138,22 @@ describe('buildGapsResponse: nada privado sale', () => {
     assert.equal(r.suggestions[0].wishlistNote, WISHLIST_LABEL)
     assert.equal(r.suggestions[1].wishlistNote, null)
     assert.equal(r.complete, false)
+  })
+})
+
+describe('buildGapsResponse: género', () => {
+  it('informa el género aplicado, el deducido y las 4 opciones del selector, también sin datos suficientes', () => {
+    for (const r of [buildGapsResponse(analysisFor(six())), buildGapsResponse(analysisFor([]))]) {
+      assert.equal(r.gender.applied, 'masculino')
+      assert.equal(r.gender.inferred, 'masculino')
+      assert.equal(r.gender.chosen, false)
+      assert.deepEqual(r.gender.options.map((o) => o.value), ['masculino', 'unisex', 'femenino', 'todos'])
+      assert.deepEqual(r.gender.options.map((o) => o.includesUnisex), [true, false, true, false])
+    }
+  })
+
+  it('lo elegido por la persona se marca como elegido', () => {
+    const r = buildGapsResponse({ ...analysisFor(six()), gender: resolveGender('masculino', 'todos') })
+    assert.deepEqual([r.gender.applied, r.gender.inferred, r.gender.chosen], ['todos', 'masculino', true])
   })
 })

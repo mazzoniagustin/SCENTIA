@@ -3,7 +3,7 @@ import { test } from 'node:test'
 
 import type { Finding } from './response.ts'
 import { FAMILY_CODES } from './families.ts'
-import { announcementFor, familyColor, groupFindings, parseRetryAfter, percent, valueColor, viewFromResponse } from './view.ts'
+import { announcementFor, familyColor, genderHint, groupFindings, parseRetryAfter, percent, valueColor, viewFromResponse } from './view.ts'
 
 test('parseRetryAfter acepta enteros positivos y descarta el resto', () => {
   assert.equal(parseRetryAfter('30'), 30)
@@ -73,4 +73,19 @@ test('valueColor: estación y día/noche tienen color; duración y estela quedan
   assert.equal(valueColor('sillage', 'suave'), undefined)
   // La noche, la más oscura, tiene que verse sobre el fondo (≥ 3:1, mínimo de WCAG para gráficos).
   assert.ok(contrastOnDark(valueColor('dayNight', 'noche')!) >= 3)
+})
+
+test('genderHint explica qué género se muestra y si lo deducimos o lo eligió la persona', () => {
+  const options = [
+    { value: 'masculino', label: 'Masculino', includesUnisex: true },
+    { value: 'unisex', label: 'Unisex', includesUnisex: false },
+    { value: 'femenino', label: 'Femenino', includesUnisex: true },
+    { value: 'todos', label: 'Todos', includesUnisex: false },
+  ] as const
+  const g = (applied: string, chosen: boolean) => ({ applied, inferred: 'masculino', chosen, options: [...options] }) as never
+  assert.equal(genderHint(g('masculino', false)), 'Mostramos perfumes masculino y unisex porque es lo que predomina en tu colección. Podés cambiarlo.')
+  assert.equal(genderHint(g('femenino', true)), 'Mostrando perfumes femenino y unisex.')
+  assert.equal(genderHint(g('unisex', true)), 'Mostrando perfumes unisex.')
+  assert.equal(genderHint(g('todos', true)), 'Mostrando perfumes de todos los géneros.')
+  assert.equal(genderHint(g('todos', false)), 'Mostrando perfumes de todos los géneros.')
 })

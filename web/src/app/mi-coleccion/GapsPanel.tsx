@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 import type { Finding, GapsResponse } from '@/lib/gaps/response';
-import { announcementFor, familyColor, groupFindings, valueColor, viewFromResponse, type GapsView } from '@/lib/gaps/view';
+import type { GenderFilter } from '@/lib/gaps/gender';
+import { announcementFor, familyColor, genderHint, groupFindings, valueColor, viewFromResponse, type GapsView } from '@/lib/gaps/view';
 import { HorizontalScroller } from '@/components/HorizontalScroller';
 import { DistributionList } from './Distribution';
 import { Headline } from './Headline';
@@ -24,21 +25,65 @@ function FindingList({ items }: { items: Finding[] }) {
   );
 }
 
-function Suggestions({ data }: { data: GapsResponse }) {
+// Selector de género de las sugerencias: lo deducido de la colección viene marcado, y la persona lo puede cambiar.
+function GenderPicker({ gender, busy, onPick }: { gender: GapsResponse['gender']; busy: boolean; onPick: (value: GenderFilter) => void }) {
+  return (
+    <div className="gaps-gender" role="group" aria-labelledby="gaps-gender-title">
+      <p id="gaps-gender-title" className="gaps-gender-title">
+        Género de las sugerencias
+      </p>
+      <div className="gaps-gender-chips">
+        {gender.options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            className="gaps-gender-chip"
+            aria-pressed={gender.applied === o.value}
+            disabled={busy}
+            onClick={() => onPick(o.value)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <p className="form-hint" aria-live="polite">
+        {genderHint(gender)}
+      </p>
+    </div>
+  );
+}
+
+function Suggestions({
+  data,
+  refreshing,
+  refreshNote,
+  onPickGender,
+}: {
+  data: GapsResponse;
+  refreshing: boolean;
+  refreshNote: string | null;
+  onPickGender: (value: GenderFilter) => void;
+}) {
   return (
     <section className="gaps-block" aria-labelledby="gaps-sugg-title">
       <h3 id="gaps-sugg-title" className="outfit-subtitle">
         Perfumes para explorar
       </h3>
+      <GenderPicker gender={data.gender} busy={refreshing} onPick={onPickGender} />
+      {refreshNote && (
+        <p className="notice" role="status">
+          {refreshNote}
+        </p>
+      )}
       {data.suggestions.length === 0 ? (
-        <p className="form-hint">Por ahora no encontramos perfumes del catálogo para sugerirte.</p>
+        <p className="form-hint">Por ahora no encontramos perfumes del catálogo para sugerirte con ese género.</p>
       ) : (
         <>
           <p className="form-hint">Para empezar por ahí, estos perfumes del catálogo van en esa dirección.</p>
           {!data.complete && <p className="notice">La lista es corta: no hay muchos perfumes que encajen con lo que vimos.</p>}
           {/* Rollo: avanza solo y despacio, se frena al pasar el mouse o con el foco, y se puede arrastrar o usar las flechas.
               Las tarjetas entran una tras otra cuando el rollo aparece en pantalla (no antes). */}
-          <Reveal className="gaps-reel-wrap" threshold={0.35}>
+          <Reveal key={data.gender.applied} className={refreshing ? 'gaps-reel-wrap is-refreshing' : 'gaps-reel-wrap'} threshold={0.35}>
             <HorizontalScroller label="Perfumes para explorar" autoAdvanceMs={5000} className="gaps-reel">
               <ul className="scroller-track gaps-suggestions">
                 {data.suggestions.map((s, i) => (
@@ -149,7 +194,17 @@ function MoreDetails({ data }: { data: GapsResponse }) {
   );
 }
 
-function Results({ data }: { data: GapsResponse }) {
+function Results({
+  data,
+  refreshing,
+  refreshNote,
+  onPickGender,
+}: {
+  data: GapsResponse;
+  refreshing: boolean;
+  refreshNote: string | null;
+  onPickGender: (value: GenderFilter) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   // Cuántas veces se abrió el detalle: cada apertura monta el detalle de nuevo, así las barras y los números vuelven a llenarse.
   const [opens, setOpens] = useState(0);
@@ -163,7 +218,7 @@ function Results({ data }: { data: GapsResponse }) {
     <>
       {data.headline && <Headline text={data.headline} />}
 
-      <Suggestions data={data} />
+      <Suggestions data={data} refreshing={refreshing} refreshNote={refreshNote} onPickGender={onPickGender} />
 
       <div className="gaps-more-toggle">
         <button
@@ -195,6 +250,8 @@ export function GapsPanel() {
   const [view, setView] = useState<GapsView>({ kind: 'idle' });
   const headingRef = useRef<HTMLHeadingElement>(null);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshNote, setRefreshNote] = useState<string | null>(null);
   const busy = view.kind === 'loading';
   const waiting = view.kind === 'rate_limited' && view.seconds > 0;
 
@@ -210,13 +267,12 @@ export function GapsPanel() {
     return () => window.clearTimeout(timer);
   }, [view]);
 
-  async function analyze() {
-    setView({ kind: 'loading' });
+  async function request(gender?: GenderFilter): Promise<GapsView> {
     try {
       const res = await fetch('/api/collection/gaps', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: '{}',
+        body: JSON.stringify(gender ? { gender } : {}),
       });
       let body: unknown = null;
       try {
@@ -224,10 +280,28 @@ export function GapsPanel() {
       } catch {
         body = null;
       }
-      setView(viewFromResponse(res.status, res.headers.get('Retry-After'), body));
+      return viewFromResponse(res.status, res.headers.get('Retry-After'), body);
     } catch {
-      setView({ kind: 'network' });
+      return { kind: 'network' };
     }
+  }
+
+  async function analyze() {
+    setRefreshNote(null);
+    setView({ kind: 'loading' });
+    setView(await request());
+  }
+
+  // Cambiar el género vuelve a pedir el análisis, pero deja a la vista el resultado anterior (no lo reemplaza por el cargando).
+  async function pickGender(gender: GenderFilter) {
+    if (view.kind !== 'ok' || view.data.gender.applied === gender) return;
+    setRefreshing(true);
+    setRefreshNote(null);
+    const next = await request(gender);
+    if (next.kind === 'ok') setView(next);
+    else if (next.kind === 'unauthorized') setView(next);
+    else setRefreshNote(next.kind === 'rate_limited' ? 'Hiciste muchas consultas seguidas: esperá unos segundos y probá de nuevo.' : 'No pudimos actualizar las sugerencias. Probá de nuevo.');
+    setRefreshing(false);
   }
 
   return (
@@ -269,7 +343,7 @@ export function GapsPanel() {
             <h3 ref={headingRef} tabIndex={-1} className="outfit-section-title gaps-result-title">
               Lo que vimos en tu colección
             </h3>
-            <Results data={view.data} />
+            <Results data={view.data} refreshing={refreshing} refreshNote={refreshNote} onPickGender={pickGender} />
           </>
         )}
 

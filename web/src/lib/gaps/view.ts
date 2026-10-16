@@ -105,3 +105,12 @@ const VALUE_COLORS: Readonly<Record<string, Readonly<Record<string, string>>>> =
 export function valueColor(dimension: string, code: string): string | undefined {
   return VALUE_COLORS[dimension]?.[code]
 }
+
+/** Frase corta que explica qué género se está mostrando y por qué. */
+export function genderHint(gender: GapsResponse['gender']): string {
+  const label = gender.options.find((o) => o.value === gender.applied)?.label ?? ''
+  const withUnisex = gender.options.find((o) => o.value === gender.applied)?.includesUnisex ?? false
+  if (gender.applied === 'todos') return 'Mostrando perfumes de todos los géneros.'
+  const scope = withUnisex ? `${label.toLowerCase()} y unisex` : label.toLowerCase()
+  return gender.chosen ? `Mostrando perfumes ${scope}.` : `Mostramos perfumes ${scope} porque es lo que predomina en tu colección. Podés cambiarlo.`
+}

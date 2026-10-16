@@ -5,6 +5,7 @@
 //   npx tsx --conditions=react-server scripts/gaps-preview.ts --list
 //   npx tsx --conditions=react-server scripts/gaps-preview.ts --nickname <apodo>
 //   npx tsx --conditions=react-server scripts/gaps-preview.ts --user-id <id>
+// Con --gender masculino|unisex|femenino|todos fuerza el género de las sugerencias (por defecto se deduce de la colección).
 // Con --json imprime exactamente la respuesta pública que devolvería POST /api/collection/gaps.
 // Con --twice repite el cálculo para ver los tiempos en frío y con las cachés en memoria ya calientes.
 import { config } from 'dotenv'
@@ -17,6 +18,7 @@ import { FAMILY_LABELS } from '../src/lib/gaps/families'
 import { DIMENSION_LABELS, VALUE_LABELS } from '../src/lib/gaps/dimensions'
 import { WISHLIST_LABEL, type Covered } from '../src/lib/gaps/rank'
 import { buildGapsResponse } from '../src/lib/gaps/response'
+import { GENDER_FILTERS, type GenderFilter } from '../src/lib/gaps/gender'
 import type { FamilyCoverage } from '../src/lib/gaps/types'
 
 const args = process.argv.slice(2)
@@ -76,7 +78,14 @@ async function main() {
   const t0 = Date.now()
   const counts = await queryCatalogCounts()
   const t1 = Date.now()
-  const analysis = await buildGapAnalysis(userId, sharesFromCounts(counts))
+  const requested = flag('--gender')
+  if (requested !== undefined && !(GENDER_FILTERS as readonly string[]).includes(requested)) {
+    console.error(`--gender debe ser uno de: ${GENDER_FILTERS.join(', ')}`)
+    process.exitCode = 1
+    return
+  }
+  const gender = requested as GenderFilter | undefined
+  const analysis = await buildGapAnalysis(userId, sharesFromCounts(counts), { gender })
   const t2 = Date.now()
 
   if (args.includes('--json')) return console.log(JSON.stringify(buildGapsResponse(analysis), null, 2))
@@ -86,7 +95,7 @@ async function main() {
     const w0 = Date.now()
     await queryCatalogCounts()
     const w1 = Date.now()
-    await buildGapAnalysis(userId, sharesFromCounts(counts))
+    await buildGapAnalysis(userId, sharesFromCounts(counts), { gender })
     console.log(`Tiempos: frecuencias ${t1 - t0} ms (1.ª) / ${w1 - w0} ms (2.ª); análisis ${t2 - t1} ms (1.ª) / ${Date.now() - w1} ms (2.ª)\n`)
   }
   console.log(`Catálogo: ${counts.families.total} perfumes publicados (frecuencias en ${t1 - t0} ms).`)
@@ -106,7 +115,8 @@ async function main() {
     for (const v of d.values) console.log(`    ${(VALUE_LABELS[d.dimension][v.value] ?? v.value).padEnd(18)} ${String(v.count).padStart(3)}  tuyo ${pct(v.presence).padStart(5)}  catálogo ${pct(v.catalogShare).padStart(5)}  ${v.level}`)
   }
 
-  console.log(`\nNecesidades buscadas: ${analysis.needs.length === 0 ? 'ninguna' : analysis.needs.map((n) => `${n.kind === 'family' ? FAMILY_LABELS[n.family] : `${DIMENSION_LABELS[n.dimension]} ${VALUE_LABELS[n.dimension][n.value]}`} (${n.weight})`).join(', ')}`)
+  console.log(`\nGénero de las sugerencias: ${analysis.gender.applied}${analysis.gender.chosen ? ' (elegido)' : ` (deducido de la colección: ${analysis.gender.inferred})`}`)
+  console.log(`Necesidades buscadas: ${analysis.needs.length === 0 ? 'ninguna' : analysis.needs.map((n) => `${n.kind === 'family' ? FAMILY_LABELS[n.family] : `${DIMENSION_LABELS[n.dimension]} ${VALUE_LABELS[n.dimension][n.value]}`} (${n.weight})`).join(', ')}`)
   console.log(`Candidatos (${analysis.suggestions.length}${analysis.complete ? '' : ', lista corta'}, calculados en ${t2 - t1} ms):`)
   for (const [i, s] of analysis.suggestions.entries()) {
     console.log(`  ${i + 1}. ${s.brand} — ${s.name}  [puntaje ${s.score.toFixed(3)}]`)

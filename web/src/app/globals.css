@@ -4420,6 +4420,62 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   margin-top: 0;
 }
 
+/* Selector de género de las sugerencias. */
+.gaps-gender {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.gaps-gender-title {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.gaps-gender-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gaps-gender-chip {
+  min-height: var(--tap-size);
+  padding: 0 1rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.gaps-gender-chip:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+/* Elegido: relleno y trazo grueso (no depende solo del color). */
+.gaps-gender-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+}
+
+.gaps-gender-chip:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.gaps-gender-chip:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+.gaps-reel-wrap.is-refreshing {
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
 .gaps-more-toggle {
   display: grid;
   justify-items: start;
