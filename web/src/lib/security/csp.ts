@@ -4,7 +4,7 @@ import { ALLOWED_IMAGE_HOSTS } from '../images.ts'
 export type CspOptions = {
   /** Nonce por request (base64). */
   nonce: string
-  /** Desarrollo: suma 'unsafe-eval' (React lo usa para depuración) y omite upgrade-insecure-requests (también se omite en Report-Only). */
+  /** Desarrollo: suma 'unsafe-eval' (React lo usa para depuración) y omite upgrade-insecure-requests. */
   isDev: boolean
   /** Solo con la política bloqueante: suma upgrade-insecure-requests (el navegador la ignora en Report-Only y avisa por consola). */
   enforce?: boolean
@@ -45,5 +45,5 @@ export function buildCsp({ nonce, isDev, enforce = false, supabaseUrl }: CspOpti
   return directives.join('; ')
 }
 
-/** Nombre del encabezado. Para pasar a modo bloqueante, cambiar a 'Content-Security-Policy'. */
-export const CSP_HEADER_NAME = 'Content-Security-Policy-Report-Only'
+/** Nombre del encabezado: política bloqueante. Para volver a solo informar, usar 'Content-Security-Policy-Report-Only' y quitar `enforce` en el proxy. */
+export const CSP_HEADER_NAME = 'Content-Security-Policy'

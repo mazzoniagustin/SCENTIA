@@ -6,7 +6,7 @@ import { updateSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const csp = buildCsp({ nonce, isDev: process.env.NODE_ENV === "development" });
+  const csp = buildCsp({ nonce, isDev: process.env.NODE_ENV === "development", enforce: true });
 
   // Encabezados en la REQUEST (Next lee el nonce de ahí al renderizar). `updateSession` crea su
   // respuesta con esta misma request, así que los conserva y no se pierden las cookies de sesión.

@@ -44,7 +44,7 @@ describe('buildCsp', () => {
   })
 
   it('upgrade-insecure-requests solo en producción y con la política bloqueante', () => {
-    assert.ok(!prod.has('upgrade-insecure-requests'), 'Report-Only: el navegador la ignora y avisa')
+    assert.ok(!prod.has('upgrade-insecure-requests'), 'sin enforce no se agrega: el navegador la ignora en Report-Only')
     assert.ok(dirs(buildCsp({ nonce, isDev: false, enforce: true })).has('upgrade-insecure-requests'))
     assert.ok(!dirs(buildCsp({ nonce, isDev: true, enforce: true })).has('upgrade-insecure-requests'))
     assert.ok(!dev.has('upgrade-insecure-requests'))
@@ -58,7 +58,7 @@ describe('buildCsp', () => {
     assert.equal(bad.get('connect-src'), "connect-src 'self'")
   })
 
-  it('usa el modo Report-Only', () => {
-    assert.equal(CSP_HEADER_NAME, 'Content-Security-Policy-Report-Only')
+  it('usa el modo bloqueante', () => {
+    assert.equal(CSP_HEADER_NAME, 'Content-Security-Policy')
   })
 })
