@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AuthSubmit } from "@/components/AuthSubmit";
+import { BrandImage } from "@/components/BrandImage";
 import { CheckEmailPanel } from "@/components/CheckEmailPanel";
 import { FocusOnMount } from "@/components/FocusOnMount";
 import { PASSWORD_MAX } from "@/lib/auth/password";
@@ -40,6 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         ← Volver al inicio
       </Link>
       <section aria-labelledby="login-title" className="auth-card">
+        <BrandImage slot="authMark" className="auth-mark" />
         <p className="eyebrow">Tu colección, en privado</p>
         <h1 id="login-title">Ingresar</h1>
         {sent === "1" ? (

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
+import { BrandImage } from "@/components/BrandImage";
 import { LoadingPanel } from "@/components/LoadBar";
 import { Skeleton } from "@/components/Skeleton";
 import { AccordsSection, CatalogCount, DailySection, FeaturedSection, PersonalSection, StatsSection } from "./home-sections";
@@ -16,6 +17,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
   return (
     <main id="contenido" className="home">
       <section className="home-hero" aria-labelledby="home-title">
+        <BrandImage slot="hero" className="home-hero-art" priority />
         <h1 id="home-title">
           Elegí un perfume con más <em>contexto</em>.
         </h1>

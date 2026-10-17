@@ -280,7 +280,6 @@
   margin-bottom: 1rem;
 }
 
-
 html {
   height: 100%;
 }
@@ -323,14 +322,8 @@ a {
   padding: 2rem;
 }
 
-.landing-content,
 .auth-card {
   width: min(100%, 42rem);
-}
-
-.landing-content {
-  display: grid;
-  gap: 1.5rem;
 }
 
 .eyebrow {
@@ -362,31 +355,6 @@ h1 {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 0.5rem;
-}
-
-.daily-card {
-  display: grid;
-  gap: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  padding: 2rem;
-}
-
-.daily-card .perfume-name {
-  font-size: clamp(2.25rem, 6vw, 2.75rem);
-  line-height: 1.12;
-  letter-spacing: 0.005em;
-  margin: 0.25rem 0 0.1rem;
-}
-
-.daily-card .perfume-badges {
-  margin: 0.5rem 0;
-  gap: 0.5rem;
-}
-
-.daily-card .perfume-meta {
-  line-height: 1.5;
 }
 
 .button,
@@ -1588,13 +1556,6 @@ html {
   text-decoration-color: currentColor;
 }
 
-.home-footer {
-  border-top: 1px solid var(--border);
-  padding-top: 1.5rem;
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
 @media (min-width: 52rem) {
   .home-daily {
     grid-template-columns: 5fr 6fr;
@@ -1668,28 +1629,6 @@ html {
   display: grid;
   gap: 0.75rem;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-}
-
-.duration-fieldset {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 0;
-  margin: 0;
-  padding: 0;
-  grid-column: span 2;
-}
-
-.duration-fieldset legend {
-  float: left;
-  margin-right: 0.5rem;
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.duration-fieldset input {
-  width: 100%;
-  min-width: 0;
 }
 
 .catalog-filters-actions {
@@ -1808,14 +1747,6 @@ html {
 
 .ficha-hero-actions {
   margin-top: 0.75rem;
-}
-
-/* Datos que faltan: presentes pero en segundo plano. */
-.ficha-details .is-empty dt,
-.ficha-details .is-empty dd,
-.no-data {
-  color: var(--muted);
-  font-weight: 400;
 }
 
 .ficha-hero-text h1 {
@@ -2242,6 +2173,45 @@ html {
   text-underline-offset: 0.2em;
 }
 
+/* Identidad visual (public/brand/, ver docs/identidad-visual.md): cada imagen lleva su width/height reales, así que reserva el
+   espacio. Los lugares sin archivo cargado no dibujan nada. */
+.site-logo {
+  display: block;
+  width: auto;
+  height: 2.5rem;
+}
+
+@media (min-width: 52rem) {
+  .site-logo {
+    height: 3rem;
+  }
+}
+
+.site-footer-mark {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+}
+
+.home-hero-art {
+  width: min(24rem, 82%);
+  height: auto;
+  margin-bottom: -0.5rem;
+}
+
+.auth-mark {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-md);
+}
+
+.empty-art {
+  display: block;
+  width: min(15rem, 70%);
+  height: auto;
+  margin-bottom: 1.5rem;
+}
+
 .credits-list {
   display: grid;
   gap: 0.5rem;
@@ -2295,7 +2265,6 @@ html {
   text-transform: uppercase;
 }
 
-.community-relation,
 .community-source {
   color: var(--muted);
   font-size: var(--text-sm);
@@ -2769,8 +2738,18 @@ html {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .affinity-fill {
+  /* El anillo se dibuja cuando entra en pantalla (data-reveal lo pone AffinityRing): `initial` es lo que ve el servidor y quien
+     no tiene JavaScript (entrada por tiempo, termina con el anillo completo); `pending` lo deja vacío hasta que aparece. */
+  .affinity-ring[data-reveal='initial'] .affinity-fill {
     animation: ring-draw 1s var(--ease-out) var(--delay, 0ms) backwards;
+  }
+
+  .affinity-ring[data-reveal='pending'] .affinity-fill {
+    stroke-dashoffset: 100;
+  }
+
+  .affinity-ring[data-reveal='shown'] .affinity-fill {
+    animation: ring-draw 1s var(--ease-out) backwards;
   }
 
   @keyframes ring-draw {
@@ -2902,17 +2881,30 @@ html {
   .catalog-grid > li:nth-child(7), .home-tiles > :nth-child(7) { --i: 6; }
   .catalog-grid > li:nth-child(8), .home-tiles > :nth-child(8) { --i: 7; }
 
-  /* Barras de acordes y de la comunidad: se llenan de izquierda a derecha. */
+  /* Barras de acordes y de la comunidad: se llenan de izquierda a derecha cuando la lista entra en pantalla (ScrollReveal pone
+     data-reveal en la lista). Antes iban atadas al scroll de cada barra (6 px de alto: el llenado duraba un parpadeo) o corrían
+     al cargar aunque estuvieran más abajo. `initial` = servidor / sin JavaScript: entrada por tiempo con el estado final completo. */
   .ficha-bar > span {
     transform-origin: left center;
+  }
+
+  [data-reveal='initial'] .ficha-bar > span {
     animation: bar-grow 0.9s var(--ease-out) 0.15s backwards;
   }
 
-  .ficha-accords li:nth-child(2) .ficha-bar > span { animation-delay: 0.22s; }
-  .ficha-accords li:nth-child(3) .ficha-bar > span { animation-delay: 0.29s; }
-  .ficha-accords li:nth-child(4) .ficha-bar > span { animation-delay: 0.36s; }
-  .ficha-accords li:nth-child(5) .ficha-bar > span { animation-delay: 0.43s; }
-  .ficha-accords li:nth-child(n + 6) .ficha-bar > span { animation-delay: 0.5s; }
+  [data-reveal='pending'] .ficha-bar > span {
+    transform: scaleX(0);
+  }
+
+  [data-reveal='shown'] .ficha-bar > span {
+    animation: bar-grow 0.9s var(--ease-out) backwards;
+  }
+
+  [data-reveal='shown'] li:nth-child(2) .ficha-bar > span { animation-delay: 0.07s; }
+  [data-reveal='shown'] li:nth-child(3) .ficha-bar > span { animation-delay: 0.14s; }
+  [data-reveal='shown'] li:nth-child(4) .ficha-bar > span { animation-delay: 0.21s; }
+  [data-reveal='shown'] li:nth-child(5) .ficha-bar > span { animation-delay: 0.28s; }
+  [data-reveal='shown'] li:nth-child(n + 6) .ficha-bar > span { animation-delay: 0.35s; }
 
   /* Secciones de la portada y tarjetas: aparecen al entrar en pantalla (donde el navegador soporta animaciones por scroll; si no, quedan visibles).
      Parten de opacidad 0,4 (`rise-soft`). Ficha, estado vacío y racha no se animan: son contenido que se busca y se lee de inmediato. */
@@ -2927,18 +2919,19 @@ html {
     }
 
     .catalog-grid > li,
-    .home-tiles > *,
-    .scroller-item {
+    .home-tiles > * {
       animation: rise-soft linear backwards;
       animation-timeline: view();
       animation-range: entry 0% entry 35%;
       animation-delay: 0s;
     }
 
-    .ficha-bar > span {
-      animation: bar-grow linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 80%;
+    /* Tarjetas de un carrusel: su caja se desplaza en horizontal, así que la línea de tiempo es la del eje en línea (con la
+       vertical el carrusel no scrollea y la entrada nunca avanzaba). */
+    .scroller-item {
+      animation: rise-soft linear backwards;
+      animation-timeline: view(inline);
+      animation-range: entry 0% entry 35%;
       animation-delay: 0s;
     }
   }
@@ -2952,8 +2945,7 @@ html {
   .home-stats,
   .catalog-grid > li,
   .home-tiles > *,
-  .scroller-item,
-  .ficha-bar > span {
+  .scroller-item {
     animation: none;
   }
 }
@@ -4201,13 +4193,6 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   overflow-wrap: anywhere;
 }
 
-.outfit-ai-tag {
-  margin-top: 0.4rem;
-  color: var(--muted);
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-}
-
 .outfit-weather {
   display: grid;
   gap: 0.75rem;
@@ -4455,6 +4440,25 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
 
 .gaps-reel .outfit-alt-link {
   height: 100%;
+}
+
+/* Rollo de "Me recuerda a" (ficha): la entrada por scroll genérica de .scroller-item no corre bien en un rollo que se mueve por
+   código, así que se desactiva; las tarjetas cortadas por el borde se atenúan como en el de /mi-coleccion. */
+.reminds-reel .scroller-item {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reminds-reel .scroller-item {
+    transition:
+      opacity 0.5s ease,
+      scale 0.5s var(--ease-out);
+  }
+
+  .reminds-reel .scroller-item[data-edge='true'] {
+    opacity: 0.6;
+    scale: 0.97;
+  }
 }
 
 /* Modo rollo: se mueve por código y se arrastra con el mouse, así que sin imán de scroll, y con la mano para agarrar. */
@@ -5057,3 +5061,45 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   cursor: not-allowed;
 }
 
+
+/* ————— Presencia: microinteracciones y entrada de pantallas (misma paleta y tipografía) ————— */
+
+.button:active,
+.auth-form button:active,
+.account-actions button:active {
+  transform: translateY(1px);
+}
+
+.button:hover:not(.button-ghost) {
+  box-shadow: 0 10px 28px -12px var(--accent);
+}
+
+.perfume-card {
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.25s ease;
+}
+
+.perfume-card:hover,
+.perfume-card:focus-within {
+  box-shadow: 0 18px 36px -22px var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Al navegar entre pantallas el contenido principal entra con un fundido corto (termina siempre en el estado normal). */
+  main {
+    animation: page-in 0.4s var(--ease-out);
+  }
+
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(8px); }
+  }
+
+  /* Portada: logo, título, buscador y botones entran uno tras otro (está a la vista al cargar, así que corre por tiempo). */
+  .home-hero > * {
+    animation: rise 0.7s var(--ease-out) backwards;
+  }
+
+  .home-hero > :nth-child(2) { animation-delay: 80ms; }
+  .home-hero > :nth-child(3) { animation-delay: 160ms; }
+  .home-hero > :nth-child(4) { animation-delay: 240ms; }
+  .home-hero > :nth-child(5) { animation-delay: 320ms; }
+}

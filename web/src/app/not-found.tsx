@@ -1,11 +1,14 @@
 import Link from "next/link";
 
+import { BrandImage } from "@/components/BrandImage";
+
 export const metadata = { title: "No encontramos esa página" };
 
 // Página 404 propia: va dentro del layout raíz (idioma, enlace de salto) y en español.
 export default function NotFound() {
   return (
     <main id="contenido" className="catalog" data-page="not-found">
+      <BrandImage slot="emptyState" className="empty-art" />
       <header className="catalog-header">
         <p className="eyebrow">Error 404</p>
         <h1>No encontramos esa página</h1>

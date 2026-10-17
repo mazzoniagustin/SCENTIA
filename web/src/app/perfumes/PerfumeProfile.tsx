@@ -1,6 +1,8 @@
 // Acordes con barra de intensidad y pirámide de notas (salida / corazón / fondo), como en Fragrantica.
 // Se usa en la ficha y en el perfume del día.
 
+import { ScrollReveal } from "@/components/ScrollReveal";
+
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 export const PHASES = [
@@ -13,7 +15,7 @@ export function AccordBars({ accords }: { accords: Array<{ name: string; intensi
   // Sin datos no se muestra nada: quien lo use decide si oculta también su título.
   if (accords.length === 0) return null;
   return (
-    <ul className="ficha-accords">
+    <ScrollReveal as="ul" className="ficha-accords">
       {accords.map(({ name, intensity }) => (
         <li key={name}>
           <span>{capitalize(name)}</span>
@@ -22,7 +24,7 @@ export function AccordBars({ accords }: { accords: Array<{ name: string; intensi
           </span>
         </li>
       ))}
-    </ul>
+    </ScrollReveal>
   );
 }
 

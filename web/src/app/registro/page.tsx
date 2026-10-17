@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AuthSubmit } from "@/components/AuthSubmit";
+import { BrandImage } from "@/components/BrandImage";
 import { CheckEmailPanel } from "@/components/CheckEmailPanel";
 import { FocusFieldOnMount } from "@/components/FocusFieldOnMount";
 import { FocusOnMount } from "@/components/FocusOnMount";
@@ -51,6 +52,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
         ← Volver al inicio
       </Link>
       <section aria-labelledby="signup-title" className="auth-card">
+        <BrandImage slot="authMark" className="auth-mark" />
         <p className="eyebrow">Tu colección, en privado</p>
         <h1 id="signup-title">Creá tu cuenta</h1>
         {sent === "1" ? (

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { BrandImage } from "@/components/BrandImage";
+
 // Pantalla de error propia (en español, dentro del layout): antes un fallo mostraba la pantalla por defecto de Next.
 // `retry` vuelve a pedir y a dibujar el contenido de la página (API estable desde Next 16.3).
 export default function ErrorPage({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
@@ -13,6 +15,7 @@ export default function ErrorPage({ error, retry }: { error: Error & { digest?: 
 
   return (
     <main id="contenido" className="catalog">
+      <BrandImage slot="emptyState" className="empty-art" />
       <header className="catalog-header">
         <p className="eyebrow">Algo salió mal</p>
         <h1>No pudimos cargar esta página</h1>

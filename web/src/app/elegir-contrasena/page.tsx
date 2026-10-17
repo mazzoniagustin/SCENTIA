@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AuthSubmit } from "@/components/AuthSubmit";
+import { BrandImage } from "@/components/BrandImage";
 import { FocusOnMount } from "@/components/FocusOnMount";
 import { signOut } from "@/app/login/actions";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -32,6 +33,7 @@ export default async function ChoosePasswordPage({ searchParams }: ChoosePasswor
   return (
     <main id="contenido" className="auth-shell">
       <section aria-labelledby="choose-title" className="auth-card">
+        <BrandImage slot="authMark" className="auth-mark" />
         <p className="eyebrow">Un último paso</p>
         <h1 id="choose-title">Elegí tu contraseña</h1>
         <p>

@@ -33,7 +33,7 @@ export async function CollectionSection({ perfumeId, perfumeName, brand, isAuthe
         <CollectionForm perfumeId={perfumeId} initialData={entry ?? undefined} />
       ) : (
         <p>
-          <Link href="/login">Iniciá sesión</Link> para añadirlo a tu colección.
+          <Link href="/login">Iniciá sesión</Link> para agregarlo a tu colección.
         </p>
       )}
     </section>

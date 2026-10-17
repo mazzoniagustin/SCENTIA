@@ -5,6 +5,7 @@ import { CompareBar } from "@/app/perfumes/CompareBar";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { getBrandAsset } from "@/lib/brand-assets";
 import { Suspense } from "react";
 import "./globals.css";
 
@@ -24,6 +25,9 @@ function siteUrl(): URL {
   }
 }
 
+// Imágenes de identidad (public/brand/): solo se declaran cuando el archivo ya está cargado (ver lib/brand-assets.ts).
+const ogImage = getBrandAsset("ogImage");
+
 export const metadata: Metadata = {
   metadataBase: siteUrl(),
   title: { default: "Scentia", template: "%s — Scentia" },
@@ -35,8 +39,14 @@ export const metadata: Metadata = {
     locale: "es_AR",
     title: "Scentia — catálogo editorial de perfumes",
     description: "Elegí un perfume con más contexto: acordes, notas, comparador y tu perfil olfativo.",
+    ...(ogImage ? { images: [{ url: ogImage.src, width: ogImage.width, height: ogImage.height, alt: ogImage.alt }] } : {}),
   },
-  twitter: { card: "summary", title: "Scentia", description: "Elegí un perfume con más contexto." },
+  twitter: {
+    card: ogImage ? "summary_large_image" : "summary",
+    title: "Scentia",
+    description: "Elegí un perfume con más contexto.",
+    ...(ogImage ? { images: [ogImage.src] } : {}),
+  },
 };
 
 // Barra del navegador del celular en el color del fondo, y esquema oscuro para los controles nativos.

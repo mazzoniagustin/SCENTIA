@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   LONGEVITY_LABELS, PRICE_VALUE_LABELS, SILLAGE_LABELS, scaleLabel, scalePercent, shares,
 } from "@/lib/community";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import type { Stats } from "@/lib/import/kaggle-fragrantica";
 
 type Props = { longevity: number | null; sillage: number | null; stats: unknown };
@@ -48,28 +49,28 @@ export function CommunityStats({ longevity, sillage, stats: rawStats }: Props) {
   return (
     <section className="ficha-section" aria-labelledby="ficha-comunidad">
       <h2 id="ficha-comunidad">Según la comunidad</h2>
-      <ul className="community-bars">
+      <ScrollReveal as="ul" className="community-bars">
         {longevity !== null && <Bar label="Duración" value={scaleLabel(longevity, LONGEVITY_LABELS)} percent={scalePercent(longevity, 5)} />}
         {sillage !== null && <Bar label="Estela" value={scaleLabel(sillage, SILLAGE_LABELS)} percent={scalePercent(sillage, 4)} />}
         {stats?.priceValue != null && <Bar label="Precio" value={scaleLabel(stats.priceValue, PRICE_VALUE_LABELS)} percent={scalePercent(stats.priceValue, 5)} />}
-      </ul>
+      </ScrollReveal>
 
       {seasonShares && dayShares && stats && Object.values(stats.seasons).reduce((a, b) => a + b, 0) > 0 && (
         <div className="community-split">
           <div>
             <h3>Estaciones</h3>
-            <ul className="community-bars">
+            <ScrollReveal as="ul" className="community-bars">
               {seasonRows.map(([label, k]) => (
                 <Bar key={k} label={label} value={`${seasonShares[k]} %`} percent={seasonShares[k]} />
               ))}
-            </ul>
+            </ScrollReveal>
           </div>
           <div>
             <h3>Momento del día</h3>
-            <ul className="community-bars">
+            <ScrollReveal as="ul" className="community-bars">
               <Bar label="Día" value={`${dayShares.day} %`} percent={dayShares.day} />
               <Bar label="Noche" value={`${dayShares.night} %`} percent={dayShares.night} />
-            </ul>
+            </ScrollReveal>
           </div>
         </div>
       )}

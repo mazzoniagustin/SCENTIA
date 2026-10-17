@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { BrandImage } from "@/components/BrandImage";
 import { NavAccountLink, NavAuthActions } from "@/components/NavSignupLink";
 import { SiteNav } from "@/components/SiteNav";
+import { getBrandAsset } from "@/lib/brand-assets";
 import { getSessionNickname } from "@/lib/auth/db-user";
 import { getCurrentUser } from "@/lib/auth/session";
 import { NAV_LINKS } from "@/lib/nav";
@@ -43,8 +45,9 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="site-header-inner">
+        {/* Con el logo cargado (public/brand/logo.svg) reemplaza al texto; su alt ya dice "Scentia". */}
         <Link className="site-wordmark" href="/">
-          Scentia
+          {getBrandAsset("logo") ? <BrandImage slot="logo" className="site-logo" priority /> : "Scentia"}
         </Link>
         <SiteNav
           links={NAV_LINKS}
