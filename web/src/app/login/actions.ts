@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { runMagicLinkAction } from "@/lib/auth/magic-link-action";
@@ -26,11 +27,15 @@ export async function requestMagicLink(formData: FormData) {
 // Ingreso con correo y contraseña.
 export async function signInWithPasswordAction(formData: FormData) {
   const deps = await buildPasswordAuthDeps("signin");
-  redirect(await signInWithPasswordCore({ email: formData.get("email"), password: formData.get("password") }, deps));
+  const destination = await signInWithPasswordCore({ email: formData.get("email"), password: formData.get("password") }, deps);
+  // La cabecera vive en el layout raíz: sin esto, tras ingresar puede seguir mostrando "Ingresar" o un apodo viejo.
+  revalidatePath("/", "layout");
+  redirect(destination);
 }
 
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  revalidatePath("/", "layout");
   redirect("/");
 }

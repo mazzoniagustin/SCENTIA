@@ -22,3 +22,15 @@ export const getCurrentUser = cache(async () => {
     canChoosePassword: canChoosePassword(claimsResult.claims, Math.floor(Date.now() / 1000)),
   };
 });
+
+/**
+ * ¿La sesión es válida de verdad? `getCurrentUser` solo lee el JWT local (puede seguir "válido" aunque la cuenta de Supabase ya no
+ * exista o la sesión se haya revocado); esto consulta a Supabase con `getUser()`, igual que `/account` (`getAuthenticatedUserOrNull`).
+ * Usarlo donde una redirección dependa de que `/account` vaya a aceptar la sesión: si dos pantallas se contradicen, redirigen entre
+ * sí sin fin (/login → /account → /login).
+ */
+export const hasVerifiedSession = cache(async (): Promise<boolean> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+  return !error && Boolean(data.user?.email);
+});

@@ -8,7 +8,7 @@ import { FocusFieldOnMount } from "@/components/FocusFieldOnMount";
 import { FocusOnMount } from "@/components/FocusOnMount";
 import { NICKNAME_ERRORS, NICKNAME_HINT, NICKNAME_MAX, NICKNAME_MIN } from "@/lib/account/nickname";
 import { PASSWORD_ERRORS, PASSWORD_HINT, PASSWORD_MAX, PASSWORD_MIN } from "@/lib/auth/password";
-import { getCurrentUser } from "@/lib/auth/session";
+import { hasVerifiedSession } from "@/lib/auth/session";
 
 import { requestSignupLink, signUpWithPasswordAction } from "./actions";
 
@@ -28,9 +28,8 @@ const errors: Record<string, string> = {
 export const metadata = { title: "Crear cuenta" };
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
-  const user = await getCurrentUser();
-
-  if (user) {
+  // Sesión verificada con Supabase (no solo el JWT): /account la verifica así, y si discrepan, /login y /account se redirigen sin fin.
+  if (await hasVerifiedSession()) {
     redirect("/account");
   }
 

@@ -24,7 +24,8 @@ export default async function AccountPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const user = await getAuthenticatedUserOrNull();
-  if (!user) redirect("/login");
+  // Sin sesión válida: /auth/expired borra una cookie que ya no sirve (cuenta eliminada o sesión revocada) y sigue a /login.
+  if (!user) redirect("/auth/expired");
 
   const params = await searchParams;
   const [profile, superadmin] = await Promise.all([getUserProfile(user.id), getSuperadminOrNull()]);

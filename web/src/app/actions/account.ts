@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { DELETE_CONFIRMATION } from "@/lib/account/constants";
@@ -59,6 +60,8 @@ export async function saveNicknameAction(formData: FormData) {
 
   const result = await saveNickname(user.id, validated.nickname);
   if (result === "taken") redirect("/account?error=nickname-taken");
+  // El apodo se ve en la cabecera, que es parte del layout raíz: hay que invalidarlo o queda el apodo viejo hasta recargar a mano.
+  revalidatePath("/", "layout");
   redirect("/account?saved=nickname");
 }
 
@@ -104,5 +107,6 @@ export async function deleteAccountAction(formData: FormData) {
 
   const supabase = await createClient();
   await supabase.auth.signOut();
+  revalidatePath("/", "layout"); // la cabecera no debe seguir mostrando el apodo de una cuenta que ya no existe
   redirect("/?cuenta=eliminada");
 }

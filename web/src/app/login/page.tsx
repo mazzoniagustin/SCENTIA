@@ -6,7 +6,7 @@ import { BrandImage } from "@/components/BrandImage";
 import { CheckEmailPanel } from "@/components/CheckEmailPanel";
 import { FocusOnMount } from "@/components/FocusOnMount";
 import { PASSWORD_MAX } from "@/lib/auth/password";
-import { getCurrentUser } from "@/lib/auth/session";
+import { hasVerifiedSession } from "@/lib/auth/session";
 
 import { requestMagicLink, signInWithPasswordAction } from "./actions";
 
@@ -26,9 +26,8 @@ const errors: Record<string, string> = {
 export const metadata = { title: "Ingresar" };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const user = await getCurrentUser();
-
-  if (user) {
+  // Sesión verificada con Supabase (no solo el JWT): /account la verifica así, y si discrepan, /login y /account se redirigen sin fin.
+  if (await hasVerifiedSession()) {
     redirect("/account");
   }
 
