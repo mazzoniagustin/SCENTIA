@@ -2218,7 +2218,7 @@ html {
   padding-left: 1.25rem;
 }
 
-.ficha-section p a,
+.ficha-section p a:not(.button),
 .community-source a,
 .quiz-summary-edit,
 .quiz-summary-actions > p a {
@@ -5102,4 +5102,61 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   .home-hero > :nth-child(3) { animation-delay: 160ms; }
   .home-hero > :nth-child(4) { animation-delay: 240ms; }
   .home-hero > :nth-child(5) { animation-delay: 320ms; }
+}
+
+/* === Auditoría del superadmin === */
+.admin-bar {
+  display: inline-block;
+  min-width: 2px;
+  max-width: 7rem;
+  height: 0.6rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+}
+
+.admin-bar-muted {
+  background: var(--control-border);
+}
+
+.admin-top {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: top;
+}
+
+.admin-top li {
+  display: grid;
+  grid-template-columns: auto 1fr 7rem auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  counter-increment: top;
+}
+
+.admin-top li::before {
+  content: counter(top) ".";
+  color: var(--muted);
+  margin-right: 0.5rem;
+}
+
+.admin-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  color: var(--muted);
+}
+
+.admin-pager a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  color: var(--accent);
+  font-weight: 600;
 }

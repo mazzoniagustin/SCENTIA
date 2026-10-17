@@ -8,6 +8,7 @@ import { getUserProfile } from "@/lib/account/data";
 import { LOCALES } from "@/lib/account/preferences";
 import { PASSWORD_ERRORS, PASSWORD_HINT, PASSWORD_MAX, PASSWORD_MIN } from "@/lib/auth/password";
 import { getAuthenticatedUserOrNull } from "@/lib/auth/require-user";
+import { getSuperadminOrNull } from "@/lib/auth/superadmin";
 import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 
 import { changePasswordAction, deleteAccountAction, saveNicknameAction, savePreferencesAction } from "../actions/account";
@@ -26,7 +27,7 @@ export default async function AccountPage({
   if (!user) redirect("/login");
 
   const params = await searchParams;
-  const profile = await getUserProfile(user.id);
+  const [profile, superadmin] = await Promise.all([getUserProfile(user.id), getSuperadminOrNull()]);
   const preferences = profile?.preferences ?? { locale: "es", country: null, currency: null };
 
   const nicknameMissing = !profile?.nickname || profile.nicknameIsTemporary;
@@ -43,6 +44,12 @@ export default async function AccountPage({
         <h1>Mi cuenta</h1>
         <p className="lead">{user.email}</p>
       </header>
+
+      {superadmin && (
+        <p className="notice">
+          Sos superadmin. <Link href="/admin/auditoria">Ver la auditoría</Link>
+        </p>
+      )}
 
       {params.saved === "preferences" && (
         <p className="notice" role="status">

@@ -39,6 +39,9 @@ check(
 )
 const id = listBody.data?.[0]?.id
 const ficha = await get(`/perfumes/${id}`)
+const admin = await fetch(`${BASE}/admin/auditoria`, { redirect: 'manual' })
+check('auditoría del superadmin: sin sesión no existe (404)', admin.status === 404, `http ${admin.status}`)
+
 check('ficha de perfume', ficha.status === 200, `http ${ficha.status}`)
 const similares = await get(`/api/perfumes/${id}/recommendations?limit=3`)
 const sBody = await similares.json().catch(() => ({}))
