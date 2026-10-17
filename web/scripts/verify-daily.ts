@@ -16,6 +16,7 @@ import type { QuizAnswers } from '../src/lib/quiz/questions'
 const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL as string) })
 const answers: QuizAnswers = {
   ambiente: 'jardin', estacion: 'entretiempo', ocasion: 'formal', dulzor: 'algo', estilo: 'suave',
+  duracion: 'cualquiera', estela: 'cualquiera', favoritos: [],
   familias: ['floral'], evitar: ['oud'],
 }
 const noon = (iso: string) => new Date(`${iso}T15:00:00Z`)

@@ -51,8 +51,7 @@ export function ContextBox({
         aria-describedby={hintId}
       />
       <p id={hintId} className="form-hint">
-        {text.length} / 200. Lo que escribas se envía a Gemini (Google), que en el nivel gratuito puede usar el contenido para mejorar
-        sus productos: no escribas datos personales. La IA solo interpreta tu plan; el perfume lo elige tu colección y el clima.
+        {text.length} / 200. No escribas datos personales. La IA solo interpreta tu plan; el perfume lo elige tu colección y el clima.
       </p>
       <div className="gaps-refine-examples" aria-label="Ejemplos">
         {CONTEXT_EXAMPLES.map((example) => (
@@ -74,7 +73,7 @@ export function ContextBox({
       <div role="status" aria-live="polite" className="outfit-context-status">
         {state.status === 'applied' && (
           <p>
-            <span className="outfit-chip">Interpretado con IA</span> {state.summary}
+            {state.summary}
           </p>
         )}
         {(state.status === 'not_understood' || state.status === 'unavailable' || state.status === 'rate_limited' || state.status === 'invalid_text') && (

@@ -18,6 +18,7 @@ const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL
 
 const answers: QuizAnswers = {
   ambiente: 'mar', estacion: 'verano', ocasion: 'deporte', dulzor: 'nada', estilo: 'suave',
+  duracion: 'cualquiera', estela: 'cualquiera', favoritos: [],
   familias: ['citrico'], evitar: ['oud'],
 }
 

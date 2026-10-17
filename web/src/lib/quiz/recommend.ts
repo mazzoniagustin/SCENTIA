@@ -7,8 +7,10 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getAccordStats } from '@/lib/accord-stats'
 import { getUserCollectionEntries } from '@/lib/exclusions'
-import { buildProfile } from './profile'
+import { addFavorites, buildProfile } from './profile'
+import { preferencesFromAnswers } from './preferences'
 import type { QuizAnswers } from './questions'
+import type { PreferenceKey } from './preferences'
 import { AVOID_THRESHOLD, buildIdf, rankCandidates, type QuizCandidate, type QuizReason } from './scoring'
 
 export const QUIZ_GENDERS = ['femenino', 'masculino', 'unisex'] as const
@@ -32,6 +34,7 @@ export type QuizResult = {
   imageUrl: string | null
   score: number
   matchedAccords: string[]
+  matchedPreferences: PreferenceKey[]
   reasons: QuizReason[]
 }
 
@@ -39,8 +42,8 @@ export async function recommendFromAnswers(
   answers: QuizAnswers,
   options: { gender?: QuizGender; season?: string; limit?: number; userId?: string | null } = {},
 ): Promise<QuizResult[]> {
-  const profile = buildProfile(answers)
-  const stats = await getAccordStats()
+  const [favorites, stats] = await Promise.all([getFavoriteAccords(answers.favoritos), getAccordStats()])
+  const profile = addFavorites(buildProfile(answers), favorites.map((f) => f.accords))
   const idf = buildIdf(stats.dfByName, stats.total)
 
   // Los acordes más característicos del perfil (peso × rareza) acotan los candidatos.
@@ -66,8 +69,9 @@ export async function recommendFromAnswers(
   const publishedClause = Prisma.sql`AND p.status = 'PUBLISHED' ${genderClause} ${seasonClause}`
 
   const [rows, collection] = await Promise.all([
-    prisma.$queryRaw<Array<{ id: string; name: string; intensity: number; ratingCount: number | null }>>`
-      SELECT pa."perfumeId" AS id, a.name, pa.intensity::int AS intensity, p."ratingCount" AS "ratingCount"
+    prisma.$queryRaw<Array<{ id: string; name: string; intensity: number; ratingCount: number | null; seasons: string[]; occasions: string[]; longevity: number | null; sillage: number | null }>>`
+      SELECT pa."perfumeId" AS id, a.name, pa.intensity::int AS intensity, p."ratingCount" AS "ratingCount",
+             p.seasons, p.occasions, p.longevity, p.sillage
       FROM "PerfumeAccord" pa
       JOIN "Accord" a ON a.id = pa."accordId"
       JOIN "Perfume" p ON p.id = pa."perfumeId"
@@ -82,9 +86,16 @@ export async function recommendFromAnswers(
 
   const popularityOf = (count: number | null) =>
     stats.maxRatingCount > 0 ? Math.log(1 + (count ?? 0)) / Math.log(1 + stats.maxRatingCount) : 0
-  const byId = new Map<string, { accords: Array<{ name: string; intensity: number }>; popularity: number }>()
+  const byId = new Map<string, Omit<QuizCandidate, 'id'> & { accords: Array<{ name: string; intensity: number }> }>()
   for (const row of rows) {
-    const entry = byId.get(row.id) ?? { accords: [], popularity: popularityOf(row.ratingCount) }
+    const entry = byId.get(row.id) ?? {
+      accords: [],
+      popularity: popularityOf(row.ratingCount),
+      seasons: row.seasons,
+      occasions: row.occasions,
+      longevity: row.longevity,
+      sillage: row.sillage,
+    }
     entry.accords.push({ name: row.name, intensity: row.intensity })
     byId.set(row.id, entry)
   }
@@ -93,6 +104,8 @@ export async function recommendFromAnswers(
     collection,
     limit: options.limit,
     popularityWeight: POPULARITY_WEIGHT,
+    preferences: preferencesFromAnswers(answers),
+    excludeIds: favorites.map((f) => f.id),
   })
 
   const meta = new Map(
@@ -115,7 +128,32 @@ export async function recommendFromAnswers(
       // Redondeo a 2 decimales en la capa de API; el puntaje interno es pleno.
       score: Math.round(rec.score * 100) / 100,
       matchedAccords: rec.matchedAccords,
+      matchedPreferences: rec.matchedPreferences,
       reasons: rec.reasons,
     }
   })
+}
+
+/**
+ * Acordes de los perfumes favoritos que existen y están publicados (un id inexistente o en borrador se ignora sin error).
+ * Una consulta, sin importar cuántos sean (máximo MAX_FAVORITES).
+ */
+export async function getFavoriteAccords(ids: readonly string[]): Promise<Array<{ id: string; accords: Array<{ name: string; intensity: number }> }>> {
+  if (ids.length === 0) return []
+  const rows = await prisma.perfume.findMany({
+    where: { id: { in: [...ids] }, status: 'PUBLISHED' },
+    select: { id: true, accords: { select: { intensity: true, accord: { select: { name: true } } } } },
+  })
+  return rows.map((row) => ({ id: row.id, accords: row.accords.map((a) => ({ name: a.accord.name, intensity: a.intensity })) }))
+}
+
+/** Marca y nombre de los favoritos, en el orden recibido (para mostrarlos). Los que no existen o no están publicados se omiten. */
+export async function getFavoriteLabels(ids: readonly string[]): Promise<Array<{ id: string; label: string }>> {
+  if (ids.length === 0) return []
+  const rows = await prisma.perfume.findMany({
+    where: { id: { in: [...ids] }, status: 'PUBLISHED' },
+    select: { id: true, brand: true, name: true },
+  })
+  const byId = new Map(rows.map((r) => [r.id, `${r.brand} — ${r.name}`]))
+  return ids.filter((id) => byId.has(id)).map((id) => ({ id, label: byId.get(id)! }))
 }

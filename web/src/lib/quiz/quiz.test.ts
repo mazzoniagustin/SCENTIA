@@ -27,8 +27,11 @@ const answers: QuizAnswers = {
   ocasion: 'diario',
   dulzor: 'nada',
   estilo: 'suave',
+  duracion: 'cualquiera',
+  estela: 'cualquiera',
   familias: ['amaderado', 'citrico'],
   evitar: ['ahumado'],
+  favoritos: [],
 }
 
 // IDF plano (peso 1 para todos): aísla la lógica de intersección de la rareza.
@@ -51,7 +54,7 @@ describe('mapeo de preguntas', () => {
         }
       }
     }
-    assert.equal(QUIZ_VERSION, 1)
+    assert.equal(QUIZ_VERSION, 2)
   })
 })
 
@@ -63,7 +66,8 @@ describe('validateAnswers', () => {
   })
 
   it('las multi pueden faltar y quedan vacías', () => {
-    const { familias, evitar, ...single } = answers
+    const { familias, evitar, favoritos, duracion, estela, ...single } = answers
+    void favoritos; void duracion; void estela
     void familias
     void evitar
     const result = validateAnswers(single)
@@ -254,7 +258,9 @@ describe('FormData y query string', () => {
     }
     form.append('gender', 'masculino') // campo ajeno al quiz: se ignora
     const raw = answersFromFormData(form)
-    assert.deepEqual(raw, answers)
+    const { favoritos, ...withoutFavorites } = answers // sin favoritos el campo no viaja
+    void favoritos
+    assert.deepEqual(raw, withoutFavorites)
     assert.equal(validateAnswers(raw).ok, true)
   })
 

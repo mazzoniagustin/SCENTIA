@@ -2,7 +2,12 @@
 // Los nombres de acorde deben coincidir con `Accord.name` (84 términos en español);
 // quiz.test.ts verifica que todos existan. Si cambia el mapeo, subir QUIZ_VERSION.
 
-export const QUIZ_VERSION = 1
+// Versión 2: suma duración, estela y "perfumes que ya amás". Las respuestas guardadas con la versión 1 siguen valiendo (ver `QUIZ_COMPATIBLE_FROM`).
+export const QUIZ_VERSION = 2
+/** Versión más vieja de respuestas guardadas que se sigue leyendo: las preguntas nuevas toman su opción por defecto. */
+export const QUIZ_COMPATIBLE_FROM = 1
+/** Máximo de perfumes favoritos que se aceptan. */
+export const MAX_FAVORITES = 3
 
 /** Pesos 0-100 por nombre de acorde (misma escala que PerfumeAccord.intensity). */
 export type AccordWeights = Readonly<Record<string, number>>
@@ -21,9 +26,11 @@ export type QuizQuestion = {
   label: string
   kind: 'single' | 'multi'
   options: ReadonlyArray<QuizOption>
+  /** Pregunta opcional de una sola opción: si falta la respuesta se usa esta opción (un enlace o perfil viejo sigue siendo válido). */
+  defaultOptionId?: string
 }
 
-export type QuestionId = 'ambiente' | 'estacion' | 'ocasion' | 'dulzor' | 'estilo' | 'familias' | 'evitar'
+export type QuestionId = 'ambiente' | 'estacion' | 'ocasion' | 'dulzor' | 'estilo' | 'duracion' | 'estela' | 'familias' | 'evitar'
 
 /** Respuestas: una opción por pregunta 'single', una lista (posiblemente vacía) por 'multi'. */
 export type QuizAnswers = {
@@ -32,8 +39,12 @@ export type QuizAnswers = {
   ocasion: string
   dulzor: string
   estilo: string
+  duracion: string
+  estela: string
   familias: string[]
   evitar: string[]
+  /** Ids de hasta MAX_FAVORITES perfumes del catálogo que la persona ya ama; sus acordes se suman al perfil. */
+  favoritos: string[]
 }
 
 export const QUESTIONS: ReadonlyArray<QuizQuestion> = [
@@ -44,7 +55,7 @@ export const QUESTIONS: ReadonlyArray<QuizQuestion> = [
     options: [
       { id: 'bosque', label: 'Un bosque después de la lluvia', weights: { terroso: 60, musgoso: 50, verde: 50, amaderado: 40 } },
       { id: 'mar', label: 'El mar', weights: { marino: 70, acuático: 60, salado: 40, cítrico: 30 } },
-      { id: 'jardin', label: 'Un jardín en flor', weights: { floral: 60, 'floral blanco': 50, rosa: 40, verde: 20 } },
+      { id: 'jardin', label: 'Un jardín lleno de flores', weights: { floral: 60, 'floral blanco': 50, rosa: 40, verde: 20 } },
       { id: 'postre', label: 'Una pastelería', weights: { dulce: 60, vainilla: 60, caramelo: 40 } },
       { id: 'noche', label: 'Una noche en la ciudad', weights: { ámbar: 50, cuero: 50, ahumado: 40, 'especiado cálido': 40, oud: 30 } },
     ],
@@ -87,6 +98,28 @@ export const QUESTIONS: ReadonlyArray<QuizQuestion> = [
     options: [
       { id: 'suave', label: 'Suave y limpio', weights: { almizclado: 50, empolvado: 40, fresco: 40 } },
       { id: 'notorio', label: 'Notorio, con presencia', weights: { ámbar: 50, 'especiado cálido': 50, oud: 30, cuero: 30 } },
+    ],
+  },
+  {
+    id: 'duracion',
+    label: '¿Cuánto querés que dure?',
+    kind: 'single',
+    defaultOptionId: 'cualquiera',
+    options: [
+      { id: 'cualquiera', label: 'Me da igual' },
+      { id: 'larga', label: 'Que dure todo el día' },
+      { id: 'ligera', label: 'Algo liviano, aunque dure menos' },
+    ],
+  },
+  {
+    id: 'estela',
+    label: '¿Cómo querés que se note?',
+    kind: 'single',
+    defaultOptionId: 'cualquiera',
+    options: [
+      { id: 'cualquiera', label: 'Me da igual' },
+      { id: 'discreta', label: 'Discreto, que casi no se note' },
+      { id: 'notoria', label: 'Que se note al pasar' },
     ],
   },
   {

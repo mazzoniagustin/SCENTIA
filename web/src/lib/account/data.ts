@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { validateAnswers } from '@/lib/quiz/profile'
-import { QUIZ_VERSION, type QuizAnswers } from '@/lib/quiz/questions'
+import { QUIZ_COMPATIBLE_FROM, QUIZ_VERSION, type QuizAnswers } from '@/lib/quiz/questions'
 import { buildDeletionSummary } from './deletion-summary'
 import type { Preferences } from './preferences'
 
@@ -16,7 +16,7 @@ export async function getUserProfile(
   const profile = await prisma.userProfile.findUnique({ where: { userId } })
   if (!profile) return null
 
-  const validated = profile.quizVersion === QUIZ_VERSION ? validateAnswers(profile.quizAnswers) : null
+  const validated = profile.quizVersion !== null && profile.quizVersion >= QUIZ_COMPATIBLE_FROM && profile.quizVersion <= QUIZ_VERSION ? validateAnswers(profile.quizAnswers) : null
   return {
     answers: validated?.ok ? validated.answers : null,
     preferences: { locale: profile.locale, country: profile.country, currency: profile.currency },

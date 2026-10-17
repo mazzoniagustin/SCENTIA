@@ -10,8 +10,11 @@ const answers: QuizAnswers = {
   ocasion: 'cita',
   dulzor: 'algo',
   estilo: 'suave',
+  duracion: 'larga',
+  estela: 'cualquiera',
   familias: ['citrico', 'floral'],
   evitar: ['oud', 'cuero'],
+  favoritos: [],
 }
 
 describe('summarizeAnswers', () => {
@@ -22,7 +25,7 @@ describe('summarizeAnswers', () => {
 
   it('traduce los ids a las etiquetas de las opciones', () => {
     const byId = Object.fromEntries(summarizeAnswers(answers).map((row) => [row.id, row.labels]))
-    assert.deepEqual(byId.ambiente, ['Un jardín en flor'])
+    assert.deepEqual(byId.ambiente, ['Un jardín lleno de flores'])
     assert.deepEqual(byId.estacion, ['Verano'])
     assert.deepEqual(byId.dulzor, ['Un toque'])
   })

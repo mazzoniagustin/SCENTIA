@@ -8,6 +8,7 @@
 
 import { EXCLUDED_STATUSES, type UserCollectionEntry } from '../similarity.ts'
 import type { OlfactoryProfile } from './profile.ts'
+import { applyPreferences, preferenceMatch, type PreferenceKey, type Preferences, type PreferenceTarget } from './preferences.ts'
 
 /** Intensidad desde la cual un acorde rechazado descarta al perfume. */
 export const AVOID_THRESHOLD = 60
@@ -16,14 +17,14 @@ export const MAX_MATCHED_ACCORDS = 3
 
 export type CandidateAccord = { name: string; intensity: number }
 
-export type QuizCandidate = {
+export type QuizCandidate = PreferenceTarget & {
   id: string
   accords: ReadonlyArray<CandidateAccord>
   /** Popularidad 0-1 (cantidad de valoraciones, en escala logarítmica). Sin dato = 0. */
   popularity?: number
 }
 
-export type QuizReason = 'matched_accords' | 'avoids_rejected'
+export type QuizReason = 'matched_accords' | 'avoids_rejected' | 'matches_preferences'
 
 export type QuizScore = {
   score: number
@@ -36,6 +37,8 @@ export type QuizRecommendation = {
   perfumeId: string
   score: number
   matchedAccords: string[]
+  /** Preferencias (estación, día/noche, duración, estela) que el perfume cumple. Vacío si no hay preferencias activas. */
+  matchedPreferences: PreferenceKey[]
   reasons: QuizReason[]
 }
 
@@ -102,21 +105,33 @@ export function rankCandidates(
   profile: OlfactoryProfile,
   candidates: ReadonlyArray<QuizCandidate>,
   idf: (name: string) => number,
-  options: { collection?: ReadonlyArray<UserCollectionEntry>; limit?: number; popularityWeight?: number } = {},
+  options: {
+    collection?: ReadonlyArray<UserCollectionEntry>
+    limit?: number
+    popularityWeight?: number
+    /** Estación, día/noche, duración y estela: ajuste suave del puntaje, nunca un filtro. */
+    preferences?: Preferences
+    /** Perfumes que no se recomiendan (los favoritos que la persona eligió). */
+    excludeIds?: ReadonlyArray<string>
+  } = {},
 ): QuizRecommendation[] {
-  const excludedIds = new Set(
-    (options.collection ?? [])
+  const excludedIds = new Set([
+    ...(options.collection ?? [])
       .filter((entry) => EXCLUDED_STATUSES.has(entry.status.toLowerCase()))
       .map((entry) => entry.perfumeId),
-  )
+    ...(options.excludeIds ?? []),
+  ])
 
   const ranked = candidates
     .filter((candidate) => !excludedIds.has(candidate.id))
     .map((candidate) => {
       const result = scoreCandidate(profile, candidate, idf)
+      const match = options.preferences ? preferenceMatch(options.preferences, candidate) : { average: 1, matched: [] as PreferenceKey[], active: 0 }
+      const popular = applyPopularity(result.score, candidate.popularity, options.popularityWeight ?? 0)
       return {
         candidate,
-        result: { ...result, score: applyPopularity(result.score, candidate.popularity, options.popularityWeight ?? 0) },
+        matched: match.matched,
+        result: { ...result, score: match.active > 0 ? applyPreferences(popular, match.average) : popular },
       }
     })
     .filter(({ result }) => result.score > 0)
@@ -127,13 +142,15 @@ export function rankCandidates(
         a.candidate.id.localeCompare(b.candidate.id),
     )
 
-  return ranked.slice(0, options.limit ?? ranked.length).map(({ candidate, result }) => ({
+  return ranked.slice(0, options.limit ?? ranked.length).map(({ candidate, result, matched }) => ({
     perfumeId: candidate.id,
     score: result.score,
     matchedAccords: result.matchedAccords,
+    matchedPreferences: matched,
     reasons: [
       'matched_accords',
       ...(profile.avoid.length > 0 ? (['avoids_rejected'] as const) : []),
+      ...(matched.length > 0 ? (['matches_preferences'] as const) : []),
     ],
   }))
 }

@@ -75,8 +75,7 @@ export function RefineBox({
         aria-describedby={hintId}
       />
       <p id={hintId} className="form-hint">
-        {text.length} / {maxChars}. Lo que escribas se envía a Gemini (Google), que en el nivel gratuito puede usar el contenido para
-        mejorar sus productos: no escribas datos personales. La IA solo interpreta tu pedido; los perfumes salen del catálogo.
+        {text.length} / {maxChars}. No escribas datos personales. La IA solo interpreta tu pedido; los perfumes salen del catálogo.
       </p>
 
       <div className="gaps-refine-examples" aria-label="Ejemplos">

@@ -4,7 +4,8 @@ import { getUserProfile } from "@/lib/account/data";
 import { getAuthenticatedUserOrNull } from "@/lib/auth/require-user";
 import { answersFromSearchParams, answersToSearchParams } from "@/lib/quiz/params";
 import { validateAnswers } from "@/lib/quiz/profile";
-import { QUESTIONS } from "@/lib/quiz/questions";
+import { MAX_FAVORITES, QUESTIONS } from "@/lib/quiz/questions";
+import { getFavoriteLabels } from "@/lib/quiz/recommend";
 import { QuizWizard } from "./QuizWizard";
 
 export const metadata = { title: "Quiz de perfil olfativo" };
@@ -18,6 +19,7 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
   const user = await getAuthenticatedUserOrNull();
   const saved = user ? (await getUserProfile(user.id))?.answers ?? null : null;
   const initial = fromUrl.ok ? fromUrl.answers : saved;
+  const savedFavorites = await getFavoriteLabels(initial?.favoritos ?? []);
 
   return (
     <main id="contenido" className="catalog">
@@ -42,8 +44,10 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
       )}
 
       <QuizWizard
-        questions={QUESTIONS.map((q) => ({ id: q.id, label: q.label, kind: q.kind, options: q.options.map((o) => ({ id: o.id, label: o.label })) }))}
+        questions={QUESTIONS.map((q) => ({ id: q.id, label: q.label, kind: q.kind, options: q.options.map((o) => ({ id: o.id, label: o.label })), defaultOptionId: q.defaultOptionId }))}
         saved={initial}
+        savedFavorites={savedFavorites}
+        maxFavorites={MAX_FAVORITES}
       />
     </main>
   );

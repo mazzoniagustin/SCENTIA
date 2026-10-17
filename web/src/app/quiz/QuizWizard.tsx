@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { FavoritesPicker, type FavoritePerfume } from "./FavoritesPicker";
+
 type Option = { id: string; label: string };
-export type WizardQuestion = { id: string; label: string; kind: "single" | "multi"; options: Option[] };
+export type WizardQuestion = { id: string; label: string; kind: "single" | "multi"; options: Option[]; defaultOptionId?: string };
 export type WizardAnswers = Record<string, string | string[]>;
 
 const AUTO_ADVANCE_MS = 260;
@@ -11,11 +13,24 @@ const AUTO_ADVANCE_MS = 260;
 // Quiz paso a paso: una pregunta por pantalla, con barra de progreso, tarjetas de opción y transición entre pasos.
 // Sigue siendo un formulario GET normal (los inputs conservan su `name`): sin JavaScript se ven todas las preguntas
 // juntas (ver `@media (scripting: none)` en globals.css) y se envía igual a /quiz/resultado, que valida las respuestas en el servidor.
-export function QuizWizard({ questions, saved }: { questions: WizardQuestion[]; saved: WizardAnswers | null }) {
-  const total = questions.length;
+//
+// Después de las preguntas hay un paso opcional ("perfumes que ya amás", hasta `maxFavorites`) que usa JavaScript.
+export function QuizWizard({
+  questions,
+  saved,
+  savedFavorites,
+  maxFavorites,
+}: {
+  questions: WizardQuestion[];
+  saved: WizardAnswers | null;
+  savedFavorites: FavoritePerfume[];
+  maxFavorites: number;
+}) {
+  const favoritesStep = questions.length;
+  const total = questions.length + 1;
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<WizardAnswers>(() =>
-    Object.fromEntries(questions.map((q) => [q.id, saved?.[q.id] ?? (q.kind === "multi" ? [] : "")])),
+    Object.fromEntries(questions.map((q) => [q.id, saved?.[q.id] ?? q.defaultOptionId ?? (q.kind === "multi" ? [] : "")])),
   );
   const legendRef = useRef<HTMLLegendElement | null>(null);
   const mounted = useRef(false);
@@ -36,7 +51,7 @@ export function QuizWizard({ questions, saved }: { questions: WizardQuestion[]; 
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  const stepAnswered = isAnswered(questions[step]);
+  const stepAnswered = step === favoritesStep || isAnswered(questions[step]);
 
   const go = (next: number) => setStep(Math.max(0, Math.min(total - 1, next)));
 
@@ -100,6 +115,14 @@ export function QuizWizard({ questions, saved }: { questions: WizardQuestion[]; 
           </div>
         </fieldset>
       ))}
+
+      <fieldset className="quiz-step quiz-favorites-step" hidden={favoritesStep !== step} data-active={favoritesStep === step}>
+        <legend ref={favoritesStep === step ? legendRef : undefined} tabIndex={-1}>
+          ¿Hay perfumes que ya amás?
+        </legend>
+        <p className="quiz-hint">Es opcional. Elegí hasta {maxFavorites} y buscamos otros con acordes parecidos.</p>
+        <FavoritesPicker initial={savedFavorites} max={maxFavorites} />
+      </fieldset>
 
       <div className="quiz-wizard-nav">
         <button type="button" className="quiz-nav-back" onClick={() => go(step - 1)} disabled={step === 0}>

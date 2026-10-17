@@ -88,7 +88,7 @@ function Suggestions({
       {refined && (
         <div className="gaps-refined-note">
           <p>
-            <span className="outfit-chip gaps-tag">Interpretado con IA</span> {refined.summary}
+            {refined.summary}
           </p>
           <button type="button" className="gaps-link-button" onClick={onClearRefined}>
             Volver a las sugerencias del análisis

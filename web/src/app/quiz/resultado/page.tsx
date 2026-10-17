@@ -5,17 +5,25 @@ import { saveQuizProfile } from "@/app/actions/account";
 import { PerfumeImage } from "@/app/perfumes/PerfumeImage";
 import { genderLabel } from "@/app/perfumes/types";
 import { getSessionDbUserId } from "@/lib/auth/db-user";
-import { answersFromSearchParams, answersToSearchParams } from "@/lib/quiz/params";
+import { answersFromSearchParams, answersToFields, answersToSearchParams } from "@/lib/quiz/params";
 import { validateAnswers } from "@/lib/quiz/profile";
-import { QUESTIONS, type QuizAnswers } from "@/lib/quiz/questions";
+import { type QuizAnswers } from "@/lib/quiz/questions";
 import { summarizeAnswers } from "@/lib/quiz/summary";
 import { AffinityRing } from "@/components/AffinityRing";
 import { AnalyzingLoader } from "@/components/AnalyzingLoader";
-import { QUIZ_GENDERS, recommendFromAnswers, type QuizGender } from "@/lib/quiz/recommend";
+import { getFavoriteLabels, QUIZ_GENDERS, recommendFromAnswers, type QuizGender } from "@/lib/quiz/recommend";
+import type { PreferenceKey } from "@/lib/quiz/preferences";
 
 export const metadata = { title: "Tus recomendaciones" };
 
 const RESULT_LIMIT = 12;
+
+const PREFERENCE_LABELS: Record<PreferenceKey, string> = {
+  season: "estación",
+  occasion: "momento del día",
+  duration: "duración",
+  sillage: "estela",
+};
 
 type Params = { [key: string]: string | string[] | undefined };
 
@@ -46,10 +54,8 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
     : undefined;
 
   // Para el filtro de género se reenvían las mismas respuestas como campos ocultos.
-  const hiddenFields = QUESTIONS.flatMap((question) => {
-    const value = validated.answers[question.id];
-    return (Array.isArray(value) ? value : [value]).map((v) => ({ name: question.id, value: v }));
-  });
+  const hiddenFields = answersToFields(validated.answers);
+  const favorites = await getFavoriteLabels(validated.answers.favoritos);
 
   return (
     <main id="contenido" className="catalog">
@@ -75,7 +81,7 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
           </Link>
         </div>
         <dl className="quiz-summary-list">
-          {summarizeAnswers(validated.answers).map((row) => (
+          {summarizeAnswers(validated.answers, favorites.map((f) => f.label)).map((row) => (
             <div key={row.id}>
               <dt>{row.title}</dt>
               <dd>
@@ -189,6 +195,9 @@ async function Results({ answers, gender }: { answers: QuizAnswers; gender?: Qui
               )}
               {result.reasons.includes("avoids_rejected") && (
                 <p className="quiz-reason">Evita lo que marcaste como rechazo.</p>
+              )}
+              {result.matchedPreferences.length > 0 && (
+                <p className="quiz-reason">Coincide con lo que pediste: {result.matchedPreferences.map((key) => PREFERENCE_LABELS[key]).join(", ")}.</p>
               )}
             </div>
           </article>

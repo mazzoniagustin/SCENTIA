@@ -356,7 +356,6 @@ export function OutfitToday() {
 
             <blockquote className="outfit-phrase">
               <p>{view.phrase.text}</p>
-              {view.phrase.source === 'llm' && <footer className="outfit-ai-tag">Frase redactada con IA</footer>}
             </blockquote>
 
             <section aria-labelledby="outfit-weather-title" className="outfit-weather">
