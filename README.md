@@ -93,7 +93,7 @@ Quien tenga su correo (confirmado) en `SUPERADMIN_EMAILS` ve `/admin/auditoria`:
 
 ### Despliegue
 
-Guía paso a paso (Supabase, Vercel, correo, verificación): [`web/docs/despliegue.md`](web/docs/despliegue.md).
+Se despliega en Vercel con las variables de entorno de arriba; `main` es la rama de producción.
 
 ### Documentación
 
@@ -105,7 +105,6 @@ Guía paso a paso (Supabase, Vercel, correo, verificación): [`web/docs/desplieg
 | ¿Qué le falta a tu colección? | [`web/docs/que-le-falta-a-mi-coleccion.md`](web/docs/que-le-falta-a-mi-coleccion.md) |
 | ¿Qué me pongo hoy? | [`web/docs/clima-que-me-pongo.md`](web/docs/clima-que-me-pongo.md) |
 | Comparador | [`web/docs/rf03-comparador.md`](web/docs/rf03-comparador.md) |
-| Seguridad (CSP) | [`web/docs/seguridad-csp.md`](web/docs/seguridad-csp.md) |
 | Accesibilidad | [`web/docs/accesibilidad.md`](web/docs/accesibilidad.md) |
 | Identidad visual | [`web/docs/identidad-visual.md`](web/docs/identidad-visual.md) |
 | Auditoría del superadmin | [`web/docs/auditoria-superadmin.md`](web/docs/auditoria-superadmin.md) |
