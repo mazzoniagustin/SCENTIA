@@ -51,7 +51,7 @@ Los acordes, notas, estaciones, duración, estela y votos provienen del dataset 
 
 ---
 
-## Para quien lo instala y lo mantiene
+## Para quien lo instala
 
 Scentia es una aplicación Next.js 16 con Prisma 7 sobre Postgres de Supabase (que además maneja el acceso), desplegada en Vercel. El código vive en [`web/`](web/).
 
