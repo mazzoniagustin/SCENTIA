@@ -24,5 +24,4 @@ web/claude-office/
 
 # metadatos de Windows
 *:Zone.Identifier
-web/docs/despliegue.md
-web/docs/seguridad-csp.md
+web/docs/

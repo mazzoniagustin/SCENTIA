@@ -95,20 +95,6 @@ Quien tenga su correo (confirmado) en `SUPERADMIN_EMAILS` ve `/admin/auditoria`:
 
 Se despliega en Vercel con las variables de entorno de arriba; `main` es la rama de producción.
 
-### Documentación
-
-| Tema | Dónde |
-|---|---|
-| Cuentas y contraseña | [`web/docs/cuenta-con-contrasena.md`](web/docs/cuenta-con-contrasena.md) |
-| Eliminar cuenta y resumen anónimo | [`web/docs/retencion-eliminacion-cuenta.md`](web/docs/retencion-eliminacion-cuenta.md) |
-| Quiz olfativo | [`web/docs/quiz-perfil-olfativo.md`](web/docs/quiz-perfil-olfativo.md) |
-| ¿Qué le falta a tu colección? | [`web/docs/que-le-falta-a-mi-coleccion.md`](web/docs/que-le-falta-a-mi-coleccion.md) |
-| ¿Qué me pongo hoy? | [`web/docs/clima-que-me-pongo.md`](web/docs/clima-que-me-pongo.md) |
-| Comparador | [`web/docs/rf03-comparador.md`](web/docs/rf03-comparador.md) |
-| Accesibilidad | [`web/docs/accesibilidad.md`](web/docs/accesibilidad.md) |
-| Identidad visual | [`web/docs/identidad-visual.md`](web/docs/identidad-visual.md) |
-| Auditoría del superadmin | [`web/docs/auditoria-superadmin.md`](web/docs/auditoria-superadmin.md) |
-
 ### Ramas
 
 `development` es la rama de integración y `main` es la que despliega Vercel.
