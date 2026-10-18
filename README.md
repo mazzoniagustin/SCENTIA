@@ -99,19 +99,23 @@ Guía paso a paso (Supabase, Vercel, correo, verificación): [`web/docs/desplieg
 
 | Tema | Dónde |
 |---|---|
-| Estado del proyecto y pendientes | [`web/PROGRESS.md`](web/PROGRESS.md) |
-| Especificación y decisiones (ADR) | [`docs/project-specification.md`](docs/project-specification.md) |
 | Cuentas y contraseña | [`web/docs/cuenta-con-contrasena.md`](web/docs/cuenta-con-contrasena.md) |
 | Eliminar cuenta y resumen anónimo | [`web/docs/retencion-eliminacion-cuenta.md`](web/docs/retencion-eliminacion-cuenta.md) |
 | Quiz olfativo | [`web/docs/quiz-perfil-olfativo.md`](web/docs/quiz-perfil-olfativo.md) |
 | ¿Qué le falta a tu colección? | [`web/docs/que-le-falta-a-mi-coleccion.md`](web/docs/que-le-falta-a-mi-coleccion.md) |
 | ¿Qué me pongo hoy? | [`web/docs/clima-que-me-pongo.md`](web/docs/clima-que-me-pongo.md) |
 | Comparador | [`web/docs/rf03-comparador.md`](web/docs/rf03-comparador.md) |
-| Seguridad (CSP, revisiones) | [`web/docs/seguridad-csp.md`](web/docs/seguridad-csp.md), [`web/docs/revision-seguridad.md`](web/docs/revision-seguridad.md) |
+| Seguridad (CSP) | [`web/docs/seguridad-csp.md`](web/docs/seguridad-csp.md) |
 | Accesibilidad | [`web/docs/accesibilidad.md`](web/docs/accesibilidad.md) |
 | Identidad visual | [`web/docs/identidad-visual.md`](web/docs/identidad-visual.md) |
 | Auditoría del superadmin | [`web/docs/auditoria-superadmin.md`](web/docs/auditoria-superadmin.md) |
 
-### Cómo se trabaja en el repositorio
+### Ramas
 
-`development` es la rama de integración y `main` es la que despliega Vercel. Las reglas de seguridad y de Git (qué se confirma antes de hacer y qué no) están en [`AGENTS.md`](AGENTS.md) y [`docs/security-and-git-safety.md`](docs/security-and-git-safety.md).
+`development` es la rama de integración y `main` es la que despliega Vercel.
+
+---
+
+## Licencia
+
+El código se distribuye bajo la [licencia MIT](LICENSE). Los datos del catálogo no están incluidos en el repositorio y se rigen por la licencia de su origen (CC BY-NC-SA 4.0, ver [Datos y créditos](#datos-y-créditos)); el uso comercial de esos datos no está permitido. Los logos y el material de marca de `web/assets` y `web/public/brand` son parte del proyecto Scentia.
