@@ -29,6 +29,8 @@ export async function GET(request: NextRequest) {
       : new Error("Falta el código de confirmación.");
 
   if (error) {
+    const { code: errorCode, status } = error as { code?: string; status?: number };
+    console.error(`[auth/confirm] flow=${code ? "code" : "token_hash"} type=${type ?? "-"} status=${status ?? "-"} code=${errorCode ?? "-"} ${error.message}`);
     return loginRedirect(request, "confirmation");
   }
 
