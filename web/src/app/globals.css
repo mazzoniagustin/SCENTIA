@@ -2294,7 +2294,7 @@ html {
 
 .scroller-viewport {
   overflow-x: auto;
-  overscroll-behavior-x: contain;
+  overscroll-behavior-x: none; /* `contain` no corta el rebote elástico de iOS: dejaba arrastrar más allá de la última tarjeta */
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
   scrollbar-color: var(--control-border) transparent;
