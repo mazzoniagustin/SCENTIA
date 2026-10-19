@@ -41,7 +41,7 @@ function pageHref(params: Record<string, string | string[] | undefined>, page: n
 
 async function fetchPerfumes(
   searchParams: Record<string, string | string[] | undefined>,
-): Promise<{ perfumes: Perfume[]; pagination?: Pagination; error?: string }> {
+): Promise<{ perfumes: Perfume[]; pagination?: Pagination; error?: string; loadFailed?: boolean }> {
   const query = new URLSearchParams();
   for (const key of [
     "q",
@@ -71,7 +71,7 @@ async function fetchPerfumes(
     };
   } catch (error) {
     logServerError("perfumes/page", error);
-    return { perfumes: [], error: "No se pudo cargar el catálogo." };
+    return { perfumes: [], error: "No se pudo cargar el catálogo.", loadFailed: true };
   }
 }
 
@@ -83,7 +83,7 @@ export default async function PerfumesPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const [{ perfumes, pagination, error }, accordOptions, brandOptions] = await Promise.all([
+  const [{ perfumes, pagination, error, loadFailed }, accordOptions, brandOptions] = await Promise.all([
     fetchPerfumes(params),
     getAccordNames(),
     // Si falla el índice de marcas, el datalist queda vacío y el input sigue funcionando.
@@ -254,9 +254,9 @@ export default async function PerfumesPage({
       {perfumes.length === 0 ? (
         <div className="catalog-empty">
           <p className="catalog-empty-title">
-            {error ? "No se pudo cargar el catálogo." : "No encontramos perfumes con esos filtros."}
+            {loadFailed ? "No se pudo cargar el catálogo." : "No encontramos perfumes con esos filtros."}
           </p>
-          {!error && (
+          {!loadFailed && (
             <>
               {suggestion && (
                 <p className="catalog-empty-tip">

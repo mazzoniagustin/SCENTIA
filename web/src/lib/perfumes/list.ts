@@ -45,7 +45,7 @@ function parseSort(value: string | null): SortValue | null {
 const DEFAULT_PAGE_SIZE = 24
 const MAX_PAGE_SIZE = 100
 // Búsqueda y filtros por lista: límites para acotar el costo de la consulta.
-const MAX_SEARCH_TOKENS = 5
+const MAX_SEARCH_TOKENS = 8
 const MAX_TOKEN_LENGTH = 50
 const MAX_LIST_FILTERS = 3
 // Un acorde "cuenta" para el filtro cuando tiene al menos esta intensidad en el perfume.
