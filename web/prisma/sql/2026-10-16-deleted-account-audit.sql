@@ -1,4 +1,4 @@
--- Resumen anónimo de cuentas eliminadas (RF-05; ver docs/retencion-eliminacion-cuenta.md).
+-- Resumen anónimo de cuentas eliminadas (RF-05).
 -- Aditivo: crea dos tablas nuevas, no modifica filas ni tablas existentes. Sin datos personales: id propio (no el User.id),
 -- fechas solo como mes (YYYY-MM), sin correo, notas ni quiz.
 -- Prisma conoce los modelos, pero se aplican a mano con este archivo (no con `db push`).

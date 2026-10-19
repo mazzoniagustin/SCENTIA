@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 // Cabeceras de seguridad estáticas para todas las rutas. La Content-Security-Policy no va acá: lleva un
-// nonce por request y la genera src/proxy.ts (hoy en modo Report-Only; ver docs/seguridad-csp.md).
+// nonce por request y la genera src/proxy.ts.
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },

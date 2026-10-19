@@ -117,7 +117,7 @@ enum CollectionStatus {
   DISLIKED
 }
 
-// Resumen anónimo de una cuenta eliminada (RF-05, docs/retencion-eliminacion-cuenta.md). Sin datos personales: id propio
+// Resumen anónimo de una cuenta eliminada (RF-05). Sin datos personales: id propio
 // (no el de User), fechas solo como mes, sin correo, notas ni quiz. Se crean con prisma/sql/2026-10-16-deleted-account-audit.sql
 // (no con `db push`). Sin relación con Perfume a propósito: el histórico no debe perderse si un perfume sale del catálogo.
 model DeletedAccountAudit {

@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { config } from 'dotenv';
 config({ path: '.env.local' });
-console.log("DATABASE_URL cargada desde .env.local:", process.env.DATABASE_URL);
 
 import { getOrCreateUser } from './auth';
 
