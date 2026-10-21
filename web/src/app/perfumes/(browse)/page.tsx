@@ -142,7 +142,7 @@ export default async function PerfumesPage({
           <input
             type="search"
             name="q"
-            placeholder="Buscar por nombre o marca"
+            placeholder="Ej.: Sauvage o Dior…"
             aria-label="Buscar por nombre o marca"
             defaultValue={selected.q}
           />
@@ -155,7 +155,7 @@ export default async function PerfumesPage({
               type="text"
               name="brand"
               list="brand-options"
-              placeholder="Marca"
+              placeholder="Ej.: Armaf…"
               aria-label="Marca"
               autoComplete="off"
               defaultValue={selected.brand}

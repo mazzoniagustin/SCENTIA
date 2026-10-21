@@ -34,16 +34,7 @@ export function IdentityCard({
     >
       <button
         onClick={remove}
-        style={{
-          position: "absolute",
-          top: "8px",
-          right: "8px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          fontWeight: "bold",
-          color: "var(--muted)",
-        }}
+        className="compare-card-remove"
         aria-label={`Quitar ${perfume.name}`}
       >
         ×

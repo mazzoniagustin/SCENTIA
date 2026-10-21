@@ -50,7 +50,7 @@ export default async function BrandsPage({
 
       <form className="catalog-filter-bar" action="/marcas" method="GET">
         <div className="catalog-search">
-          <input type="search" name="q" placeholder="Buscar una marca" aria-label="Buscar una marca" maxLength={MAX_QUERY} defaultValue={q} />
+          <input type="search" name="q" placeholder="Ej.: Armaf…" aria-label="Buscar una marca" maxLength={MAX_QUERY} defaultValue={q} />
           <button type="submit">Buscar</button>
         </div>
       </form>

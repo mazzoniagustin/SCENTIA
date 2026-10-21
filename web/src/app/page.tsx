@@ -38,7 +38,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
             className="hero-search-input"
             type="search"
             name="q"
-            placeholder="Perfume o marca"
+            placeholder="Ej.: Sauvage o Dior…"
             maxLength={80}
             autoComplete="off"
           />

@@ -13,8 +13,8 @@ export function PerfumeCard({ perfume, collectionEntry, isAuthenticated }: { per
     <article className="perfume-card">
       <PerfumeImage name={perfume.name} brand={perfume.brand} imageUrl={perfume.imageUrl} accords={perfume.accords} />
       <div className="perfume-card-body">
-        <p className="perfume-brand">{perfume.brand}</p>
-        <h2 className="perfume-name">
+        <p className="perfume-brand" translate="no">{perfume.brand}</p>
+        <h2 className="perfume-name" translate="no">
           <Link href={`/perfumes/${perfume.id}`}>{perfume.name}</Link>
         </h2>
         {meta && <p className="perfume-meta">{meta}</p>}

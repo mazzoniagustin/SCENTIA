@@ -44,7 +44,7 @@ export function NotePyramid({ notes }: { notes: Array<{ noteType: string; name: 
         const names = notes.filter((n) => n.noteType === type).map((n) => n.name);
         if (names.length === 0) return null;
         return (
-          <div key={type}>
+          <div key={type} className={label ? undefined : "ficha-phase-unlabeled"}>
             {label && <h3>{label}</h3>}
             <ul className="perfume-badges">
               {names.map((name) => (
