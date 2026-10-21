@@ -2,15 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SAVED_PAGE_SIZE, getSavedPerfumes } from "@/lib/admin/audit-data";
-import { SAVED_GENDERS, SAVED_STATUSES, pageCount, parsePage, parseSavedFilters, type SavedFilters } from "@/lib/admin/audit-report";
+import { pageCount, parsePage, parseSavedFilters, type SavedFilters } from "@/lib/admin/audit-report";
 import { getSuperadminOrNull } from "@/lib/auth/superadmin";
+import { STATUS_LABELS, STATUS_ORDER } from "@/lib/collection/overview";
+import { GENDER_LABELS, GENDERS } from "@/lib/perfumes/filter-labels";
 
 export const metadata = { title: "Todos los guardados", robots: { index: false, follow: false } };
 
 const nf = new Intl.NumberFormat("es-AR");
-
-const GENDER_LABEL = { femenino: "Femenino", masculino: "Masculino", unisex: "Unisex" } as const;
-const STATUS_LABEL = { OWNED: "Lo tengo", SAMPLED: "Probé", WISHLIST: "Deseado", DISLIKED: "Descartado" } as const;
 
 /** Enlace a la lista con los filtros dados; la página vuelve a la 1 salvo que se pida otra. */
 function savedHref(filters: SavedFilters, page = 1): string {
@@ -24,6 +23,7 @@ function savedHref(filters: SavedFilters, page = 1): string {
 
 const cell = (value: number, active: boolean) => (active ? <strong>{nf.format(value)}</strong> : nf.format(value));
 
+// Misma estructura que las pestañas de "Mi colección" (.collection-tabs): lista de enlaces con aria-current="page" en el activo.
 function FilterGroup<T extends string>({ label, options, labels, current, hrefFor }: {
   label: string;
   options: readonly T[];
@@ -32,19 +32,20 @@ function FilterGroup<T extends string>({ label, options, labels, current, hrefFo
   hrefFor: (value: T | null) => string;
 }) {
   return (
-    <nav className="admin-filters" aria-label={label}>
-      <span className="admin-filters-label">{label}</span>
-      {[null, ...options].map((value) => (
-        <Link key={value ?? "todos"} href={hrefFor(value)} className="admin-filter" aria-current={value === current ? "true" : undefined}>
-          {value ? labels[value] : "Todos"}
-        </Link>
-      ))}
+    <nav className="collection-tabs admin-filters" aria-label={label}>
+      <ul>
+        {[null, ...options].map((value) => (
+          <li key={value ?? "todos"}>
+            <Link href={hrefFor(value)} aria-current={value === current ? "page" : undefined}>
+              {value ? labels[value] : "Todos"}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </nav>
   );
 }
 
-// Todos los perfumes guardados en alguna colección (activa o eliminada) y cuántas veces. Solo conteos por perfume, sin personas.
-// Solo para el superadmin: para cualquier otra persona la ruta no existe (404).
 export default async function SavedPerfumesPage({
   searchParams,
 }: {
@@ -71,14 +72,14 @@ export default async function SavedPerfumesPage({
         <h1>Todos los guardados</h1>
         <p className="lead">
           {nf.format(totalPerfumes)} perfumes distintos guardados en colecciones activas y eliminadas
-          {filters.gender && <>, de género {GENDER_LABEL[filters.gender].toLowerCase()}</>}
-          {filters.status && <>, con al menos un guardado como «{STATUS_LABEL[filters.status]}»</>}
-          , de más a menos {filters.status ? `«${STATUS_LABEL[filters.status]}»` : "guardados"}. Solo conteos: no se sabe quién guardó cada uno.
+          {filters.gender && <>, de género {filters.gender}</>}
+          {filters.status && <>, con al menos un guardado como «{STATUS_LABELS[filters.status]}»</>}
+          , de más a menos {filters.status ? `«${STATUS_LABELS[filters.status]}»` : "guardados"}. Solo conteos: no se sabe quién guardó cada uno.
         </p>
       </header>
 
-      <FilterGroup label="Género" options={SAVED_GENDERS} labels={GENDER_LABEL} current={filters.gender} hrefFor={(gender) => savedHref({ ...filters, gender })} />
-      <FilterGroup label="Estado" options={SAVED_STATUSES} labels={STATUS_LABEL} current={filters.status} hrefFor={(status) => savedHref({ ...filters, status })} />
+      <FilterGroup label="Filtrar por género" options={GENDERS} labels={GENDER_LABELS} current={filters.gender} hrefFor={(gender) => savedHref({ ...filters, gender })} />
+      <FilterGroup label="Filtrar por estado" options={STATUS_ORDER} labels={STATUS_LABELS} current={filters.status} hrefFor={(status) => savedHref({ ...filters, status })} />
 
       {rows.length === 0 ? (
         <p>{filters.gender || filters.status ? "No hay perfumes guardados con esos filtros." : "Todavía no hay perfumes en colecciones."}</p>
