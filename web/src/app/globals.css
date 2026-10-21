@@ -5301,6 +5301,11 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   font-weight: 600;
 }
 
+/* Aire arriba (texto de ayuda) y abajo (chips): suelto pegaba con ambos. Gana a `.private-accords > * + *` por especificidad. */
+.private-accords .accord-count {
+  margin-block: 1rem;
+}
+
 /* Chips de acordes: misma forma que las pestañas de Mi colección. La casilla está oculta (.sr-only, sigue en el teclado y para el
    lector de pantalla); el chip es el control y el estado se ve con el acento y un tilde. */
 .accord-picker {
