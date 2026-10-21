@@ -73,7 +73,6 @@ export default async function BrandPage({
         ← Marcas
       </Link>
       <header className="catalog-header">
-        <p className="eyebrow">Marca</p>
         <h1>{entry.brand}</h1>
         <p className="catalog-hint">
           {summary.count.toLocaleString("es-AR")} {summary.count === 1 ? "perfume" : "perfumes"}

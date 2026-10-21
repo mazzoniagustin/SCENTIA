@@ -27,7 +27,6 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
         ← Inicio
       </Link>
       <header className="catalog-header">
-        <p className="eyebrow">Quiz</p>
         <h1>Tu perfil olfativo</h1>
         <p className="lead">
           Respondé unas preguntas y te recomendamos perfumes según los acordes que

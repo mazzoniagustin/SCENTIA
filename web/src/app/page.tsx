@@ -19,7 +19,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
       <section className="home-hero" aria-labelledby="home-title">
         <BrandImage slot="hero" className="home-hero-art" priority />
         <h1 id="home-title">
-          Elegí un perfume con más <em>contexto</em>.
+          Elegí un perfume con más contexto.
         </h1>
         <p className="lead">
           Explorá{" "}

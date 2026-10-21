@@ -43,7 +43,6 @@ export default async function BrandsPage({
   return (
     <main id="contenido" className="catalog">
       <header className="catalog-header">
-        <p className="eyebrow">Marcas</p>
         <h1>Explorá por marca</h1>
         {index.length > 0 && <p className="catalog-hint">{index.length.toLocaleString("es-AR")} marcas en el catálogo.</p>}
       </header>

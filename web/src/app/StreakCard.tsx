@@ -30,10 +30,7 @@ export function StreakCard({
     return (
       <section className="streak-card" id="racha" aria-labelledby="streak-title">
         <div>
-          <p className="eyebrow" id="streak-title">
-            Tu racha
-          </p>
-          <h2>Un perfume por día, una racha que crece.</h2>
+          <h2 id="streak-title">Un perfume por día, una racha que crece.</h2>
           <p className="streak-lead">
             Registrá qué perfume de tu colección usás cada día y sumá días seguidos.
           </p>
