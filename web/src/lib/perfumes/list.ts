@@ -2,6 +2,7 @@ import type { Prisma, PriceTier } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { createTtlCache } from '@/lib/ttl-cache'
 import { normalizeGender, normalizeSeason } from './filter-labels'
+import { parseSort, SORT_ORDER, SORT_VALUES } from './sort'
 
 // Tipado estricto del where: solo los filtros que aplicamos
 type PerfumeWhere = Prisma.PerfumeWhereInput
@@ -17,29 +18,6 @@ type FilterResult =
       pageSize: number
     }
   | { ok: false; error: string }
-
-// Valores de orden aceptados. 'relevance' es placeholder del orden editorial
-// (brand/name asc) hasta que exista scoring de relevancia real.
-const SORT_VALUES = ['relevance', 'newest', 'duration-desc', 'duration-asc', 'longevity-desc'] as const
-type SortValue = (typeof SORT_VALUES)[number]
-
-// Tie-break determinista: brand/name asc detrás del criterio principal.
-const SORT_ORDER: Record<SortValue, Prisma.PerfumeOrderByWithRelationInput[]> = {
-  relevance: [{ brand: 'asc' }, { name: 'asc' }],
-  newest: [{ releaseYear: { sort: 'desc', nulls: 'last' } }, { brand: 'asc' }, { name: 'asc' }],
-  'duration-desc': [{ duration: { sort: 'desc', nulls: 'last' } }, { brand: 'asc' }, { name: 'asc' }],
-  'duration-asc': [{ duration: { sort: 'asc', nulls: 'last' } }, { brand: 'asc' }, { name: 'asc' }],
-  // Duración votada por la comunidad (1-5), la que traen los perfumes importados del dataset de Kaggle.
-  'longevity-desc': [{ longevity: { sort: 'desc', nulls: 'last' } }, { ratingCount: { sort: 'desc', nulls: 'last' } }, { id: 'asc' }],
-}
-
-function parseSort(value: string | null): SortValue | null {
-  if (value === null || value === '') {
-    // Sin sort explícito, mismo default que siempre tuvo el endpoint
-    return 'relevance'
-  }
-  return SORT_VALUES.includes(value as SortValue) ? (value as SortValue) : null
-}
 
 // Paginación: el catálogo tiene decenas de miles de perfumes, así que el listado nunca es completo.
 const DEFAULT_PAGE_SIZE = 24
