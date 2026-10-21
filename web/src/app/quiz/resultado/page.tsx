@@ -63,7 +63,6 @@ export default async function QuizResultPage({ searchParams }: { searchParams: P
         ← Rehacer el quiz
       </Link>
       <header className="catalog-header">
-        <p className="eyebrow">Quiz</p>
         <h1>Tus recomendaciones</h1>
       </header>
 

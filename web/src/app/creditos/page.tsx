@@ -10,7 +10,6 @@ export default function CreditsPage() {
   return (
     <main id="contenido" className="catalog ficha">
       <header className="catalog-header">
-        <p className="eyebrow">Créditos</p>
         <h1>Datos y licencias</h1>
         <p className="lead">Scentia es una guía de perfumes sin fines de lucro.</p>
       </header>

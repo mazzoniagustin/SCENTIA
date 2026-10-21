@@ -309,7 +309,6 @@ export default async function ComparePage({
         ← Catálogo
       </Link>
       <header className="compare-header">
-        <p className="eyebrow">Comparador</p>
         <h1>{ids.length >= 2 ? `Comparando ${ids.length} perfumes` : "Comparador"}</h1>
       </header>
 

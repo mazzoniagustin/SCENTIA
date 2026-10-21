@@ -127,7 +127,6 @@ export default async function PerfumesPage({
   return (
     <main id="contenido" className="catalog">
       <header className="catalog-header">
-        <p className="eyebrow">Catálogo</p>
         <h1>Perfumes</h1>
         {!isAuthenticated && (
           <p className="catalog-hint">
