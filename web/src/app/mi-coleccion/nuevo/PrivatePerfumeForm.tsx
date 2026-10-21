@@ -96,7 +96,7 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
         <div className="private-photo">
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob) o URL firmada de Storage
-            <img src={previewUrl} alt="Vista previa de la foto del perfume" className="private-photo-preview" />
+            <img src={previewUrl} alt="Vista previa de la foto del perfume" width={240} height={300} className="private-photo-preview" />
           ) : (
             <div className="private-photo-empty" aria-hidden="true">
               Sin foto
