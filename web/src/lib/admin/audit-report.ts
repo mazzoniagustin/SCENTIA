@@ -90,3 +90,24 @@ export function parsePage(raw: string | string[] | undefined, pages: number): nu
   if (typeof value !== 'string' || !/^\d{1,6}$/.test(value)) return 1
   return Math.min(Math.max(Number(value), 1), Math.max(pages, 1))
 }
+
+export const SAVED_GENDERS = ['femenino', 'masculino', 'unisex'] as const
+export type SavedGender = (typeof SAVED_GENDERS)[number]
+export const SAVED_STATUSES = ['OWNED', 'SAMPLED', 'WISHLIST', 'DISLIKED'] as const
+export type SavedStatus = (typeof SAVED_STATUSES)[number]
+
+export type SavedFilters = { gender: SavedGender | null; status: SavedStatus | null }
+
+function firstValue(raw: string | string[] | undefined): string | undefined {
+  return Array.isArray(raw) ? raw[0] : raw
+}
+
+/** Filtros de la lista de guardados desde la URL: solo valores de la lista fija; cualquier otra cosa es "todos" (null). */
+export function parseSavedFilters(params: { genero?: string | string[]; estado?: string | string[] }): SavedFilters {
+  const gender = firstValue(params.genero)
+  const status = firstValue(params.estado)
+  return {
+    gender: SAVED_GENDERS.find((g) => g === gender) ?? null,
+    status: SAVED_STATUSES.find((s) => s === status) ?? null,
+  }
+}

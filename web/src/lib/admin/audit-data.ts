@@ -3,8 +3,10 @@ import 'server-only'
 // Lectura de la auditoría para el superadmin. Solo agregados: conteos, sumas y promedios. Nunca correos, nombres, apodos,
 // ids de personas ni notas. Solo lectura. Las cuentas eliminadas salen del resumen anónimo (docs/retencion-eliminacion-cuenta.md).
 
+import { Prisma } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
-import { buildTimeline, pageCount, totalsByStatus, type StatusTotals, type TimelineRow } from './audit-report'
+import { buildTimeline, pageCount, totalsByStatus, type SavedFilters, type StatusTotals, type TimelineRow } from './audit-report'
 
 export type TopPerfume = { id: string; brand: string; name: string; count: number }
 
@@ -106,11 +108,16 @@ export type SavedPerfume = { id: string; brand: string; name: string; total: num
 export const SAVED_PAGE_SIZE = 50
 
 /**
- * Todos los perfumes guardados en alguna colección (activa o eliminada), de más a menos guardados, con el desglose por estado.
- * Solo conteos por perfume: sin ids de personas. `page` ya viene acotada por quien llama.
+ * Perfumes del catálogo guardados en alguna colección (activa o eliminada), con el desglose por estado. Sin filtro van de más a
+ * menos guardados; con `status` solo entran los que tienen al menos un guardado en ese estado y se ordenan por esa cantidad.
+ * Solo conteos por perfume: sin ids de personas. `page` ya viene acotada por quien llama; los filtros, validados (`parseSavedFilters`).
  */
-export async function getSavedPerfumes(page: number): Promise<{ rows: SavedPerfume[]; totalPerfumes: number; pages: number }> {
+export async function getSavedPerfumes(page: number, filters: SavedFilters = { gender: null, status: null }): Promise<{ rows: SavedPerfume[]; totalPerfumes: number; pages: number }> {
   const offset = (Math.max(page, 1) - 1) * SAVED_PAGE_SIZE
+  const genderWhere = filters.gender ? Prisma.sql`AND p.gender = ${filters.gender}` : Prisma.empty
+  const statusHaving = filters.status ? Prisma.sql`HAVING count(*) FILTER (WHERE c.status = ${filters.status}) > 0` : Prisma.empty
+  const statusWhere = filters.status ? Prisma.sql`AND c.status = ${filters.status}` : Prisma.empty
+  const sortCount = filters.status ? Prisma.sql`count(*) FILTER (WHERE c.status = ${filters.status})` : Prisma.sql`count(*)`
   const [rows, count] = await Promise.all([
     prisma.$queryRaw<SavedPerfume[]>`
       SELECT p.id, p.brand, p.name,
@@ -121,14 +128,17 @@ export async function getSavedPerfumes(page: number): Promise<{ rows: SavedPerfu
              (count(*) FILTER (WHERE c.status = 'DISLIKED'))::int AS disliked
       FROM (SELECT "perfumeId", status::text AS status FROM "UserCollection"
             UNION ALL SELECT "perfumeId", status::text AS status FROM "DeletedAccountCollection") c
-      JOIN "Perfume" p ON p.id = c."perfumeId" AND p."ownerId" IS NULL
+      JOIN "Perfume" p ON p.id = c."perfumeId" AND p."ownerId" IS NULL ${genderWhere}
       GROUP BY p.id, p.brand, p.name
-      ORDER BY total DESC, p.brand, p.name, p.id
+      ${statusHaving}
+      ORDER BY ${sortCount} DESC, total DESC, p.brand, p.name, p.id
       LIMIT ${SAVED_PAGE_SIZE} OFFSET ${offset}`,
     prisma.$queryRaw<Array<{ count: number }>>`
       SELECT count(DISTINCT c."perfumeId")::int AS count
-      FROM (SELECT "perfumeId" FROM "UserCollection" UNION ALL SELECT "perfumeId" FROM "DeletedAccountCollection") c
-      WHERE NOT EXISTS (SELECT 1 FROM "Perfume" p WHERE p.id = c."perfumeId" AND p."ownerId" IS NOT NULL)`,
+      FROM (SELECT "perfumeId", status::text AS status FROM "UserCollection"
+            UNION ALL SELECT "perfumeId", status::text AS status FROM "DeletedAccountCollection") c
+      JOIN "Perfume" p ON p.id = c."perfumeId" AND p."ownerId" IS NULL ${genderWhere}
+      WHERE true ${statusWhere}`,
   ])
   const totalPerfumes = count[0]?.count ?? 0
   return { rows, totalPerfumes, pages: pageCount(totalPerfumes, SAVED_PAGE_SIZE) }

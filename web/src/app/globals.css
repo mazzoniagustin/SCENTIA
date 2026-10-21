@@ -5168,6 +5168,35 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   font-weight: 600;
 }
 
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-filters-label {
+  min-width: 4.5rem;
+  color: var(--muted);
+}
+
+.admin-filter {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  padding: 0 0.9rem;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  color: var(--foreground);
+}
+
+.admin-filter[aria-current="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* === Perfumes propios === */
 
 /* Formularios y fichas de perfumes propios: misma columna angosta que la cuenta (.account-page) y mismas tarjetas que .ficha-section. */

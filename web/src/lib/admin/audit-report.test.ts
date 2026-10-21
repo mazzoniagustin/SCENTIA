@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { average, barWidth, buildTimeline, monthLabel, pageCount, parsePage, percent, totalsByStatus } from './audit-report.ts'
+import { average, barWidth, buildTimeline, monthLabel, pageCount, parsePage, parseSavedFilters, percent, totalsByStatus } from './audit-report.ts'
 
 describe('average y percent', () => {
   it('null sin datos, nunca NaN ni división por cero', () => {
@@ -85,5 +85,13 @@ describe('paginación', () => {
     assert.equal(parsePage(['4', '2'], 5), 4)
     assert.equal(parsePage('99999999999', 5), 1)
     assert.equal(parsePage('2', 0), 1)
+  })
+  it('parseSavedFilters: solo acepta valores de la lista fija', () => {
+    assert.deepEqual(parseSavedFilters({ genero: 'femenino', estado: 'OWNED' }), { gender: 'femenino', status: 'OWNED' })
+    assert.deepEqual(parseSavedFilters({}), { gender: null, status: null })
+    assert.deepEqual(parseSavedFilters({ genero: ['unisex', 'x'], estado: ['WISHLIST'] }), { gender: 'unisex', status: 'WISHLIST' })
+    for (const bad of ['FEMENINO', "x' OR 1=1 --", 'todos', '', 'owned']) {
+      assert.deepEqual(parseSavedFilters({ genero: bad, estado: bad }), { gender: null, status: null }, bad)
+    }
   })
 })
