@@ -8,16 +8,26 @@ export const MAX_PHOTO_BYTES = 307200
 
 const PHOTO_ID = /^[A-Za-z0-9_-]{1,64}$/
 
-export function photoPath(supabaseId: string, perfumeId: string): string {
-  return `${supabaseId}/${perfumeId}.webp`
+/** Formatos de la foto ya achicada: WebP, o JPEG en los navegadores que no pueden codificar WebP (Safari en iOS). */
+export const PHOTO_EXTENSIONS = ['webp', 'jpg'] as const
+export type PhotoExtension = (typeof PHOTO_EXTENSIONS)[number]
+
+export function isPhotoExtension(value: unknown): value is PhotoExtension {
+  return PHOTO_EXTENSIONS.includes(value as PhotoExtension)
 }
 
-/** La ruta es `{supabaseId}/{id}.webp`, de la carpeta de esa persona y sin saltos de directorio. */
+export function photoPath(supabaseId: string, perfumeId: string, extension: PhotoExtension = 'webp'): string {
+  return `${supabaseId}/${perfumeId}.${extension}`
+}
+
+/** La ruta es `{supabaseId}/{id}.webp` (o `.jpg`), de la carpeta de esa persona y sin saltos de directorio. */
 export function isOwnPhotoPath(supabaseId: string, path: unknown): path is string {
   if (typeof path !== 'string' || !PHOTO_ID.test(supabaseId)) return false
   const prefix = `${supabaseId}/`
-  if (!path.startsWith(prefix) || !path.endsWith('.webp')) return false
-  return PHOTO_ID.test(path.slice(prefix.length, -'.webp'.length))
+  if (!path.startsWith(prefix)) return false
+  const extension = PHOTO_EXTENSIONS.find((e) => path.endsWith(`.${e}`))
+  if (!extension) return false
+  return PHOTO_ID.test(path.slice(prefix.length, -(extension.length + 1)))
 }
 
 export type PhotoCheck = { ok: true } | { ok: false; message: string }

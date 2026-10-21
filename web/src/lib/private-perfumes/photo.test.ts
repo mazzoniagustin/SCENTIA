@@ -7,12 +7,17 @@ describe('photoPath', () => {
   it('arma la ruta con el id de Supabase como carpeta', () => {
     assert.equal(photoPath('abc', 'p1'), 'abc/p1.webp')
   })
+
+  it('usa .jpg cuando el navegador no pudo codificar WebP', () => {
+    assert.equal(photoPath('abc', 'p1', 'jpg'), 'abc/p1.jpg')
+  })
 })
 
 describe('isOwnPhotoPath', () => {
-  it('acepta solo una ruta de la propia carpeta con extensión webp', () => {
+  it('acepta solo una ruta de la propia carpeta con extensión webp o jpg', () => {
     assert.equal(isOwnPhotoPath('abc', 'abc/p1.webp'), true)
-    for (const path of ['xyz/p1.webp', 'abc/../xyz/p1.webp', 'abc/p1.png', 'abc/sub/p1.webp', 'abc/.webp', 'abc/', '', undefined, null, 5]) {
+    assert.equal(isOwnPhotoPath('abc', 'abc/p1.jpg'), true)
+    for (const path of ['xyz/p1.webp', 'abc/../xyz/p1.webp', 'abc/p1.png', 'abc/sub/p1.webp', 'abc/.webp', 'abc/.jpg', 'abc/p1.jpeg', 'abc/', '', undefined, null, 5]) {
       assert.equal(isOwnPhotoPath('abc', path), false, String(path))
     }
   })

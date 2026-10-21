@@ -9,7 +9,7 @@ import { collectionInputFromFormData, type CollectionFormState } from '@/lib/col
 import { isValidPerfumeId, validateCollectionEntry } from '@/lib/collection/validation'
 import { logServerError } from '@/lib/log'
 import { isDuplicatePerfumeError, createPrivatePerfume, deletePrivatePerfume, getOwnPrivatePerfume, updatePrivatePerfume } from '@/lib/private-perfumes/data'
-import { checkUploadedPhoto } from '@/lib/private-perfumes/photo'
+import { checkUploadedPhoto, isPhotoExtension, type PhotoExtension } from '@/lib/private-perfumes/photo'
 import { createUploadTarget, isPhotoStorageAvailable, photoExists, removePhotos } from '@/lib/private-perfumes/storage'
 import { privatePerfumeInputFromFormData, validatePrivatePerfume } from '@/lib/private-perfumes/validation'
 import { RATE_LIMIT_MESSAGE, limitAction } from '@/lib/rate-limit'
@@ -45,13 +45,14 @@ function parseForm(formData: FormData) {
 type PhotoUploadResponse = { ok: true; path: string; token: string } | { ok: false; message: string }
 
 /** Pide una ruta nueva y un token de un solo uso para subir la foto directo a Storage. */
-export async function requestPhotoUploadAction(): Promise<PhotoUploadResponse> {
+export async function requestPhotoUploadAction(extension: PhotoExtension = 'webp'): Promise<PhotoUploadResponse> {
   try {
+    if (!isPhotoExtension(extension)) return { ok: false, message: GENERIC_ERROR }
     if (!isPhotoStorageAvailable()) return { ok: false, message: PHOTO_UNAVAILABLE }
     const user = await getAuthenticatedUserOrNull()
     if (!user?.supabaseId) return { ok: false, message: SESSION_EXPIRED }
     if (!writeAllowed(user.id)) return { ok: false, message: RATE_LIMIT_MESSAGE }
-    const target = await createUploadTarget(user.supabaseId, randomUUID())
+    const target = await createUploadTarget(user.supabaseId, randomUUID(), extension)
     return target ? { ok: true, ...target } : { ok: false, message: PHOTO_UNAVAILABLE }
   } catch (error) {
     logServerError('private-perfumes/request-upload', error)

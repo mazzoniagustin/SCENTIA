@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 
 import { logServerError } from '@/lib/log'
 import { getSupabaseConfig } from '@/lib/supabase/config'
-import { PHOTO_BUCKET, photoPath } from './photo'
+import { PHOTO_BUCKET, photoPath, type PhotoExtension } from './photo'
 import { listFolderPaths, photoExistsIn, removePhotosFrom, signPhotoUrlsWith, type PhotoBucket } from './storage-core'
 
 // Fotos de perfumes propios en un bucket privado de Supabase Storage. Se usa la clave de servicio
@@ -23,10 +23,10 @@ function photoBucket(): PhotoBucket | null {
 export const isPhotoStorageAvailable = () => Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)
 
 /** Ruta nueva y token para que el navegador suba la foto directo a Storage (no pasa por las funciones de Vercel). */
-export async function createUploadTarget(supabaseId: string, fileId: string): Promise<{ path: string; token: string } | null> {
+export async function createUploadTarget(supabaseId: string, fileId: string, extension: PhotoExtension = 'webp'): Promise<{ path: string; token: string } | null> {
   const bucket = photoBucket()
   if (!bucket) return null
-  const path = photoPath(supabaseId, fileId)
+  const path = photoPath(supabaseId, fileId, extension)
   try {
     const { data, error } = await bucket.createSignedUploadUrl(path)
     if (error || !data) {
