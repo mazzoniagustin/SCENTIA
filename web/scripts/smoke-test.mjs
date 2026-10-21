@@ -63,7 +63,10 @@ check('perfume del día', daily.status === 200, `http ${daily.status}`)
 
 // 5) Lo privado exige sesión
 const account = await get('/account')
-check('/account sin sesión redirige a /login', [307, 308].includes(account.status) && (account.headers.get('location') ?? '').includes('/login'), `http ${account.status}`)
+// /account sin sesión pasa primero por /auth/expired (borra la cookie vencida) y de ahí va a /login: se siguen las dos redirecciones.
+const accountHop = account.headers.get('location') ?? ''
+const accountEnd = [307, 308].includes(account.status) && accountHop.includes('/auth/expired') ? await get(new URL(accountHop, BASE).pathname) : account
+check('/account sin sesión termina en /login', [307, 308].includes(accountEnd.status) && (accountEnd.headers.get('location') ?? '').includes('/login'), `http ${account.status} → ${accountEnd.status}`)
 const exp = await get('/api/account/export')
 const choosePassword = await get('/elegir-contrasena')
 check('/elegir-contrasena sin sesión redirige a /login', [307, 308].includes(choosePassword.status) && (choosePassword.headers.get('location') ?? '').includes('/login'), `http ${choosePassword.status}`)
