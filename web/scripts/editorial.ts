@@ -24,6 +24,7 @@ const prisma = new PrismaClient({ adapter: new PrismaPg(process.env.DATABASE_URL
 
 async function list(status: PublicationStatus | null, limit: number, q: string | null) {
   const where = {
+    ownerId: null,
     ...(status ? { status } : {}),
     ...(q ? { OR: [{ brand: { contains: q, mode: 'insensitive' as const } }, { name: { contains: q, mode: 'insensitive' as const } }] } : {}),
   }
@@ -33,8 +34,8 @@ async function list(status: PublicationStatus | null, limit: number, q: string |
       select: { id: true, brand: true, name: true, status: true, source: true, imageSource: true },
     }),
     prisma.perfume.count({ where }),
-    prisma.perfume.groupBy({ by: ['status'], _count: { _all: true } }),
-    prisma.perfume.groupBy({ by: ['source'], _count: { _all: true } }),
+    prisma.perfume.groupBy({ by: ['status'], where: { ownerId: null }, _count: { _all: true } }),
+    prisma.perfume.groupBy({ by: ['source'], where: { ownerId: null }, _count: { _all: true } }),
   ])
   for (const r of rows) {
     console.log([r.id, r.brand, r.name, r.status, r.source ?? '-', r.imageSource ?? '-'].join(' | '))
@@ -64,7 +65,7 @@ async function change(kind: 'publish' | 'unpublish', rawIds: string[], file: str
   if (ids.length > MAX_IDS_PER_RUN) console.log(`Aviso: ${ids.length} ids (--force-large).`)
 
   const rows = await prisma.perfume.findMany({
-    where: { id: { in: ids } },
+    where: { id: { in: ids }, ownerId: null },
     select: { id: true, brand: true, name: true, status: true, source: true, imageUrl: true, imageSource: true, imageSourceUrl: true },
   })
   const byId = new Map(rows.map((r) => [r.id, r]))
@@ -92,7 +93,7 @@ async function change(kind: 'publish' | 'unpublish', rawIds: string[], file: str
   if (apply && toChange.length) {
     // El filtro por estado previo evita pisar un cambio concurrente.
     const result = await prisma.perfume.updateMany({
-      where: { id: { in: toChange.map((r) => r.id) }, status: { not: target } },
+      where: { id: { in: toChange.map((r) => r.id) }, ownerId: null, status: { not: target } },
       data: { status: target },
     })
     updated = result.count

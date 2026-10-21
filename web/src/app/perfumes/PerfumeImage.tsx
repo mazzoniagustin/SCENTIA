@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { isAllowedImageUrl } from "@/lib/images";
+import { isOwnPhotoUrl } from "@/lib/private-perfumes/photo";
 import { PerfumeCover } from "./PerfumeCover";
 import type { PerfumeAccord } from "./types";
 
@@ -35,17 +36,19 @@ export function PerfumeImage({
     if (img && img.complete && img.naturalWidth === 0) setFailed(true);
   }, []);
 
-  if (!imageUrl || failed || !isAllowedImageUrl(imageUrl)) {
+  // La foto de un perfume propio es la URL firmada de nuestro Storage; el resto, enlaces de hosts permitidos (hotlink).
+  const own = isOwnPhotoUrl(imageUrl, process.env.NEXT_PUBLIC_SUPABASE_URL);
+  if (!imageUrl || failed || (!own && !isAllowedImageUrl(imageUrl))) {
     return <PerfumeCover name={name} accords={accords} />;
   }
 
   return (
-    <div className={`perfume-media perfume-media-${size}`}>
+    <div className={`perfume-media perfume-media-${size}${own ? " perfume-media-own" : ""}`}>
       {/* eslint-disable-next-line @next/next/no-img-element -- enlace directo a propósito: sin optimización de Vercel ni copias */}
       <img
         ref={ref}
         src={imageUrl}
-        alt={`Frasco de ${name} de ${brand}`}
+        alt={own ? `Foto de ${name}` : `Frasco de ${name} de ${brand}`}
         width={375}
         height={500}
         loading={priority ? "eager" : "lazy"}

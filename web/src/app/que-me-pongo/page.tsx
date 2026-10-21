@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getCurrentUser } from '@/lib/auth/session';
@@ -23,7 +24,7 @@ export default async function WhatToWearPage() {
       <noscript>
         <p className="outfit-noscript notice">
           Esta página necesita JavaScript para consultar el clima. Activalo en tu navegador o mirá tu colección a mano en{' '}
-          <a href="/mi-coleccion">Mi colección</a>.
+          <Link href="/mi-coleccion">Mi colección</Link>.
         </p>
       </noscript>
 

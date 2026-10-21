@@ -51,6 +51,7 @@ type Existing = { id: string; brand: string; name: string; priceTier: string | n
 /** Paso 1: id de Fragrantica → perfume ya importado (se reconstruye la clave humanizada que usó el import original). */
 async function linkExisting(): Promise<Map<string, Existing>> {
   const all = await prisma.perfume.findMany({
+    where: { ownerId: null },
     select: { id: true, brand: true, name: true, priceTier: true, seasons: true, occasions: true, sourceId: true },
   })
   const byKey = new Map(all.map((p) => [key(p.brand, p.name), p]))
@@ -93,7 +94,7 @@ async function main() {
 
   // Claves (marca, nombre) ocupadas, para no chocar con el índice único al renombrar o crear.
   const keyOwner = new Map<string, string>()
-  for (const p of await prisma.perfume.findMany({ select: { id: true, brand: true, name: true } })) keyOwner.set(key(p.brand, p.name), p.id)
+  for (const p of await prisma.perfume.findMany({ where: { ownerId: null }, select: { id: true, brand: true, name: true } })) keyOwner.set(key(p.brand, p.name), p.id)
 
   const noteIds = new Map((await prisma.note.findMany({ select: { id: true, name: true } })).map((n) => [n.name, n.id]))
   const accordIds = new Map((await prisma.accord.findMany({ select: { id: true, name: true } })).map((a) => [a.name, a.id]))

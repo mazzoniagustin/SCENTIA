@@ -33,7 +33,8 @@ export function buildCsp({ nonce, isDev, enforce = false, supabaseUrl }: CspOpti
     `style-src 'self' 'nonce-${nonce}'`,
     // Los style={{}} de React son atributos: los nonces no los cubren.
     `style-src-attr 'unsafe-inline'`,
-    `img-src 'self' data: blob: ${imageHosts.join(' ')}`,
+    // Las fotos de perfumes propios se sirven con URL firmada del propio Supabase Storage.
+    `img-src 'self' data: blob: ${imageHosts.join(' ')}${supabaseOrigin ? ` ${supabaseOrigin}` : ''}`,
     `font-src 'self'`,
     `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ''}`,
     `form-action 'self'`,

@@ -225,3 +225,12 @@ describe('recommendOutfit: contexto (ADR-011)', () => {
     assert.deepEqual(a, b)
   })
 })
+
+describe('recommendOutfit: perfumes propios', () => {
+  it('el elegido conserva la marca own del candidato (y no la inventa si no la trae)', () => {
+    const own = ok(recommendOutfit([perfume('mine', [['cítrico', 100]], { own: true })], HOT))
+    assert.equal(own.primary.own, true)
+    const catalog = ok(recommendOutfit([fresh], HOT))
+    assert.equal(catalog.primary.own, undefined)
+  })
+})

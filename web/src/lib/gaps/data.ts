@@ -80,9 +80,12 @@ export async function getCollectionSamples(userId: string): Promise<CollectionSa
       SELECT uc."perfumeId", uc.status FROM "UserCollection" uc
       WHERE uc."userId" = ${userId} ORDER BY uc."perfumeId" LIMIT ${MAX_COLLECTION_ENTRIES}
     ) c
-    JOIN "Perfume" p ON p.id = c."perfumeId" AND p.status = 'PUBLISHED'
+    JOIN "Perfume" p ON p.id = c."perfumeId"
+      AND (p.status = 'PUBLISHED' OR (p.status = 'PRIVATE' AND p."ownerId" = ${userId}))
     LEFT JOIN "PerfumeAccord" pa ON pa."perfumeId" = p.id
     LEFT JOIN "Accord" a ON a.id = pa."accordId"
+    -- Un perfume propio sin acordes no aporta nada al análisis: no cuenta.
+    WHERE p.status = 'PUBLISHED' OR pa."perfumeId" IS NOT NULL
     ORDER BY c."perfumeId", a.name`
   const byId = new Map<string, CollectionSample>()
   for (const row of rows) {

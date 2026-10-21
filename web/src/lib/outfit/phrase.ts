@@ -1,6 +1,7 @@
 // Frase de respaldo (sin LLM) de "¿Qué me pongo hoy?". Módulo puro y determinista: mismo clima y
 // mismo perfume, misma frase. Español rioplatense, máximo dos oraciones.
 
+import { nameOfBrand } from '../private-perfumes/display.ts'
 import { ACCORD_TRANSLATIONS } from '../../../scripts/accord-translations.ts'
 import type { OutfitPick, WeatherProfile } from './types.ts'
 
@@ -33,7 +34,7 @@ function accordList(accords: string[]): string {
 export function templatePhrase(profile: WeatherProfile, pick: Pick<OutfitPick, 'brand' | 'name' | 'topAccords'>): string {
   const accords = accordList(pick.topAccords)
   const second = accords
-    ? `Probá ${pick.name} de ${pick.brand}, con sus notas de ${accords}.`
-    : `Probá ${pick.name} de ${pick.brand}.`
+    ? `Probá ${nameOfBrand(pick.name, pick.brand)}, con sus notas de ${accords}.`
+    : `Probá ${nameOfBrand(pick.name, pick.brand)}.`
   return `${weatherSentence(profile)}. ${second}`
 }

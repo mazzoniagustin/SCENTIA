@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { displayImageUrls } from '@/lib/private-perfumes/storage'
 import { isValidPerfumeId } from '@/lib/collection/validation'
 import { dayKey } from '@/lib/daily/daily'
 import { lastDays, summarizeStreak, type DayDot, type StreakSummary } from '@/lib/streak/streak'
@@ -40,10 +41,11 @@ export async function getWearSummary(userId: string, now: Date = new Date()): Pr
 export async function getWearOptions(userId: string): Promise<Array<{ perfumeId: string; brand: string; name: string; imageUrl: string | null }>> {
   const rows = await prisma.userCollection.findMany({
     where: { userId, status: { in: [...WEARABLE_STATUSES] } },
-    select: { perfume: { select: { id: true, brand: true, name: true, imageUrl: true } } },
+    select: { perfume: { select: { id: true, status: true, brand: true, name: true, imageUrl: true } } },
     orderBy: [{ perfume: { brand: 'asc' } }, { perfume: { name: 'asc' } }],
   })
-  return rows.map((r) => ({ perfumeId: r.perfume.id, brand: r.perfume.brand, name: r.perfume.name, imageUrl: r.perfume.imageUrl }))
+  const images = await displayImageUrls(rows.map((r) => r.perfume))
+  return rows.map((r, i) => ({ perfumeId: r.perfume.id, brand: r.perfume.brand, name: r.perfume.name, imageUrl: images[i] }))
 }
 
 /** Cuántos perfumes tiene la persona en su colección y cuántos se pueden registrar como uso de hoy. */

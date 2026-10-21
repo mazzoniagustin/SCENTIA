@@ -36,7 +36,7 @@ export async function savePreferences(userId: string, preferences: Preferences) 
 
 /** Todo lo que la aplicación conserva de la persona (RF-05). */
 export async function exportUserData(userId: string) {
-  const [user, profile, collection, wearLogs] = await Promise.all([
+  const [user, profile, collection, wearLogs, ownPerfumes] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true, createdAt: true } }),
     prisma.userProfile.findUnique({ where: { userId } }),
     prisma.userCollection.findMany({
@@ -53,6 +53,16 @@ export async function exportUserData(userId: string) {
       where: { userId },
       select: { day: true, perfume: { select: { id: true, brand: true, name: true } } },
       orderBy: { day: 'asc' },
+    }),
+    // Perfumes que la persona cargó ella misma: son suyos, así que van completos (sin la ruta interna de la foto).
+    prisma.perfume.findMany({
+      where: { ownerId: userId, status: 'PRIVATE' },
+      select: {
+        id: true, brand: true, name: true, perfumer: true, gender: true, description: true,
+        topNotes: true, heartNotes: true, baseNotes: true, longevity: true, sillage: true, createdAt: true,
+        accords: { select: { accord: { select: { name: true } } }, orderBy: { accord: { name: 'asc' } } },
+      },
+      orderBy: [{ brand: 'asc' }, { name: 'asc' }],
     }),
   ])
   if (!user) return null
@@ -74,6 +84,7 @@ export async function exportUserData(userId: string) {
       : null,
     collection,
     wearLogs,
+    ownPerfumes: ownPerfumes.map(({ accords, ...perfume }) => ({ ...perfume, accords: accords.map((a) => a.accord.name) })),
   }
 }
 

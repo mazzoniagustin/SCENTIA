@@ -70,6 +70,17 @@ check('/elegir-contrasena sin sesión redirige a /login', [307, 308].includes(ch
 check('exportación de datos sin sesión → 401', exp.status === 401)
 const outfitPage = await get('/que-me-pongo')
 check('/que-me-pongo sin sesión redirige a /login', [307, 308].includes(outfitPage.status) && (outfitPage.headers.get('location') ?? '').includes('/login'), `http ${outfitPage.status}`)
+// Perfumes propios: las páginas son privadas y la CSP deja cargar sus fotos firmadas y subirlas directo a Storage.
+for (const path of ['/mi-coleccion/nuevo', '/mi-coleccion/no-existe', '/mi-coleccion/no-existe/editar']) {
+  const r = await get(path)
+  check(`${path} sin sesión redirige a /login`, [307, 308].includes(r.status) && (r.headers.get('location') ?? '').includes('/login'), `http ${r.status}`)
+}
+if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  const origin = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
+  const csp = (await get('/login')).headers.get('content-security-policy') ?? ''
+  const directive = (name) => csp.split('; ').find((d) => d.startsWith(`${name} `)) ?? ''
+  check('CSP: img-src y connect-src incluyen Supabase Storage', directive('img-src').includes(origin) && directive('connect-src').includes(origin))
+}
 const jsonPost = (path, body) => get(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
 const outfitToday = await jsonPost('/api/outfit/today', { latitude: -31.4, longitude: -64.2 })
 check('POST /api/outfit/today sin sesión → 401', outfitToday.status === 401, `http ${outfitToday.status}`)

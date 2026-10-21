@@ -7,7 +7,7 @@ import { collectionInputFromFormData, type CollectionFormState } from '@/lib/col
 import { RATE_LIMIT_MESSAGE, limitAction } from '@/lib/rate-limit'
 import { logServerError } from '@/lib/log'
 import { getAuthenticatedUserOrNull } from '@/lib/auth/require-user'
-import { upsertCollectionForUser } from '@/lib/collection/data'
+import { assertCollectable, upsertCollectionForUser } from '@/lib/collection/data'
 import { isValidPerfumeId, validateCollectionEntry, type CollectionEntryInput } from '@/lib/collection/validation'
 
 const getAuthenticatedUser = requireUser
@@ -32,6 +32,7 @@ export async function upsertCollectionEntry(input: CollectionEntryInput) {
 
   const user = await getAuthenticatedUser()
   if (!collectionWriteAllowed(user.id)) throw new Error('rate')
+  await assertCollectable(user.id, data.perfumeId)
 
   return await prisma.userCollection.upsert({
     where: {

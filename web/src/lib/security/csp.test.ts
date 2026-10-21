@@ -58,6 +58,13 @@ describe('buildCsp', () => {
     assert.equal(bad.get('connect-src'), "connect-src 'self'")
   })
 
+  it('img-src suma Supabase (fotos firmadas de perfumes propios) solo si se indica y es válido', () => {
+    const withSb = dirs(buildCsp({ nonce, isDev: false, supabaseUrl: 'https://abc.supabase.co/rest/v1' }))
+    assert.equal(withSb.get('img-src'), "img-src 'self' data: blob: https://fimgs.net https://abc.supabase.co")
+    const bad = dirs(buildCsp({ nonce, isDev: false, supabaseUrl: 'javascript:alert(1)' }))
+    assert.equal(bad.get('img-src'), "img-src 'self' data: blob: https://fimgs.net")
+  })
+
   it('usa el modo bloqueante', () => {
     assert.equal(CSP_HEADER_NAME, 'Content-Security-Policy')
   })

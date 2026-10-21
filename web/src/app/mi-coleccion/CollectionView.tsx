@@ -11,6 +11,7 @@ import {
 import { CollectionForm } from '../perfumes/CollectionForm';
 import { PerfumeImage } from '../perfumes/PerfumeImage';
 import { DeleteEntryForm } from './DeleteEntryForm';
+import { DeletePrivatePerfumeForm } from './DeletePrivatePerfumeForm';
 
 type Entry = {
   perfumeId: string;
@@ -18,6 +19,7 @@ type Entry = {
   rating: number | null;
   personalNotes: string | null;
   perfume: {
+    status: string;
     name: string;
     brand: string;
     imageUrl: string | null;
@@ -61,15 +63,18 @@ export function CollectionView({ collection, statusFilter }: { collection: Entry
         </div>
       ) : (
         <ul className="catalog-grid">
-          {visible.map((entry) => (
+          {visible.map((entry) => {
+            const own = entry.perfume.status === 'PRIVATE';
+            return (
             <li key={entry.perfumeId} className="perfume-card">
               <PerfumeImage name={entry.perfume.name} brand={entry.perfume.brand} imageUrl={entry.perfume.imageUrl} accords={entry.perfume.accords} />
               <div className="perfume-card-body">
-                <p className="perfume-brand">{entry.perfume.brand}</p>
+                {entry.perfume.brand && <p className="perfume-brand">{entry.perfume.brand}</p>}
                 <h2 className="perfume-name">
-                  <Link href={`/perfumes/${entry.perfumeId}`}>{entry.perfume.name}</Link>
+                  <Link href={own ? `/mi-coleccion/${entry.perfumeId}` : `/perfumes/${entry.perfumeId}`}>{entry.perfume.name}</Link>
                 </h2>
                 <ul className="perfume-badges" aria-label="Estado y puntuación">
+                  {own && <li>Propio</li>}
                   <li className={`collection-status-${entry.status.toLowerCase()}`}>
                     {STATUS_LABELS[entry.status as CollectionStatusValue] ?? entry.status}
                   </li>
@@ -81,11 +86,12 @@ export function CollectionView({ collection, statusFilter }: { collection: Entry
                     <summary>Editar</summary>
                     <CollectionForm perfumeId={entry.perfumeId} initialData={entry} />
                   </details>
-                  <DeleteEntryForm perfumeId={entry.perfumeId} />
+                  {own ? <DeletePrivatePerfumeForm perfumeId={entry.perfumeId} /> : <DeleteEntryForm perfumeId={entry.perfumeId} />}
                 </div>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </>

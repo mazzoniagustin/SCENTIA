@@ -4,6 +4,7 @@ import { logWearAction } from "@/app/actions/wear";
 import { PerfumeImage } from "@/app/perfumes/PerfumeImage";
 import { WearSubmit } from "@/app/WearSubmit";
 import type { WearSummary } from "@/lib/wear/data";
+import { brandInParens } from "@/lib/private-perfumes/display";
 
 type Option = { perfumeId: string; brand: string; name: string; imageUrl?: string | null };
 
@@ -96,7 +97,7 @@ export function StreakCard({
 
         {today && (
           <p className="streak-done">
-            Hoy usás <strong>{today.name}</strong> <span>({today.brand})</span>.
+            Hoy usás <strong>{today.name}</strong>{brandInParens(today.brand) && <span> {brandInParens(today.brand)}</span>}.
           </p>
         )}
 
@@ -129,7 +130,7 @@ export function StreakCard({
                     />
                     <PerfumeImage name={o.name} brand={o.brand} imageUrl={o.imageUrl} size="thumb" />
                     <span className="wear-option-text">
-                      <small>{o.brand}</small>
+                      {o.brand && <small>{o.brand}</small>}
                       <span>{o.name}</span>
                     </span>
                     <span className="wear-option-mark" aria-hidden="true" />

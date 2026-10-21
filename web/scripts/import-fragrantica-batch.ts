@@ -123,7 +123,7 @@ async function importBatch(batch: Prepared[], noteIds: Map<string, string>, acco
 
   // 2) Perfumes: crear los nuevos en bloque; los existentes se actualizan (sin priceTier).
   const existing = await prisma.perfume.findMany({
-    where: { OR: batch.map((p) => ({ brand: p.brand, name: p.name })) },
+    where: { ownerId: null, OR: batch.map((p) => ({ brand: p.brand, name: p.name })) },
     select: { id: true, brand: true, name: true },
   })
   const ids = new Map(existing.map((e) => [key(e.brand, e.name), e.id]))
@@ -143,7 +143,7 @@ async function importBatch(batch: Prepared[], noteIds: Map<string, string>, acco
       skipDuplicates: true,
     })
     const created = await prisma.perfume.findMany({
-      where: { OR: fresh.map((p) => ({ brand: p.brand, name: p.name })) },
+      where: { ownerId: null, OR: fresh.map((p) => ({ brand: p.brand, name: p.name })) },
       select: { id: true, brand: true, name: true },
     })
     for (const c of created) ids.set(key(c.brand, c.name), c.id)

@@ -61,7 +61,7 @@ async function writeCountries(updates: Array<{ id: string; country: string }>) {
 async function main() {
   console.log(APPLY ? '*** APLICANDO cambios ***' : '*** SIMULACIÓN: no se escribe nada (agregá --apply) ***')
 
-  const perfumes = await prisma.perfume.findMany({ select: { id: true, brand: true, name: true, sourceId: true, country: true } })
+  const perfumes = await prisma.perfume.findMany({ where: { ownerId: null }, select: { id: true, brand: true, name: true, sourceId: true, country: true } })
   const csv = new TextDecoder('windows-1252').decode(fs.readFileSync(path.resolve('data/fra_cleaned.csv')))
   const rows = parseSync(csv, { delimiter: ';', columns: true, skip_empty_lines: true }) as CsvRow[]
 

@@ -19,7 +19,8 @@ async function run() {
       `SELECT p.id, p.brand || ' — ' || p.name AS label, p.seasons, a.name, pa.intensity::int AS intensity
        FROM "Perfume" p
        LEFT JOIN "PerfumeAccord" pa ON pa."perfumeId" = p.id
-       LEFT JOIN "Accord" a ON a.id = pa."accordId"`,
+       LEFT JOIN "Accord" a ON a.id = pa."accordId"
+       WHERE p."ownerId" IS NULL`,
     )
 
     const perfumes = new Map<string, { label: string; seasons: string[]; accords: SeasonAccord[] }>()

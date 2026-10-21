@@ -87,6 +87,7 @@ function scoreCandidate(c: OutfitCandidate, status: WearableStatus, profile: Wea
       score,
       topAccords,
       reasons,
+      ...(c.own ? { own: true } : {}),
     },
   }
 }

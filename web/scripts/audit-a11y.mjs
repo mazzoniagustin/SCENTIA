@@ -37,7 +37,7 @@ async function pages() {
     ['Ficha de perfume', `/perfumes/${ids[0]}`],
     ['Comparador', `/perfumes/compare?ids=${ids.join(',')}`],
     ['Perfume inexistente (404)', '/perfumes/no-existe'],
-    ...(A11Y_COOKIE ? [['¿Qué me pongo hoy? (con sesión)', '/que-me-pongo'], ['Mi colección (con sesión)', '/mi-coleccion'], ['Elegir contraseña (con sesión sin contraseña)', '/elegir-contrasena']] : []),
+    ...(A11Y_COOKIE ? [['¿Qué me pongo hoy? (con sesión)', '/que-me-pongo'], ['Mi colección (con sesión)', '/mi-coleccion'], ['Agregar perfume propio (con sesión)', '/mi-coleccion/nuevo'], ['Elegir contraseña (con sesión sin contraseña)', '/elegir-contrasena']] : []),
   ]
 }
 

@@ -12,6 +12,8 @@ model User {
   email       String           @unique
   name        String?
   collections UserCollection[]
+  /// Perfumes propios (status PRIVATE): solo viven en la colección de esta persona y se borran con la cuenta.
+  privatePerfumes Perfume[] @relation("PerfumeOwner")
   profile     UserProfile?
   wearLogs    WearLog[]
   createdAt   DateTime         @default(now())
@@ -62,10 +64,22 @@ model Perfume {
   sillage   Float?
   stats     Json?
 
+  // Perfume propio (status PRIVATE): dueño y notas libres (lista de texto; no usan la tabla global Note). `imageUrl` guarda la
+  // ruta de la foto en el bucket privado de Storage, no una URL. La duración y la estela que marca la persona van en
+  // `longevity` (1-5) y `sillage` (1-4), que son las que leen los motores.
+  ownerId    String?
+  owner      User?    @relation("PerfumeOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  topNotes   String[] @default([])
+  heartNotes String[] @default([])
+  baseNotes  String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([brand, name], name: "brand_name")
+  // La unicidad de (brand, name) NO está acá: Prisma no modela índices parciales. Viven en
+  // prisma/sql/2026-10-21-private-perfumes.sql: único (brand, name) solo para el catálogo (ownerId IS NULL) y único
+  // (ownerId, lower(brand), lower(name)) por persona. No usar `db push` sobre esta tabla sin revisar ese archivo.
+  @@index([ownerId])
   @@index([gender])
   @@index([concentration])
   @@index([status])
@@ -155,6 +169,8 @@ model DeletedAccountCollection {
 enum PublicationStatus {
   DRAFT
   PUBLISHED
+  /// Perfume propio de una persona: nunca se muestra en el catálogo público.
+  PRIVATE
 }
 
 enum PriceTier {

@@ -6,7 +6,13 @@ import { updateSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const csp = buildCsp({ nonce, isDev: process.env.NODE_ENV === "development", enforce: true });
+  const csp = buildCsp({
+    nonce,
+    isDev: process.env.NODE_ENV === "development",
+    enforce: true,
+    // La subida directa de fotos (connect-src) y las fotos firmadas (img-src) hablan con Supabase Storage.
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
 
   // Encabezados en la REQUEST (Next lee el nonce de ahí al renderizar). `updateSession` crea su
   // respuesta con esta misma request, así que los conserva y no se pierden las cookies de sesión.

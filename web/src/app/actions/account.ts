@@ -16,6 +16,8 @@ import { validateAnswers } from "@/lib/quiz/profile";
 import { limitAction } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { deleteAuthIdentity } from "@/lib/supabase/admin";
+import { listOwnPhotoPaths } from "@/lib/private-perfumes/data";
+import { removeAllPhotosOf } from "@/lib/private-perfumes/storage";
 
 // Límite compartido de las acciones de cuenta: 5 por minuto por persona. Al excederlo no se guarda nada.
 function accountRateLimited(name: string, userId: string) {
@@ -95,7 +97,10 @@ export async function deleteAccountAction(formData: FormData) {
   if (formData.get("confirm") !== DELETE_CONFIRMATION) redirect("/account?error=confirm");
 
   let failed = false;
+  let photos: string[] = [];
   try {
+    // Las fotos de los perfumes propios viven en Storage: se listan antes de borrar la fila y se eliminan después.
+    photos = await listOwnPhotoPaths(user.id);
     await deleteUserData(user.id);
   } catch (error) {
     logServerError("account/delete", error);
@@ -103,6 +108,7 @@ export async function deleteAccountAction(formData: FormData) {
   }
   if (failed) redirect("/account?error=delete"); // fuera del try: redirect() lanza
 
+  await removeAllPhotosOf(user.supabaseId, photos); // también las fotos subidas y nunca guardadas; no lanza: sin clave de servicio deja un aviso y la cuenta igual se elimina
   await deleteAuthIdentity(user.supabaseId);
 
   const supabase = await createClient();

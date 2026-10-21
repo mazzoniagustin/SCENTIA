@@ -24,10 +24,13 @@ export async function getAccordStats(): Promise<AccordStats> {
   const [rows, total, ratings] = await Promise.all([
     prisma.$queryRaw<Array<{ id: string; name: string; df: number }>>`
       SELECT a.id, a.name, COUNT(*)::int AS df
-      FROM "PerfumeAccord" pa JOIN "Accord" a ON a.id = pa."accordId"
+      FROM "PerfumeAccord" pa
+      JOIN "Accord" a ON a.id = pa."accordId"
+      JOIN "Perfume" p ON p.id = pa."perfumeId" AND p."ownerId" IS NULL
       GROUP BY a.id, a.name`,
-    prisma.perfume.count(),
-    prisma.perfume.aggregate({ _max: { ratingCount: true } }),
+    // Los perfumes propios de cada persona (ownerId) no son parte del catálogo: no entran en las frecuencias ni en el total.
+    prisma.perfume.count({ where: { ownerId: null } }),
+    prisma.perfume.aggregate({ where: { ownerId: null }, _max: { ratingCount: true } }),
   ])
   const stats: AccordStats = {
     total,

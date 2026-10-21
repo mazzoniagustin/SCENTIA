@@ -58,7 +58,7 @@ export async function getAuditData(): Promise<AuditData> {
     prisma.$queryRaw<Array<{ id: string; brand: string; name: string; count: number }>>`
       SELECT p.id, p.brand, p.name, count(*)::int AS count
       FROM (SELECT "perfumeId" FROM "UserCollection" UNION ALL SELECT "perfumeId" FROM "DeletedAccountCollection") c
-      JOIN "Perfume" p ON p.id = c."perfumeId"
+      JOIN "Perfume" p ON p.id = c."perfumeId" AND p."ownerId" IS NULL
       GROUP BY p.id, p.brand, p.name
       ORDER BY count DESC, p.id
       LIMIT ${TOP_LIMIT}`,
@@ -121,13 +121,14 @@ export async function getSavedPerfumes(page: number): Promise<{ rows: SavedPerfu
              (count(*) FILTER (WHERE c.status = 'DISLIKED'))::int AS disliked
       FROM (SELECT "perfumeId", status::text AS status FROM "UserCollection"
             UNION ALL SELECT "perfumeId", status::text AS status FROM "DeletedAccountCollection") c
-      JOIN "Perfume" p ON p.id = c."perfumeId"
+      JOIN "Perfume" p ON p.id = c."perfumeId" AND p."ownerId" IS NULL
       GROUP BY p.id, p.brand, p.name
       ORDER BY total DESC, p.brand, p.name, p.id
       LIMIT ${SAVED_PAGE_SIZE} OFFSET ${offset}`,
     prisma.$queryRaw<Array<{ count: number }>>`
-      SELECT count(DISTINCT "perfumeId")::int AS count
-      FROM (SELECT "perfumeId" FROM "UserCollection" UNION ALL SELECT "perfumeId" FROM "DeletedAccountCollection") c`,
+      SELECT count(DISTINCT c."perfumeId")::int AS count
+      FROM (SELECT "perfumeId" FROM "UserCollection" UNION ALL SELECT "perfumeId" FROM "DeletedAccountCollection") c
+      WHERE NOT EXISTS (SELECT 1 FROM "Perfume" p WHERE p.id = c."perfumeId" AND p."ownerId" IS NOT NULL)`,
   ])
   const totalPerfumes = count[0]?.count ?? 0
   return { rows, totalPerfumes, pages: pageCount(totalPerfumes, SAVED_PAGE_SIZE) }

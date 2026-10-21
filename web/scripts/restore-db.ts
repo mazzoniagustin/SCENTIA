@@ -8,8 +8,7 @@ config({ path: path.resolve(process.cwd(), '.env.local'), quiet: true })
 import fs from 'fs'
 import pg from 'pg'
 
-// Orden por claves foráneas: primero las tablas de las que dependen otras.
-const ORDER = ['Accord', 'Note', 'Perfume', 'PerfumeAccord', 'PerfumeNote', 'User', 'UserCollection', 'UserProfile']
+import { RESTORE_ORDER as ORDER } from './backup-plan'
 const CHUNK = 2000
 
 async function main() {

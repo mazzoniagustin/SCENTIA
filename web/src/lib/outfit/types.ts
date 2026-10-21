@@ -30,6 +30,8 @@ export type OutfitCandidate = {
   accords: ReadonlyArray<{ name: string; intensity: number }>
   /** Estela votada por la comunidad (1-4); null o ausente si no hay. Solo se usa con un contexto (ADR-011). */
   sillage?: number | null
+  /** Perfume que cargó la persona (no es del catálogo): su marca y nombre son texto libre y no salen hacia terceros. */
+  own?: boolean
 }
 
 export type ReasonCode =
@@ -53,6 +55,8 @@ export type OutfitPick = {
   score: number
   topAccords: string[]
   reasons: ReasonCode[]
+  /** Viene de `OutfitCandidate.own`; ausente en los del catálogo. */
+  own?: boolean
 }
 
 export type OutfitResult =

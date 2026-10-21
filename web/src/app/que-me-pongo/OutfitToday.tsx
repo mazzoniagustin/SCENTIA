@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 
+import { brandAndName, perfumeHref } from '@/lib/private-perfumes/display';
 import { PerfumeImage } from '../perfumes/PerfumeImage';
 import { ContextBox, type ContextState } from './ContextBox';
 
@@ -12,6 +13,8 @@ type Pick = {
   name: string;
   imageUrl: string | null;
   status: 'OWNED' | 'SAMPLED';
+  /** Perfume que cargó la persona: su ficha es privada. */
+  own?: boolean;
   topAccords: string[];
   reasons: string[];
   score: number;
@@ -78,7 +81,7 @@ function announcement(view: View): string {
     case 'loading':
       return 'Consultando el clima y armando tu recomendación.';
     case 'ok':
-      return `Listo: te recomendamos ${view.primary.brand} ${view.primary.name}.`;
+      return `Listo: te recomendamos ${brandAndName(view.primary.brand, view.primary.name)}.`;
     case 'empty_collection':
       return 'Tu colección está vacía.';
     case 'no_wearable':
@@ -103,12 +106,12 @@ function announcement(view: View): string {
 function CompactCard({ pick }: { pick: Pick }) {
   return (
     <li className="outfit-alt">
-      <Link href={`/perfumes/${pick.perfumeId}`} className="outfit-alt-link">
+      <Link href={perfumeHref(pick)} className="outfit-alt-link">
         <span className="outfit-alt-media">
           <PerfumeImage name={pick.name} brand={pick.brand} imageUrl={pick.imageUrl} size="thumb" />
         </span>
         <span className="outfit-alt-text">
-          <span className="perfume-brand">{pick.brand}</span>
+          {pick.brand && <span className="perfume-brand">{pick.brand}</span>}
           <span className="outfit-alt-name">{pick.name}</span>
           <span className="outfit-chip">{STATUS_LABELS[pick.status]}</span>
         </span>
@@ -324,9 +327,9 @@ export function OutfitToday() {
                 <PerfumeImage name={view.primary.name} brand={view.primary.brand} imageUrl={view.primary.imageUrl} accords={undefined} size="card" priority />
               </div>
               <div className="outfit-primary-body">
-                <p className="perfume-brand">{view.primary.brand}</p>
+                {view.primary.brand && <p className="perfume-brand">{view.primary.brand}</p>}
                 <h3 className="perfume-name">
-                  <Link href={`/perfumes/${view.primary.perfumeId}`}>{view.primary.name}</Link>
+                  <Link href={perfumeHref(view.primary)}>{view.primary.name}</Link>
                 </h3>
                 <p>
                   <span className="outfit-chip">{STATUS_LABELS[view.primary.status]}</span>

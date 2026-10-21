@@ -31,7 +31,7 @@ function knownAccords(accords: readonly string[]): string[] {
 /** Texto que va dentro de `<datos>`: clima resumido y perfume elegido, nada más. */
 export function buildPromptData(
   profile: WeatherProfile,
-  pick: Pick<OutfitPick, 'brand' | 'name' | 'topAccords'>,
+  pick: Pick<OutfitPick, 'brand' | 'name' | 'topAccords' | 'own'>,
 ): string {
   const accords = knownAccords(pick.topAccords)
   return [
@@ -40,8 +40,9 @@ export function buildPromptData(
     `lluvia: ${profile.wet ? 'sí' : 'no'}`,
     `momento: ${profile.isDay ? 'día' : 'noche'}`,
     `temperatura aparente: ${Math.round(profile.apparentTemperatureC)} grados`,
-    `marca: ${sanitizePromptField(pick.brand)}`,
-    `perfume: ${sanitizePromptField(pick.name)}`,
+    // La marca y el nombre de un perfume propio los escribió la persona: no salen hacia el proveedor.
+    `marca: ${pick.own ? 'propia' : sanitizePromptField(pick.brand)}`,
+    `perfume: ${pick.own ? 'propio' : sanitizePromptField(pick.name)}`,
     `acordes: ${accords.join(', ') || 'sin datos'}`,
   ].join('\n')
 }
