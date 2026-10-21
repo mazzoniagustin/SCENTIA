@@ -14,14 +14,14 @@ export default async function NewPrivatePerfumePage() {
   const accords = await prisma.accord.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } });
 
   return (
-    <main id="contenido" className="catalog private-perfume-page">
+    <main id="contenido" className="catalog account-page private-perfume-page">
       <Link className="back-link" href="/mi-coleccion">
         ← Mi colección
       </Link>
       <header className="catalog-header">
         <p className="eyebrow">Privado</p>
         <h1>Agregar perfume propio</h1>
-        <p>Para un perfume que tenés y no está en el catálogo. Queda solo en tu colección: nadie más lo ve.</p>
+        <p className="lead">Para un perfume que tenés y no está en el catálogo. Queda solo en tu colección: nadie más lo ve.</p>
       </header>
 
       {isPhotoStorageAvailable() ? (

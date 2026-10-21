@@ -98,25 +98,30 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
             // eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob) o URL firmada de Storage
             <img src={previewUrl} alt="Vista previa de la foto del perfume" className="private-photo-preview" />
           ) : (
-            <p className="private-photo-empty">Todavía no elegiste una foto.</p>
+            <div className="private-photo-empty" aria-hidden="true">
+              Sin foto
+            </div>
           )}
-          <label>
-            <span className="collection-label">{previewUrl ? "Cambiar foto" : "Foto del perfume (obligatoria)"}</span>
-            <input
-              ref={fileRef}
-              type="file"
-              accept={ACCEPT_ATTRIBUTE}
-              onChange={onPickPhoto}
-              aria-describedby="private-photo-help private-photo-status"
-              aria-invalid={photoError ? true : undefined}
-            />
-          </label>
-          <p id="private-photo-help" className="collection-label">
-            JPG, PNG o WebP de hasta 10 MB. Se achica antes de subirla y solo la ves vos.
-          </p>
-          <p id="private-photo-status" className={photoError ? "form-message form-message-error" : "form-message"} role={photoError ? "alert" : "status"}>
-            {uploading ? "Subiendo foto…" : photoError}
-          </p>
+          <div className="private-photo-controls">
+            <label className="button button-ghost private-photo-button">
+              {previewUrl ? "Cambiar foto" : "Elegir foto (obligatoria)"}
+              <input
+                ref={fileRef}
+                className="sr-only"
+                type="file"
+                accept={ACCEPT_ATTRIBUTE}
+                onChange={onPickPhoto}
+                aria-describedby="private-photo-help private-photo-status"
+                aria-invalid={photoError ? true : undefined}
+              />
+            </label>
+            <p id="private-photo-help" className="form-hint">
+              JPG, PNG o WebP de hasta 10 MB. Se achica antes de subirla y solo la ves vos.
+            </p>
+            <p id="private-photo-status" className={photoError ? "form-message form-message-error" : "form-message"} role={photoError ? "alert" : "status"}>
+              {uploading ? "Subiendo foto…" : photoError}
+            </p>
+          </div>
         </div>
       </fieldset>
 
@@ -127,6 +132,7 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
 
       <details className="private-form-section" open={editing}>
         <summary>Más datos (opcional)</summary>
+        <div className="private-form-fields">
         <label>
           <span className="collection-label">Marca</span>
           <input name="brand" value={brand} onChange={(e) => setBrand(e.target.value)} maxLength={BRAND_MAX} autoComplete="off" />
@@ -147,11 +153,13 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
           <span className="collection-label">Descripción</span>
           <textarea name="description" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={DESCRIPTION_MAX} />
         </label>
+        </div>
       </details>
 
       <details className="private-form-section" open={editing}>
         <summary>Notas (opcional)</summary>
-        <p className="collection-label">Escribilas separadas por coma, por ejemplo: bergamota, limón.</p>
+        <div className="private-form-fields">
+        <p className="form-hint">Escribilas separadas por coma, por ejemplo: bergamota, limón.</p>
         <label>
           <span className="collection-label">Notas de salida</span>
           <input name="topNotes" value={topNotes} onChange={(e) => setTopNotes(e.target.value)} autoComplete="off" />
@@ -164,14 +172,19 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
           <span className="collection-label">Notas de fondo</span>
           <input name="baseNotes" value={baseNotes} onChange={(e) => setBaseNotes(e.target.value)} autoComplete="off" />
         </label>
+        </div>
       </details>
 
       <details className="private-form-section" open={editing}>
         <summary>Acordes, duración y estela (opcional)</summary>
+        <div className="private-form-fields">
         <fieldset className="private-accords">
           <legend>Acordes</legend>
-          <p id="private-accords-help" className="collection-label">
+          <p id="private-accords-help" className="form-hint">
             Elegí hasta {ACCORDS_MAX}. Con al menos uno, este perfume entra en “¿Qué me pongo hoy?” y en tus huecos.
+          </p>
+          <p className="accord-count" aria-live="polite">
+            {accordIds.length} de {ACCORDS_MAX} elegidos
           </p>
           <ul className="accord-picker" aria-describedby="private-accords-help">
             {accords.map((accord) => {
@@ -180,6 +193,7 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
                 <li key={accord.id}>
                   <label className="accord-chip">
                     <input
+                      className="sr-only"
                       type="checkbox"
                       name="accordIds"
                       value={accord.id}
@@ -193,9 +207,6 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
               );
             })}
           </ul>
-          <p className="collection-label" aria-live="polite">
-            {accordIds.length} de {ACCORDS_MAX} elegidos
-          </p>
         </fieldset>
         <label>
           <span className="collection-label">Duración</span>
@@ -219,10 +230,12 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
             ))}
           </select>
         </label>
+        </div>
       </details>
 
       <fieldset className="private-form-section">
         <legend>En tu colección</legend>
+        <div className="private-form-fields">
         <label>
           <span className="collection-label">Estado</span>
           <select name="status" aria-label="Estado en tu colección" value={status} onChange={(e) => setStatus(e.target.value)} required>
@@ -247,6 +260,7 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
           <span className="collection-label">Notas personales (opcional)</span>
           <textarea name="personalNotes" maxLength={2000} value={personalNotes} onChange={(e) => setPersonalNotes(e.target.value)} placeholder="Cómo te queda, cuándo lo usás…" />
         </label>
+        </div>
       </fieldset>
 
       <button type="submit" aria-disabled={pending || uploading}>

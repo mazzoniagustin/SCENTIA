@@ -65,7 +65,7 @@ export default async function PrivatePerfumePage({ params }: { params: Promise<{
         </div>
       </header>
 
-      {(shown.length > 0 || perfume.description || perfume.entry.personalNotes) && (
+      {(shown.length > 0 || perfume.description) && (
         <section className="ficha-section" aria-labelledby="ficha-datos">
           <h2 id="ficha-datos">Datos</h2>
           {shown.length > 0 && (
@@ -79,7 +79,13 @@ export default async function PrivatePerfumePage({ params }: { params: Promise<{
             </dl>
           )}
           {perfume.description && <p>{perfume.description}</p>}
-          {perfume.entry.personalNotes && <p className="collection-notes">{perfume.entry.personalNotes}</p>}
+        </section>
+      )}
+
+      {perfume.entry.personalNotes && (
+        <section className="ficha-section" aria-labelledby="ficha-notas-personales">
+          <h2 id="ficha-notas-personales">Tus notas</h2>
+          <p className="private-notes">{perfume.entry.personalNotes}</p>
         </section>
       )}
 
@@ -97,7 +103,7 @@ export default async function PrivatePerfumePage({ params }: { params: Promise<{
         </section>
       )}
 
-      <section className="ficha-section" aria-labelledby="ficha-eliminar">
+      <section className="ficha-section account-danger" aria-labelledby="ficha-eliminar">
         <h2 id="ficha-eliminar">Eliminar</h2>
         <DeletePrivatePerfumeForm perfumeId={perfume.id} />
       </section>

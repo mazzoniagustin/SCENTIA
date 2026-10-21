@@ -23,7 +23,7 @@ export default async function EditPrivatePerfumePage({ params }: { params: Promi
   ]);
 
   return (
-    <main id="contenido" className="catalog private-perfume-page">
+    <main id="contenido" className="catalog account-page private-perfume-page">
       <Link className="back-link" href={`/mi-coleccion/${perfume.id}`}>
         ← {perfume.name}
       </Link>

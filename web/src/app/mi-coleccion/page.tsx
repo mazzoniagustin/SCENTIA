@@ -29,7 +29,7 @@ export default async function MyCollectionPage({
       <header className="catalog-header">
         <p className="eyebrow">Privado</p>
         <h1>Mi colección</h1>
-        <p>
+        <p className="catalog-header-actions">
           <Link className="button" href="/mi-coleccion/nuevo">
             Agregar perfume propio
           </Link>

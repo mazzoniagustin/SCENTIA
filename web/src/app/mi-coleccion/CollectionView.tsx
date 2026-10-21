@@ -74,7 +74,7 @@ export function CollectionView({ collection, statusFilter }: { collection: Entry
                   <Link href={own ? `/mi-coleccion/${entry.perfumeId}` : `/perfumes/${entry.perfumeId}`}>{entry.perfume.name}</Link>
                 </h2>
                 <ul className="perfume-badges" aria-label="Estado y puntuación">
-                  {own && <li>Propio</li>}
+                  {own && <li className="perfume-badge-own">Propio</li>}
                   <li className={`collection-status-${entry.status.toLowerCase()}`}>
                     {STATUS_LABELS[entry.status as CollectionStatusValue] ?? entry.status}
                   </li>
