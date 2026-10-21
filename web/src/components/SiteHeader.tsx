@@ -46,7 +46,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="site-header-inner">
         {/* Con el logo cargado (public/brand/logo.svg) reemplaza al texto; su alt ya dice "Scentia". */}
-        <Link className="site-wordmark" href="/">
+        <Link className="site-wordmark" href="/" translate="no">
           {getBrandAsset("logo") ? <BrandImage slot="logo" className="site-logo" priority /> : "Scentia"}
         </Link>
         <SiteNav

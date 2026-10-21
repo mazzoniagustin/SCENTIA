@@ -66,7 +66,8 @@ export function CollectionView({ collection, statusFilter }: { collection: Entry
           {visible.map((entry) => {
             const own = entry.perfume.status === 'PRIVATE';
             return (
-            <li key={entry.perfumeId} className="perfume-card">
+            <li key={entry.perfumeId}>
+            <article className="perfume-card">
               <PerfumeImage name={entry.perfume.name} brand={entry.perfume.brand} imageUrl={entry.perfume.imageUrl} accords={entry.perfume.accords} />
               <div className="perfume-card-body">
                 {entry.perfume.brand && <p className="perfume-brand">{entry.perfume.brand}</p>}
@@ -89,6 +90,7 @@ export function CollectionView({ collection, statusFilter }: { collection: Entry
                   {own ? <DeletePrivatePerfumeForm perfumeId={entry.perfumeId} /> : <DeleteEntryForm perfumeId={entry.perfumeId} />}
                 </div>
               </div>
+            </article>
             </li>
             );
           })}

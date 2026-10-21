@@ -88,9 +88,9 @@ export default async function PerfumePage({ params }: { params: Promise<{ id: st
         </div>
         <div className="ficha-hero-text">
         <p className="eyebrow">
-          {perfume.brand} · {genderLabel(perfume.gender)}
+          <span translate="no">{perfume.brand}</span> · {genderLabel(perfume.gender)}
         </p>
-        <h1>{perfume.name}</h1>
+        <h1 translate="no">{perfume.name}</h1>
         {(perfume.priceTier || perfume.seasons.length > 0) && (
           <ul className="perfume-badges" aria-label="Categoría y estaciones">
             {perfume.priceTier && <li>{PRICE_TIER_LABELS[perfume.priceTier]}</li>}

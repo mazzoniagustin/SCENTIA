@@ -168,9 +168,10 @@ async function Results({ answers, gender }: { answers: QuizAnswers; gender?: Qui
   return (
     <>
       <p className="catalog-count">{results.length} recomendaciones</p>
-      <div className="catalog-grid">
+      <ul className="catalog-grid">
         {results.map((result, index) => (
-          <article key={result.perfumeId} className="perfume-card" style={{ "--i": index } as React.CSSProperties}>
+          <li key={result.perfumeId} style={{ "--i": index } as React.CSSProperties}>
+          <article className="perfume-card">
             <PerfumeImage
               name={result.name}
               brand={result.brand}
@@ -201,8 +202,9 @@ async function Results({ answers, gender }: { answers: QuizAnswers; gender?: Qui
               )}
             </div>
           </article>
+          </li>
         ))}
-      </div>
+      </ul>
     </>
   );
 }
