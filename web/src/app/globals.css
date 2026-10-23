@@ -5230,10 +5230,6 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   max-width: 44rem;
 }
 
-.catalog-header-actions {
-  margin-top: 0.25rem;
-}
-
 .private-form {
   gap: 1rem;
   min-width: 0;
@@ -5492,9 +5488,11 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 .share-dialog {
+  margin: auto; /* el reset global `* { margin: 0 }` pisa el centrado nativo del <dialog> */
   width: min(32rem, calc(100% - 2rem));
   max-height: min(90dvh, 44rem);
   padding: 0;
@@ -5572,7 +5570,7 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   color: var(--foreground);
 }
 
-.share-dialog :is(button, summary, input, label):focus-visible,
+.share-dialog :is(button, summary, input:not([type="radio"])):focus-visible,
 .share-scope-option:has(input:focus-visible) {
   outline: 3px solid var(--foreground);
   outline-offset: 2px;

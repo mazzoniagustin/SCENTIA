@@ -24,6 +24,8 @@ const OPTIONS: { scope: ShareScope; label: string }[] = [
 export function ShareDialog({ shares, ownedCount, wishlistCount, collectionEmpty }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  // Si el gesto empezó dentro del diálogo (p. ej. seleccionar el link) y terminó en el fondo, no es un clic en el fondo.
+  const pressedOnBackdrop = useRef(false);
   const shareOf = (scope: ShareScope) => shares.find((s) => s.scope === scope);
   const counts: Record<ShareScope, number> = { OWNED: ownedCount, WISHLIST: wishlistCount };
 
@@ -50,8 +52,12 @@ export function ShareDialog({ shares, ownedCount, wishlistCount, collectionEmpty
         aria-labelledby="share-dialog-title"
         onClose={() => triggerRef.current?.focus()}
         // El clic en el fondo cae sobre el propio <dialog> (el contenido va en un contenedor interno).
+        onPointerDown={(event) => {
+          pressedOnBackdrop.current = event.target === event.currentTarget;
+        }}
         onClick={(event) => {
-          if (event.target === event.currentTarget) event.currentTarget.close();
+          if (pressedOnBackdrop.current && event.target === event.currentTarget) event.currentTarget.close();
+          pressedOnBackdrop.current = false;
         }}
       >
         <div className="share-dialog-body">
