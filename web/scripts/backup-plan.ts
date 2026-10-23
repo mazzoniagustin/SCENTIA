@@ -1,11 +1,11 @@
 // Qué tablas (y qué filas) incluye el respaldo y en qué orden se restauran. Lógica pura, compartida por backup-db.ts y restore-db.ts.
 
 /** Restauración por claves foráneas: primero las tablas de las que dependen otras. `User` va antes que `Perfume`: los perfumes propios
- *  (Perfume.ownerId) apuntan a una persona. */
-export const RESTORE_ORDER = ['Accord', 'Note', 'User', 'Perfume', 'PerfumeAccord', 'PerfumeNote', 'UserCollection', 'UserProfile']
+ *  (Perfume.ownerId) apuntan a una persona; `CollectionShare` también va después de `User`. */
+export const RESTORE_ORDER = ['Accord', 'Note', 'User', 'Perfume', 'PerfumeAccord', 'PerfumeNote', 'UserCollection', 'UserProfile', 'CollectionShare']
 
 /** Lo irreemplazable de las personas (el catálogo se puede regenerar con los scripts de importación). */
-export const USER_DATA_TABLES = ['User', 'UserCollection', 'UserProfile']
+export const USER_DATA_TABLES = ['User', 'UserCollection', 'UserProfile', 'CollectionShare']
 
 /** Los perfumes propios sí son irreemplazables: no vienen de ninguna importación. */
 export const OWN_PERFUME_WHERE = 'WHERE t."ownerId" IS NOT NULL'

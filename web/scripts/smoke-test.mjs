@@ -50,6 +50,11 @@ const bad = await get('/api/perfumes?page=0')
 check('validación: page inválida → 400 sin detalles internos', bad.status === 400 && !(await bad.text()).includes('Prisma'))
 const nf = await get('/perfumes/no-existe')
 check('perfume inexistente → 404', nf.status === 404, `http ${nf.status}`)
+// Colección compartida: un token con formato válido pero inexistente, uno mal formado y uno enorme dan 404 (sin distinguir causas)
+for (const [label, token] of [['token inexistente', 'A'.repeat(43)], ['token mal formado', 'abc'], ['token de 5000 caracteres', 'A'.repeat(5000)]]) {
+  const shared = await get(`/c/${token}`)
+  check(`colección compartida: ${label} → 404`, shared.status === 404, `http ${shared.status}`)
+}
 
 // 4) Quiz
 const answers = { ambiente: 'mar', estacion: 'verano', ocasion: 'deporte', dulzor: 'nada', estilo: 'suave', familias: ['citrico'] }

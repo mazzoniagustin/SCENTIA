@@ -13,7 +13,18 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    // Si dos reglas fijan la misma cabecera, gana la última (docs: headers > Header Overriding Behavior).
+    // La colección compartida lleva el token en la URL: no debe filtrarse por el Referer.
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        source: "/c/:token*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+    ];
   },
 };
 
