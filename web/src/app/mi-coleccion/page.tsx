@@ -5,6 +5,9 @@ import { redirect } from 'next/navigation';
 import { parseStatusFilter } from '@/lib/collection/overview';
 import { CollectionView } from './CollectionView';
 import { GapsPanel } from './GapsPanel';
+import { SharePanel } from './SharePanel';
+import { getAuthenticatedUserOrNull } from '@/lib/auth/require-user';
+import { listShares } from '@/lib/share/data';
 import { displayImageUrls } from '@/lib/private-perfumes/storage';
 
 export const metadata = { title: "Mi colección" };
@@ -22,6 +25,8 @@ export default async function MyCollectionPage({
   // La foto de un perfume propio se guarda como ruta de Storage: se reemplaza por su URL firmada para mostrarla.
   const images = await displayImageUrls(entries.map((entry) => entry.perfume));
   const collection = entries.map((entry, i) => ({ ...entry, perfume: { ...entry.perfume, imageUrl: images[i] } }));
+  const user = collection.length > 0 ? await getAuthenticatedUserOrNull() : null;
+  const shares = user ? (await listShares(user.id)).map((s) => ({ ...s, createdAt: s.createdAt.toISOString() })) : [];
   const statusFilter = parseStatusFilter((await searchParams).estado);
 
   return (
@@ -47,6 +52,7 @@ export default async function MyCollectionPage({
       ) : (
         <>
           <CollectionView collection={collection} statusFilter={statusFilter} />
+          <SharePanel shares={shares} />
           <GapsPanel />
         </>
       )}
