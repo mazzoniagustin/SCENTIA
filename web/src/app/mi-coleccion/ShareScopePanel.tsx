@@ -17,11 +17,11 @@ function useClientValue<T>(read: () => T, server: T): T {
 // Fecha fija (zona horaria explícita) para que servidor y cliente rendericen lo mismo.
 const dateFormat = new Intl.DateTimeFormat("es", { dateStyle: "long", timeZone: "America/Argentina/Buenos_Aires" });
 
-const TITLES: Record<ShareScope, string> = { OWNED: "Lo tengo", WISHLIST: "Lo quiero" };
+const TITLES: Record<ShareScope, string> = { OWNED: "Lo que tengo", WISHLIST: "Lo que quiero" };
 
-// Una lista compartible (Lo tengo / Lo quiero): crear o regenerar el link, copiarlo y dejar de compartir.
+// Panel de una lista compartible (Lo tengo / Lo quiero): crear o regenerar el link, copiarlo y dejar de compartir.
 // Los formularios usan `action` (funcionan sin JavaScript). aria-disabled y no `disabled` para conservar el foco mientras se procesa.
-export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareInfo }) {
+export function ShareScopePanel({ scope, share, active }: { scope: ShareScope; share?: ShareInfo; active: boolean }) {
   const [createState, createAction, creating] = useActionState(createShareAction, IDLE_SHARE_STATE);
   const [revokeState, revokeAction, revoking] = useActionState(revokeShareAction, IDLE_SHARE_STATE);
   const [copyNote, setCopyNote] = useState("");
@@ -44,7 +44,6 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
 
   const origin = useClientValue(() => window.location.origin, "");
   const canShare = useClientValue(() => typeof navigator.share === "function", false);
-  const titleId = `share-title-${scope}`;
   const url = shownToken && origin ? `${origin}/c/${createState.token}` : "";
 
   async function copy() {
@@ -65,10 +64,13 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
     }
   }
 
-  return (
-    <section className="share-card" aria-labelledby={titleId}>
-      <h3 id={titleId}>{TITLES[scope]}</h3>
+  const inputId = `share-url-${scope}`;
+  const alertMessage = createState.status === "error" ? createState.message : revokeState.status === "error" ? revokeState.message : "";
+  // Un solo aviso en vivo por panel: copiado, link creado (solo con el link a la vista) o link revocado (solo sin link a la vista).
+  const statusMessage = url ? copyNote || "Link creado." : revokeState.status === "success" ? revokeState.message : "";
 
+  return (
+    <div className="share-scope" hidden={!active}>
       {share && !url ? (
         <p className="share-active">
           Link activo desde {dateFormat.format(new Date(share.createdAt))}.
@@ -76,7 +78,7 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
         </p>
       ) : null}
 
-      <form action={createAction} onSubmit={(event) => creating && event.preventDefault()}>
+      <form className="share-form" action={createAction} onSubmit={(event) => creating && event.preventDefault()}>
         <input type="hidden" name="scope" value={scope} />
         {scope === "OWNED" ? (
           <label className="share-check">
@@ -84,40 +86,56 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
             Mostrar mis puntuaciones
           </label>
         ) : null}
-        {share ? <p className="share-note">Si generás uno nuevo, el link anterior deja de funcionar.</p> : null}
-        <button type="submit" className="button" aria-disabled={creating}>
-          {creating ? "Generando…" : share ? "Generar uno nuevo" : "Generar link"}
-        </button>
-        <p
-          className={`form-message ${createState.status === "error" ? "form-message-error" : ""}`}
-          role={createState.status === "error" ? "alert" : "status"}
-        >
-          {createState.status === "error" || shownToken ? createState.message : ""}
-        </p>
+        <div className="share-actions">
+          <button type="submit" className={share ? "button button-ghost" : "button"} aria-disabled={creating}>
+            {creating ? "Generando…" : share ? "Generar uno nuevo" : "Generar link"}
+          </button>
+          {share ? <span className="share-note">El link anterior deja de funcionar</span> : null}
+        </div>
       </form>
 
       {url ? (
         <div className="share-link">
-          <label htmlFor={`share-url-${scope}`}>Tu link</label>
-          <input id={`share-url-${scope}`} ref={inputRef} type="text" readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
-          <div className="share-link-actions">
+          <label htmlFor={inputId}>Tu link</label>
+          <div className="share-link-row">
+            <input
+              id={inputId}
+              name={inputId}
+              ref={inputRef}
+              type="text"
+              readOnly
+              autoComplete="off"
+              spellCheck={false}
+              value={url}
+              aria-describedby={`${inputId}-help`}
+              onFocus={(e) => e.currentTarget.select()}
+            />
             <button type="button" className="button" onClick={copy}>
               Copiar
             </button>
-            {canShare ? (
-              <button type="button" className="button" onClick={nativeShare}>
-                Compartir
-              </button>
-            ) : null}
           </div>
-          <p className="form-message" role="status" aria-live="polite">
-            {url ? copyNote : ""}
+          <p id={`${inputId}-help`} className="share-note">
+            Copialo ahora: no lo vas a poder ver de nuevo.
           </p>
+          {canShare ? (
+            <button type="button" className="button button-ghost share-native" onClick={nativeShare}>
+              Compartir
+            </button>
+          ) : null}
         </div>
       ) : null}
 
+      {active ? (
+        <p className="form-message" role="status" aria-live="polite">
+          {statusMessage}
+        </p>
+      ) : null}
+      <p className="form-message form-message-error" role="alert">
+        {active ? alertMessage : ""}
+      </p>
+
       {share ? (
-        <details className="private-delete">
+        <details className="share-revoke">
           <summary>Dejar de compartir</summary>
           <form action={revokeAction} onSubmit={(event) => revoking && event.preventDefault()}>
             <p>El link deja de funcionar para cualquiera que lo tenga.</p>
@@ -125,15 +143,9 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
             <button type="submit" className="button-danger" aria-disabled={revoking}>
               {revoking ? "Quitando…" : "Sí, dejar de compartir"}
             </button>
-            <p className="form-message form-message-error" role="alert">
-              {revokeState.status === "error" ? revokeState.message : ""}
-            </p>
           </form>
         </details>
       ) : null}
-      <p className="form-message" role="status" aria-live="polite">
-        {revokeState.status === "success" && !url ? revokeState.message : ""}
-      </p>
-    </section>
+    </div>
   );
 }
