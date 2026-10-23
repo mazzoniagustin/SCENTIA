@@ -16,6 +16,8 @@ model User {
   privatePerfumes Perfume[] @relation("PerfumeOwner")
   profile     UserProfile?
   wearLogs    WearLog[]
+  /// Links para compartir la colección (uno por lista); se borran con la cuenta.
+  shares      CollectionShare[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 }
@@ -211,6 +213,27 @@ model UserProfile {
   nicknameIsTemporary Boolean @default(false)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ShareScope {
+  OWNED
+  WISHLIST
+}
+
+// Link público de solo lectura a una lista de la colección (uno por persona y por lista). Se guarda solo el hash del token.
+// El CHECK ("showRatings" = false OR "scope" = 'OWNED') y el ENABLE ROW LEVEL SECURITY viven en prisma/sql/2026-10-23-collection-share.sql:
+// Prisma no los conoce, así que no hay que usar `db push` para modificar esta tabla sin revisar ese archivo. Se elimina con la cuenta.
+model CollectionShare {
+  id          String     @id @default(cuid())
+  userId      String
+  scope       ShareScope
+  showRatings Boolean    @default(false)
+  tokenHash   String     @unique
+  createdAt   DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scope])
 }
 
 // Registro diario de uso (racha): un perfume por persona y por día (`day` = "YYYY-MM-DD" en la zona horaria de la
