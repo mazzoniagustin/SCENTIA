@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { parseStatusFilter } from '@/lib/collection/overview';
 import { CollectionView } from './CollectionView';
 import { GapsPanel } from './GapsPanel';
-import { SharePanel } from './SharePanel';
+import { ShareDialog } from './ShareDialog';
 import { getAuthenticatedUserOrNull } from '@/lib/auth/require-user';
 import { listShares } from '@/lib/share/data';
 import { displayImageUrls } from '@/lib/private-perfumes/storage';
@@ -27,6 +27,8 @@ export default async function MyCollectionPage({
   const collection = entries.map((entry, i) => ({ ...entry, perfume: { ...entry.perfume, imageUrl: images[i] } }));
   // Siempre se cargan los links: quien quitó su último perfume todavía tiene que poder ver y revocar los activos.
   const shares = (await listShares(user.id)).map((s) => ({ ...s, createdAt: s.createdAt.toISOString() }));
+  const ownedCount = collection.filter((entry) => entry.status === 'OWNED').length;
+  const wishlistCount = collection.filter((entry) => entry.status === 'WISHLIST').length;
   const statusFilter = parseStatusFilter((await searchParams).estado);
 
   return (
@@ -34,15 +36,15 @@ export default async function MyCollectionPage({
       <header className="catalog-header">
         <p className="eyebrow">Privado</p>
         <h1>Mi colección</h1>
-        <p className="catalog-header-actions">
+        <div className="catalog-header-actions">
           <Link className="button" href="/mi-coleccion/nuevo">
             Agregar perfume propio
           </Link>
-        </p>
+          <ShareDialog shares={shares} ownedCount={ownedCount} wishlistCount={wishlistCount} collectionEmpty={collection.length === 0} />
+        </div>
       </header>
 
       {collection.length === 0 ? (
-        <>
         <div className="catalog-empty">
           <p className="catalog-empty-title">Tu colección está vacía.</p>
           <p>
@@ -50,12 +52,9 @@ export default async function MyCollectionPage({
             <Link href="/quiz">quiz</Link> o agregá uno que ya tengas con el botón “Agregar perfume propio”.
           </p>
         </div>
-        {shares.length > 0 ? <SharePanel shares={shares} onlyActive /> : null}
-        </>
       ) : (
         <>
           <CollectionView collection={collection} statusFilter={statusFilter} />
-          <SharePanel shares={shares} />
           <GapsPanel />
         </>
       )}

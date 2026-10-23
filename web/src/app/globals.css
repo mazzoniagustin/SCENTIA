@@ -5230,10 +5230,6 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   max-width: 44rem;
 }
 
-.catalog-header-actions {
-  margin-top: 0.25rem;
-}
-
 .private-form {
   gap: 1rem;
   min-width: 0;
@@ -5487,58 +5483,262 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
 }
 
 /* === Compartir colección === */
-.share-panel {
+/* Botón «Compartir» junto a «Agregar perfume propio» (el segundo es el único relleno). */
+.catalog-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.share-dialog {
+  margin: auto; /* el reset global `* { margin: 0 }` pisa el centrado nativo del <dialog> */
+  width: min(32rem, calc(100% - 2rem));
+  max-height: min(90dvh, 44rem);
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: var(--shadow-lg);
+}
+
+.share-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .share-dialog[open] {
+    animation: share-dialog-in var(--dur-base) var(--ease-out);
+  }
+
+  .share-dialog[open]::backdrop {
+    animation: share-backdrop-in var(--dur-base) var(--ease-out);
+  }
+}
+
+@keyframes share-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@keyframes share-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.share-dialog-body {
   display: grid;
   gap: 1rem;
-  margin-top: 2.5rem;
-  border-top: 1px solid var(--border);
-  padding-top: 2rem;
+  min-width: 0;
+  padding: 1.25rem;
+}
+
+.share-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.share-dialog-head h2 {
+  font-size: var(--text-lg);
+}
+
+.share-close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-size);
+  height: var(--tap-size);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.share-close:hover {
+  background: var(--surface-2);
+  color: var(--foreground);
+}
+
+.share-dialog :is(button, summary, input:not([type="radio"])):focus-visible,
+.share-scope-option:has(input:focus-visible) {
+  outline: 3px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+.share-scopes {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.share-scopes legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.share-scope-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--tap-size);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.share-scope-option:has(input:checked) {
+  border-color: var(--control-border);
+  background: var(--surface-2);
+}
+
+.share-scope-text {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
   min-width: 0;
 }
 
+.share-scope-count,
 .share-notice,
 .share-note,
 .share-active {
   color: var(--muted);
+  font-size: var(--text-sm);
   line-height: 1.5;
-  max-width: 42rem;
 }
 
-.share-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-  gap: 1rem;
+.share-scope[hidden] {
+  display: none;
 }
 
-.share-card {
+.share-scope {
   display: grid;
-  align-content: start;
   gap: 0.75rem;
   min-width: 0;
-  padding: 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
 }
 
-.share-card form,
-.share-link {
+.share-form,
+.share-link,
+.share-revoke form {
   display: grid;
   gap: 0.6rem;
+  min-width: 0;
 }
 
 .share-check {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: var(--tap-size);
+  touch-action: manipulation;
 }
 
-.share-link input {
-  width: 100%;
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.share-dialog .button,
+.share-dialog .button-danger {
+  touch-action: manipulation;
+}
+
+/* Campo de solo lectura y «Copiar» como un solo control: comparten borde, esquinas internas rectas. */
+.share-link-row {
+  display: flex;
   min-width: 0;
 }
 
-.share-link-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.share-link-row input {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.share-link-row .button {
+  flex: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.share-native {
+  justify-self: start;
+}
+
+.share-dialog .form-message {
+  min-height: 0;
+}
+
+.share-revoke summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  color: var(--error);
+  cursor: pointer;
+  font-weight: 600;
+  touch-action: manipulation;
+}
+
+.share-revoke summary:hover {
+  text-decoration: underline;
+}
+
+.share-revoke[open] summary {
+  margin-bottom: 0.25rem;
+}
+
+.share-notice {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .share-dialog {
+    width: 100%;
+    max-width: 100%;
+    margin: auto 0 0;
+    border-width: 1px 0 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .share-dialog-body {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  }
+
+  .share-dialog .button,
+  .share-dialog .button-danger,
+  .share-dialog input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: var(--tap-size);
+  }
+
+  .share-dialog .share-actions .button {
+    width: 100%;
+  }
+
+  @keyframes share-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(1.5rem);
+    }
+  }
 }
