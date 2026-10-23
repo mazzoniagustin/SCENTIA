@@ -25,12 +25,19 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
   const [createState, createAction, creating] = useActionState(createShareAction, IDLE_SHARE_STATE);
   const [revokeState, revokeAction, revoking] = useActionState(revokeShareAction, IDLE_SHARE_STATE);
   const [copyNote, setCopyNote] = useState("");
+  // Token cuyo link se revocó: se oculta aunque `createState` lo conserve. Un create posterior trae otro token y se muestra.
+  const [dismissedToken, setDismissedToken] = useState<string | null>(null);
+  const [seenRevoke, setSeenRevoke] = useState(revokeState);
+  if (revokeState !== seenRevoke) {
+    setSeenRevoke(revokeState);
+    if (revokeState.status === "success") setDismissedToken(createState.token ?? null);
+  }
   const inputRef = useRef<HTMLInputElement>(null);
 
   const origin = useClientValue(() => window.location.origin, "");
   const canShare = useClientValue(() => typeof navigator.share === "function", false);
   const titleId = `share-title-${scope}`;
-  const url = createState.token && origin ? `${origin}/c/${createState.token}` : "";
+  const url = createState.token && createState.token !== dismissedToken && origin ? `${origin}/c/${createState.token}` : "";
 
   async function copy() {
     try {
@@ -96,7 +103,7 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
             ) : null}
           </div>
           <p className="form-message" role="status" aria-live="polite">
-            {copyNote}
+            {url ? copyNote : ""}
           </p>
         </div>
       ) : null}
@@ -116,6 +123,9 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
           </form>
         </details>
       ) : null}
+      <p className="form-message" role="status" aria-live="polite">
+        {revokeState.status === "success" ? revokeState.message : ""}
+      </p>
     </section>
   );
 }
