@@ -17,7 +17,13 @@ const nextConfig: NextConfig = {
     // La colección compartida lleva el token en la URL: no debe filtrarse por el Referer.
     return [
       { source: "/:path*", headers: securityHeaders },
-      { source: "/c/:token*", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+      {
+        source: "/c/:token*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
     ];
   },
 };

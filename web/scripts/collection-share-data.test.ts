@@ -10,6 +10,7 @@ import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import { prisma } from '../src/lib/prisma'
+import { exportUserData } from '../src/lib/account/data'
 import { createOrReplaceShare, getPublicShare, listShares, revokeShare } from '../src/lib/share/data'
 
 const skip = !process.env.DATABASE_URL && 'sin DATABASE_URL'
@@ -142,5 +143,16 @@ describe('colección compartida (acceso a datos)', { skip }, () => {
     assert.equal((await getPublicShare(token))?.ownerLabel, 'Una colección')
     const { token: tokenA } = await createOrReplaceShare(userA, 'OWNED', false)
     assert.match((await getPublicShare(tokenA))!.ownerLabel, /^csa/)
+  })
+
+  it('la exportación de la cuenta incluye los links sin el hash del token', async () => {
+    const { token } = await createOrReplaceShare(userA, 'OWNED', true)
+    const exported = await exportUserData(userA)
+    assert.ok(exported)
+    assert.deepEqual(exported.shares, (await listShares(userA)))
+    assert.equal(exported.shares.find((s) => s.scope === 'OWNED')?.showRatings, true)
+    const json = JSON.stringify(exported)
+    assert.ok(!json.includes('tokenHash') && !json.includes(token))
+    assert.deepEqual((await exportUserData(userB))?.shares, [])
   })
 })

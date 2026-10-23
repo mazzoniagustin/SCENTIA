@@ -34,10 +34,18 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
   }
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const shownToken = createState.token && createState.token !== dismissedToken ? createState.token : null;
+  // El aviso de «copiado» pertenece al link que se mostraba: si cambia el link, se borra.
+  const [seenToken, setSeenToken] = useState(shownToken);
+  if (shownToken !== seenToken) {
+    setSeenToken(shownToken);
+    setCopyNote("");
+  }
+
   const origin = useClientValue(() => window.location.origin, "");
   const canShare = useClientValue(() => typeof navigator.share === "function", false);
   const titleId = `share-title-${scope}`;
-  const url = createState.token && createState.token !== dismissedToken && origin ? `${origin}/c/${createState.token}` : "";
+  const url = shownToken && origin ? `${origin}/c/${createState.token}` : "";
 
   async function copy() {
     try {
@@ -84,7 +92,7 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
           className={`form-message ${createState.status === "error" ? "form-message-error" : ""}`}
           role={createState.status === "error" ? "alert" : "status"}
         >
-          {createState.message}
+          {createState.status === "error" || shownToken ? createState.message : ""}
         </p>
       </form>
 
@@ -124,7 +132,7 @@ export function ShareCard({ scope, share }: { scope: ShareScope; share?: ShareIn
         </details>
       ) : null}
       <p className="form-message" role="status" aria-live="polite">
-        {revokeState.status === "success" ? revokeState.message : ""}
+        {revokeState.status === "success" && !url ? revokeState.message : ""}
       </p>
     </section>
   );
