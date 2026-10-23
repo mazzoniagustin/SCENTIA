@@ -5477,3 +5477,11 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   display: grid;
   gap: 0.5rem;
 }
+
+/* === Colección compartida === */
+/* La página reutiliza .catalog, .catalog-grid y .perfume-card (tarjeta compacta en móvil). */
+.share-rating {
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
