@@ -36,7 +36,7 @@ export async function savePreferences(userId: string, preferences: Preferences) 
 
 /** Todo lo que la aplicación conserva de la persona (RF-05). */
 export async function exportUserData(userId: string) {
-  const [user, profile, collection, wearLogs, ownPerfumes] = await Promise.all([
+  const [user, profile, collection, wearLogs, ownPerfumes, shares] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true, createdAt: true } }),
     prisma.userProfile.findUnique({ where: { userId } }),
     prisma.userCollection.findMany({
@@ -64,6 +64,12 @@ export async function exportUserData(userId: string) {
       },
       orderBy: [{ brand: 'asc' }, { name: 'asc' }],
     }),
+    // Links para compartir la colección: solo lista, puntuaciones visibles y fecha; nunca el hash del token.
+    prisma.collectionShare.findMany({
+      where: { userId },
+      select: { scope: true, showRatings: true, createdAt: true },
+      orderBy: { scope: 'asc' },
+    }),
   ])
   if (!user) return null
 
@@ -85,6 +91,7 @@ export async function exportUserData(userId: string) {
     collection,
     wearLogs,
     ownPerfumes: ownPerfumes.map(({ accords, ...perfume }) => ({ ...perfume, accords: accords.map((a) => a.accord.name) })),
+    shares,
   }
 }
 

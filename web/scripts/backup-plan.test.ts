@@ -11,9 +11,15 @@ describe('RESTORE_ORDER', () => {
   })
 
   it('respeta el resto de las claves foráneas', () => {
-    for (const [parent, child] of [['Accord', 'PerfumeAccord'], ['Note', 'PerfumeNote'], ['Perfume', 'PerfumeAccord'], ['Perfume', 'PerfumeNote'], ['Perfume', 'UserCollection'], ['User', 'UserCollection'], ['User', 'UserProfile']]) {
+    for (const [parent, child] of [['Accord', 'PerfumeAccord'], ['Note', 'PerfumeNote'], ['Perfume', 'PerfumeAccord'], ['Perfume', 'PerfumeNote'], ['Perfume', 'UserCollection'], ['User', 'UserCollection'], ['User', 'UserProfile'], ['User', 'CollectionShare']]) {
       assert.ok(before(parent, child), `${parent} antes que ${child}`)
     }
+  })
+
+  it('incluye CollectionShare, después de User', () => {
+    assert.ok(RESTORE_ORDER.includes('CollectionShare'))
+    assert.ok(before('User', 'CollectionShare'))
+    assert.ok(USER_DATA_TABLES.includes('CollectionShare'))
   })
 
   it('no repite tablas', () => {
@@ -22,7 +28,7 @@ describe('RESTORE_ORDER', () => {
 })
 
 describe('selectionFor', () => {
-  const all = ['Accord', 'Note', 'Perfume', 'PerfumeAccord', 'PerfumeNote', 'User', 'UserCollection', 'UserProfile', 'WearLog']
+  const all = ['Accord', 'Note', 'Perfume', 'PerfumeAccord', 'PerfumeNote', 'User', 'UserCollection', 'UserProfile', 'CollectionShare', 'WearLog']
 
   it('respaldo completo: todas las tablas, sin filtro', () => {
     assert.deepEqual(selectionFor(all, false), all.map((table) => ({ table, where: '' })))

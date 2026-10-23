@@ -5477,3 +5477,68 @@ body:has([data-page="not-found"]) .site-nav a[aria-current="page"]::after {
   display: grid;
   gap: 0.5rem;
 }
+
+/* === Colección compartida === */
+/* La página reutiliza .catalog, .catalog-grid y .perfume-card (tarjeta compacta en móvil). */
+.share-rating {
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+/* === Compartir colección === */
+.share-panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+  min-width: 0;
+}
+
+.share-notice,
+.share-note,
+.share-active {
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 42rem;
+}
+
+.share-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+}
+
+.share-card {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.share-card form,
+.share-link {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.share-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.share-link input {
+  width: 100%;
+  min-width: 0;
+}
+
+.share-link-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
