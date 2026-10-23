@@ -24,7 +24,7 @@ export type PublicEntry = {
   rating?: number
 }
 
-const OWNER_FALLBACK_LABEL = 'Una colección'
+export const SHARE_OWNER_FALLBACK = 'Una colección'
 
 export function parseShareScope(value: unknown): ShareScope | null {
   if (value === 'OWNED' || value === 'WISHLIST') return value
@@ -56,5 +56,5 @@ export function toPublicEntries(
 
 export function shareOwnerLabel(nickname: string | null | undefined): string {
   const trimmed = nickname?.trim() ?? ''
-  return trimmed.length > 0 ? trimmed : OWNER_FALLBACK_LABEL
+  return trimmed.length > 0 ? trimmed : SHARE_OWNER_FALLBACK
 }

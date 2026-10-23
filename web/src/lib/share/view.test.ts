@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { parseShareScope, shareOwnerLabel, toPublicEntries, type SharedRow } from './view.ts'
+import { parseShareScope, SHARE_OWNER_FALLBACK, shareOwnerLabel, toPublicEntries, type SharedRow } from './view.ts'
 
 const rowWithRating: SharedRow = {
   rating: 4,
@@ -68,5 +68,7 @@ describe('vista pública de la colección compartida', () => {
     assert.equal(shareOwnerLabel(null), 'Una colección')
     assert.equal(shareOwnerLabel(undefined), 'Una colección')
     assert.equal(shareOwnerLabel('  '), 'Una colección')
+    assert.equal(shareOwnerLabel(null), SHARE_OWNER_FALLBACK)
+    assert.equal(shareOwnerLabel('ana_perfumes') === SHARE_OWNER_FALLBACK, false)
   })
 })

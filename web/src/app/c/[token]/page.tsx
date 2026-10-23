@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { getPublicShare } from "@/lib/share/data";
+import { SHARE_OWNER_FALLBACK } from "@/lib/share/view";
 import { PerfumeImage } from "@/app/perfumes/PerfumeImage";
 import { genderLabel } from "@/app/perfumes/types";
 
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Con límite excedido no se consulta la base; el título genérico no revela nada.
   const limited = !(await withinRateLimit());
   const share = limited ? null : await getShare(token);
-  return { title: share ? `Colección de ${share.ownerLabel}` : "Colección compartida", robots: NO_INDEX };
+  return { title: share && share.ownerLabel !== SHARE_OWNER_FALLBACK ? `Colección de ${share.ownerLabel}` : "Colección compartida", robots: NO_INDEX };
 }
 
 export default async function SharedCollectionPage({ params }: Props) {
@@ -37,7 +38,7 @@ export default async function SharedCollectionPage({ params }: Props) {
     return (
       <main id="contenido" className="catalog">
         <div className="catalog-empty">
-          <p className="catalog-empty-title">Demasiadas visitas seguidas. Probá de nuevo en un minuto.</p>
+          <h1 className="catalog-empty-title">Demasiadas visitas seguidas. Probá de nuevo en un minuto.</h1>
         </div>
       </main>
     );
@@ -46,7 +47,11 @@ export default async function SharedCollectionPage({ params }: Props) {
   const share = await getShare(token);
   if (!share) notFound();
 
-  const heading = share.scope === "OWNED" ? `Lo que tiene ${share.ownerLabel}` : `Lo que quiere ${share.ownerLabel}`;
+  const anonymous = share.ownerLabel === SHARE_OWNER_FALLBACK;
+  const owned = share.scope === "OWNED";
+  const heading = anonymous
+    ? owned ? "Lo que hay en esta colección" : "Lo que se quiere en esta lista"
+    : owned ? `Lo que tiene ${share.ownerLabel}` : `Lo que quiere ${share.ownerLabel}`;
 
   return (
     <main id="contenido" className="catalog">
