@@ -54,28 +54,23 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
         </div>
       </section>
 
-      <Suspense fallback={<Skeleton style={{ height: "7rem", borderRadius: "1rem" }} />}>
-        <StatsSection />
-      </Suspense>
-
-      <Suspense fallback={<Skeleton style={{ height: "12rem", borderRadius: "1.25rem" }} />}>
-        <PersonalSection notice={notice} />
-      </Suspense>
-
-      <Suspense fallback={<LoadingPanel label="Eligiendo el perfume del día…" minHeight="24rem" />}>
-        <DailySection />
-      </Suspense>
-
-      <Suspense fallback={<LoadingPanel label="Buscando los perfumes de la estación…" minHeight="22rem" />}>
-        <FeaturedSection />
-      </Suspense>
-
-      <Suspense fallback={<Skeleton style={{ height: "9rem", borderRadius: "1rem" }} />}>
-        <AccordsSection />
-      </Suspense>
-
-      <section className="home-features" aria-label="Qué podés hacer">
-        <article className="home-feature">
+      <div className="home-bento">
+        <div className="bento-cell bento-daily">
+          <Suspense fallback={<LoadingPanel label="Eligiendo el perfume del día…" minHeight="24rem" />}>
+            <DailySection />
+          </Suspense>
+        </div>
+        <div className="bento-cell bento-stats">
+          <Suspense fallback={<Skeleton style={{ height: "7rem", borderRadius: "1rem" }} />}>
+            <StatsSection />
+          </Suspense>
+        </div>
+        <div className="bento-cell bento-accords bento-card">
+          <Suspense fallback={<Skeleton style={{ height: "9rem", borderRadius: "1rem" }} />}>
+            <AccordsSection />
+          </Suspense>
+        </div>
+        <article className="home-feature bento-cell bento-wide">
           <h2>Explorá</h2>
           <p>
             Buscá por nombre, marca, acorde, nota o estación entre{" "}
@@ -86,17 +81,25 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
           </p>
           <Link href="/perfumes">Ver el catálogo →</Link>
         </article>
-        <article className="home-feature">
+        <article className="home-feature bento-cell bento-small">
           <h2>Descubrí</h2>
           <p>Respondé unas preguntas sobre lo que te gusta y te mostramos los perfumes que mejor encajan con tu perfil.</p>
           <Link href="/quiz">Hacer el quiz →</Link>
         </article>
-        <article className="home-feature">
+        <article className="home-feature bento-cell bento-small">
           <h2>Organizá</h2>
           <p>Guardá lo que tenés, lo que probaste y lo que querés, con tus notas y puntuación. Es privado.</p>
           <Link href="/mi-coleccion">Ir a mi colección →</Link>
         </article>
-      </section>
+      </div>
+
+      <Suspense fallback={<Skeleton style={{ height: "12rem", borderRadius: "1.25rem" }} />}>
+        <PersonalSection notice={notice} />
+      </Suspense>
+
+      <Suspense fallback={<LoadingPanel label="Buscando los perfumes de la estación…" minHeight="22rem" />}>
+        <FeaturedSection />
+      </Suspense>
     </main>
   );
 }

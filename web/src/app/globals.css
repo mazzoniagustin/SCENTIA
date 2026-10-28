@@ -19,6 +19,7 @@
   --compare-3: #3fcf9b;
   --compare-4: #a597f0;
   --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-condensed: var(--font-barlow-condensed), "Arial Narrow", "Helvetica Neue", sans-serif;
   --font-body: var(--font-geist), system-ui, -apple-system, "Segoe UI", sans-serif;
   /* ——— Tokens de diseño (refinamiento visual) ——— */
   /* Superficies y bordes que antes estaban escritos a mano */
@@ -1435,8 +1436,14 @@ html {
 }
 
 .home-hero h1 {
-  max-width: 16ch;
-  font-size: var(--display-hero);
+  max-width: 14ch;
+  font-family: var(--font-condensed);
+  font-size: clamp(3.25rem, 15vw, 8.5rem);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .home-hero .lead {
@@ -1502,25 +1509,23 @@ html {
   font-weight: 600;
 }
 
-/* "Explorá / Descubrí / Organizá": sin cajas. Columnas separadas por filetes finos y titulares grandes; el enlace va siempre al fondo. */
-.home-features {
-  display: grid;
-  border-bottom: 1px solid var(--border);
-}
-
+/* "Explorá / Descubrí / Organizá": tarjetas del bento, de distinto tamaño; el enlace va siempre al fondo. */
 .home-feature {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
-  padding: 2rem 0;
-  border-top: 1px solid var(--border);
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
 }
 
 .home-feature h2 {
   font-family: var(--font-display);
-  font-size: var(--display-lg);
+  font-size: clamp(1.5rem, 6vw, 2.75rem);
   font-weight: 400;
   line-height: 1.05;
+  overflow-wrap: anywhere;
   transition: color var(--dur-base) ease;
 }
 
@@ -1554,25 +1559,144 @@ html {
   text-decoration-color: currentColor;
 }
 
-@media (min-width: 52rem) {
-  .home-daily {
-    grid-template-columns: 5fr 6fr;
+/* ————— Bento de la portada ————— */
+/* 2 columnas en celular, 4 desde 52 rem. Cada celda es un contenedor sin estilo propio: el borde y el fondo los pone su contenido. */
+.home-bento {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.bento-cell {
+  display: grid;
+  min-width: 0;
+  grid-column: span 2;
+}
+
+.bento-cell:empty {
+  display: none; /* una sección que no tiene datos no deja un hueco */
+}
+
+.bento-card {
+  align-content: start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+}
+
+.home-feature.bento-cell {
+  display: flex;
+}
+
+.bento-small {
+  grid-column: span 1;
+}
+
+/* En celdas de una columna sobra el texto largo: queda el título y el enlace. */
+.bento-small p {
+  display: none;
+}
+
+.home-bento .home-daily {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.home-bento .home-daily-body {
+  padding: 1.25rem;
+}
+
+.home-bento .home-daily-body h2 {
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+}
+
+.home-bento .home-stats {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.home-bento .home-stats > div {
+  align-content: center;
+  padding: 1.25rem 0.75rem;
+}
+
+.home-bento .home-section {
+  gap: 1rem;
+}
+
+/* A 360 px el contenido de la tarjeta mide ~220 px: chips más compactos y sin el conteo, para que entren de a dos. */
+@media (max-width: 30rem) {
+  .bento-card {
+    padding: 1rem;
   }
 
-  .home-features {
-    grid-template-columns: repeat(3, 1fr);
+  .home-bento .home-accords {
+    gap: 0.5rem;
+  }
+
+  .home-bento .home-accords a {
+    gap: 0.45rem;
+    padding: 0.4rem 0.8rem 0.4rem 0.7rem;
+  }
+
+  .home-bento .home-accords small {
+    display: none;
+  }
+}
+
+@media (min-width: 52rem) {
+  .home-bento {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .bento-daily {
+    grid-row: span 2;
+  }
+
+  .bento-daily,
+  .bento-stats,
+  .bento-accords {
+    grid-column: span 2;
+  }
+
+  .bento-wide {
+    grid-column: span 2;
+  }
+
+  .bento-small p {
+    display: block;
   }
 
   .home-feature {
-    padding: 2.5rem 2rem 1.5rem;
+    padding: 1.75rem;
+  }
+}
+
+/* Marco inclinable del frasco del perfume del día. Solo se mueve si la persona no pidió menos movimiento. */
+.tilt-frame {
+  display: grid;
+  overflow: hidden;
+  touch-action: pan-y; /* el scroll vertical sigue andando; el arrastre horizontal inclina */
+}
+
+.tilt-frame > .tilt-inner {
+  display: grid;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tilt-frame {
+    perspective: 900px;
   }
 
-  .home-feature + .home-feature {
-    border-left: 1px solid var(--border);
+  .tilt-frame > .tilt-inner {
+    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform var(--dur-base) var(--ease-out);
+    will-change: transform;
   }
 
-  .home-feature:first-child {
-    padding-left: 0;
+  .tilt-frame[data-tilting="true"] > .tilt-inner {
+    transition: none; /* mientras se mueve, sigue al puntero sin retraso */
   }
 }
 
@@ -2915,7 +3039,7 @@ html {
   @supports (animation-timeline: view()) {
     .home-section,
     .home-daily,
-    .home-features,
+    .home-feature,
     .home-stats {
       animation: rise-soft linear both;
       animation-timeline: view();
@@ -2945,7 +3069,7 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .home-section,
   .home-daily,
-  .home-features,
+  .home-feature,
   .home-stats,
   .catalog-grid > li,
   .home-tiles > *,

@@ -7,6 +7,7 @@ import { PerfumeImage } from "@/app/perfumes/PerfumeImage";
 import { AccordBars, NotePyramid } from "@/app/perfumes/PerfumeProfile";
 import { PerfumeTile } from "@/app/perfumes/PerfumeTile";
 import { StreakCard } from "@/app/StreakCard";
+import { TiltFrame } from "@/app/TiltFrame";
 import { genderLabel } from "@/app/perfumes/types";
 import { cache } from "react";
 import { CountUp } from "@/components/CountUp";
@@ -93,13 +94,15 @@ export async function DailySection() {
   if (!daily) return null;
   return (
       <section className="home-daily" aria-labelledby="daily-title">
-        <PerfumeImage
-          name={daily.name}
-          brand={daily.brand}
-          imageUrl={daily.imageUrl}
-          accords={daily.accordBars.map((a) => ({ intensity: a.intensity, accord: { name: a.name } }))}
-          size="hero"
-        />
+        <TiltFrame>
+          <PerfumeImage
+            name={daily.name}
+            brand={daily.brand}
+            imageUrl={daily.imageUrl}
+            accords={daily.accordBars.map((a) => ({ intensity: a.intensity, accord: { name: a.name } }))}
+            size="hero"
+          />
+        </TiltFrame>
         <div className="home-daily-body">
           <p className="eyebrow" id="daily-title">
             Perfume del día

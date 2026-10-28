@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Newsreader } from "next/font/google";
+import { Barlow_Condensed, Geist, Newsreader } from "next/font/google";
 
 import { CompareBar } from "@/app/perfumes/CompareBar";
 import { NavigationProgress } from "@/components/NavigationProgress";
@@ -14,6 +14,8 @@ const newsreader = Newsreader({
   style: ["normal", "italic"],
   variable: "--font-newsreader",
 });
+// Solo para el título de la portada: un peso, un subconjunto.
+const barlowCondensed = Barlow_Condensed({ subsets: ["latin"], weight: "600", variable: "--font-barlow-condensed" });
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
 // Dirección pública del sitio (la misma SITE_URL del enlace de acceso): base de las URLs absolutas de los metadatos.
@@ -57,7 +59,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${newsreader.variable} ${geist.variable}`}>
+    <html lang="es" className={`${newsreader.variable} ${geist.variable} ${barlowCondensed.variable}`}>
       <body>
         <a className="skip-link" href="#contenido">
           Saltar al contenido
