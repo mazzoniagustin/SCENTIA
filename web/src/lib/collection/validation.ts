@@ -1,7 +1,7 @@
 // Validación de lo que llega a las Server Actions de la colección. Las Server Actions son endpoints
 // públicos: los tipos de TypeScript no existen en tiempo de ejecución, así que se valida todo acá.
 
-export const COLLECTION_STATUSES = ['OWNED', 'SAMPLED', 'WISHLIST', 'DISLIKED'] as const
+export const COLLECTION_STATUSES = ['OWNED', 'DECANT', 'SAMPLED', 'WISHLIST', 'DISLIKED'] as const
 export type CollectionStatusValue = (typeof COLLECTION_STATUSES)[number]
 
 export const MAX_NOTES_LENGTH = 2000

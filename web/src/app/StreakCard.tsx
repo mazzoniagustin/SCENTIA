@@ -88,7 +88,7 @@ export function StreakCard({
         )}
         {notice === "error" && (
           <p className="error-message" role="alert">
-            No pudimos registrar ese perfume. Tiene que estar en tu colección como “Lo tengo” o “Probé una muestra”.
+            No pudimos registrar ese perfume. Tiene que estar en tu colección como “Lo tengo” o “Tengo un decant”.
           </p>
         )}
 
@@ -101,13 +101,13 @@ export function StreakCard({
         {options.length === 0 ? (
           collectionTotal === 0 ? (
             <p className="streak-lead">
-              Tu colección está vacía. Guardá un perfume desde el <Link href="/perfumes">catálogo</Link> con el estado “Lo tengo” o “Probé una
-              muestra” y vas a poder registrarlo acá.
+              Tu colección está vacía. Guardá un perfume desde el <Link href="/perfumes">catálogo</Link> con el estado “Lo tengo” o “Tengo un
+              decant” y vas a poder registrarlo acá.
             </p>
           ) : (
             <p className="streak-lead">
               Tenés {collectionTotal} {collectionTotal === 1 ? "perfume" : "perfumes"} en tu colección, pero ninguno figura como “Lo tengo” o
-              “Probé una muestra”. Cambiá el estado en <Link href="/mi-coleccion">Mi colección</Link> para poder registrarlo.
+              “Tengo un decant”. Cambiá el estado en <Link href="/mi-coleccion">Mi colección</Link> para poder registrarlo.
             </p>
           )
         ) : (

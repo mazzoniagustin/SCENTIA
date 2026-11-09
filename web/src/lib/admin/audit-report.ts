@@ -93,7 +93,7 @@ export function parsePage(raw: string | string[] | undefined, pages: number): nu
 
 export const SAVED_GENDERS = ['femenino', 'masculino', 'unisex'] as const
 export type SavedGender = (typeof SAVED_GENDERS)[number]
-export const SAVED_STATUSES = ['OWNED', 'SAMPLED', 'WISHLIST', 'DISLIKED'] as const
+export const SAVED_STATUSES = ['OWNED', 'DECANT', 'SAMPLED', 'WISHLIST', 'DISLIKED'] as const
 export type SavedStatus = (typeof SAVED_STATUSES)[number]
 
 export type SavedFilters = { gender: SavedGender | null; status: SavedStatus | null }

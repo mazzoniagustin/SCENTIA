@@ -26,11 +26,11 @@ describe('parseStatusFilter', () => {
 
 describe('countByStatus', () => {
   it('cuenta por estado, con cero para los que no aparecen', () => {
-    assert.deepEqual(countByStatus(entries), { OWNED: 2, SAMPLED: 0, WISHLIST: 1, DISLIKED: 1 })
+    assert.deepEqual(countByStatus(entries), { OWNED: 2, DECANT: 0, SAMPLED: 0, WISHLIST: 1, DISLIKED: 1 })
   })
 
   it('una colección vacía da todos en cero', () => {
-    assert.deepEqual(countByStatus([]), { OWNED: 0, SAMPLED: 0, WISHLIST: 0, DISLIKED: 0 })
+    assert.deepEqual(countByStatus([]), { OWNED: 0, DECANT: 0, SAMPLED: 0, WISHLIST: 0, DISLIKED: 0 })
   })
 })
 

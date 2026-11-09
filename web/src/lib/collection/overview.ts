@@ -1,12 +1,13 @@
 // Vista de "Mi colección": etiquetas de estado, conteos y filtro por estado (la URL manda). Lógica pura.
 
-export type CollectionStatusValue = 'OWNED' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
+export type CollectionStatusValue = 'OWNED' | 'DECANT' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
 
 /** Orden de las pestañas y de las etiquetas (las mismas del formulario de la colección). */
-export const STATUS_ORDER: readonly CollectionStatusValue[] = ['OWNED', 'SAMPLED', 'WISHLIST', 'DISLIKED']
+export const STATUS_ORDER: readonly CollectionStatusValue[] = ['OWNED', 'DECANT', 'SAMPLED', 'WISHLIST', 'DISLIKED']
 
 export const STATUS_LABELS: Record<CollectionStatusValue, string> = {
   OWNED: 'Lo tengo',
+  DECANT: 'Tengo un decant',
   SAMPLED: 'Probé una muestra',
   WISHLIST: 'Lo quiero',
   DISLIKED: 'No me gustó',
@@ -19,7 +20,7 @@ export function parseStatusFilter(value: string | string[] | undefined): Collect
 }
 
 export function countByStatus(entries: ReadonlyArray<{ status: string }>): Record<CollectionStatusValue, number> {
-  const counts: Record<CollectionStatusValue, number> = { OWNED: 0, SAMPLED: 0, WISHLIST: 0, DISLIKED: 0 }
+  const counts: Record<CollectionStatusValue, number> = { OWNED: 0, DECANT: 0, SAMPLED: 0, WISHLIST: 0, DISLIKED: 0 }
   for (const entry of entries) {
     if (entry.status in counts) counts[entry.status as CollectionStatusValue] += 1
   }

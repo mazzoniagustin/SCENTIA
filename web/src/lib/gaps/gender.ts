@@ -21,7 +21,7 @@ export const GENDER_LABELS: Readonly<Record<GenderFilter, string>> = {
   todos: 'Todos',
 }
 
-const USABLE = new Set(['OWNED', 'SAMPLED'])
+const USABLE = new Set(['OWNED', 'DECANT', 'SAMPLED'])
 
 /**
  * Género deducido de la colección. 'todos' si hay pocos datos, si está repartida o si es toda unisex. Con ambos géneros

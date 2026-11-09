@@ -57,7 +57,7 @@ export const W_ACCORDS = 0.6
 export const W_NOTES = 0.4
 
 /** Estados que excluyen al candidato del ranking (penalización total). */
-export const EXCLUDED_STATUSES: ReadonlySet<string> = new Set(['owned', 'disliked'])
+export const EXCLUDED_STATUSES: ReadonlySet<string> = new Set(['owned', 'decant', 'disliked'])
 
 /** Peso de una fase; las fases desconocidas no contribuyen al puntaje. */
 function noteWeight(noteType: string): number {

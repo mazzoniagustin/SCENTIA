@@ -12,7 +12,7 @@ type Pick = {
   brand: string;
   name: string;
   imageUrl: string | null;
-  status: 'OWNED' | 'SAMPLED';
+  status: 'OWNED' | 'DECANT' | 'SAMPLED';
   /** Perfume que cargó la persona: su ficha es privada. */
   own?: boolean;
   topAccords: string[];
@@ -58,7 +58,7 @@ const REASON_LABELS: Record<string, string> = {
   intense_for_context: 'Con cuerpo, como pediste',
 };
 
-const STATUS_LABELS = { OWNED: 'Lo tengo', SAMPLED: 'Probado' } as const;
+const STATUS_LABELS = { OWNED: 'Lo tengo', DECANT: 'Decant', SAMPLED: 'Probado' } as const;
 
 // Redondea a 1 decimal (~10 km) ANTES de que la ubicación salga del navegador.
 const round1 = (value: number) => Math.round(value * 10) / 10;
