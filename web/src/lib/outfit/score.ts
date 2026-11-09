@@ -16,7 +16,7 @@ export const CLOYING_PENALTY_HOT_HUMID = 0.7
 /** Penalización por empalagosos con lluvia o humedad, sin calor. */
 export const CLOYING_PENALTY_WET_OR_HUMID = 0.4
 
-export const STATUS_WEIGHTS = { OWNED: 1, SAMPLED: 0.9 } as const
+export const STATUS_WEIGHTS = { OWNED: 1, DECANT: 1, SAMPLED: 0.9 } as const
 
 export const MAX_ALTERNATIVES = 2
 export const TOP_ACCORDS_COUNT = 3
@@ -41,7 +41,7 @@ const round6 = (n: number) => Math.round(n * 1e6) / 1e6
 
 function wearableStatus(status: string): WearableStatus | null {
   const upper = status.toUpperCase()
-  return upper === 'OWNED' || upper === 'SAMPLED' ? upper : null
+  return upper === 'OWNED' || upper === 'DECANT' || upper === 'SAMPLED' ? upper : null
 }
 
 function scoreCandidate(c: OutfitCandidate, status: WearableStatus, profile: WeatherProfile, context: OutfitContext | null): Scored | null {

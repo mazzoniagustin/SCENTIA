@@ -240,6 +240,7 @@ export function PrivatePerfumeForm({ accords, initial }: { accords: Array<{ id: 
           <span className="collection-label">Estado</span>
           <select name="status" aria-label="Estado en tu colección" value={status} onChange={(e) => setStatus(e.target.value)} required>
             <option value="OWNED">Lo tengo</option>
+            <option value="DECANT">Tengo un decant</option>
             <option value="SAMPLED">Probé una muestra</option>
             <option value="WISHLIST">Lo quiero</option>
             <option value="DISLIKED">No me gustó</option>

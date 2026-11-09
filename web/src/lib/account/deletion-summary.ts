@@ -5,7 +5,7 @@ import { summarizeStreak } from '../streak/streak.ts'
 
 export const DELETION_POLICY_VERSION = 1
 
-export type CollectionStatusName = 'OWNED' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
+export type CollectionStatusName = 'OWNED' | 'DECANT' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
 
 export type DeletionInput = {
   createdAt: Date

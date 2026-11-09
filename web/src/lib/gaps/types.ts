@@ -2,7 +2,7 @@
 
 import type { FamilyCode } from './families.ts'
 
-export type CollectionStatus = 'OWNED' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
+export type CollectionStatus = 'OWNED' | 'DECANT' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
 
 export type SampleAccord = { name: string; intensity: number }
 

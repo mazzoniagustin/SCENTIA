@@ -6,9 +6,9 @@ import { lastDays, summarizeStreak, type DayDot, type StreakSummary } from '@/li
 
 // Registro diario de uso y racha. Todo parte del userId de la sesión del servidor, nunca de uno del cliente.
 // Solo se puede registrar el día en curso (hora de Buenos Aires) y perfumes de la propia colección que se usan:
-// los que se tienen (OWNED) o se probaron en muestra (SAMPLED).
+// los que se tienen (OWNED) o se tienen en decant (DECANT). Las muestras probadas (SAMPLED) no cuentan para la racha.
 
-export const WEARABLE_STATUSES = ['OWNED', 'SAMPLED'] as const
+export const WEARABLE_STATUSES = ['OWNED', 'DECANT'] as const
 
 export type WearToday = { perfumeId: string; brand: string; name: string }
 
