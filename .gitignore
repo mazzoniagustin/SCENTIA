@@ -11,17 +11,11 @@ web/data/
 *.log
 .claude/settings.local.json
 
-# infraestructura local de trabajo con IA (no se publica)
-/.claude/
+# infraestructura de trabajo con IA: se versiona (skills, agents, commands, docs, AGENTS/CLAUDE), salvo lo local
 /.codex/
-AGENTS.md
-CLAUDE.md
 AGENTS.override.md
-/docs/
-/scripts/AGENTS.md
 web/PROGRESS.md
 web/claude-office/
 
 # metadatos de Windows
 *:Zone.Identifier
-web/docs/
