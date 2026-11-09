@@ -37,7 +37,7 @@ export const POPULARITY_WEIGHT = 0.3
 export const WISHLIST_LABEL = 'Ya lo tenés en tu lista de deseados'
 
 /** Estados que sacan al perfume de las sugerencias. SAMPLED es "Probé una muestra". */
-export const EXCLUDED_FROM_SUGGESTIONS: ReadonlySet<CollectionStatus> = new Set(['OWNED', 'SAMPLED', 'DISLIKED'])
+export const EXCLUDED_FROM_SUGGESTIONS: ReadonlySet<CollectionStatus> = new Set(['OWNED', 'DECANT', 'SAMPLED', 'DISLIKED'])
 
 export type Need =
   | { kind: 'family'; family: FamilyCode; weight: number }

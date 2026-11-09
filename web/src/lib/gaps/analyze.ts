@@ -18,7 +18,7 @@ export const WEAK_COVERAGE_MIN_ITEMS = 6
 /** Cobertura débil: presencia en la colección menor a esta fracción de la frecuencia en el catálogo. */
 export const WEAK_COVERAGE_RATIO = 0.5
 
-const USABLE = new Set(['OWNED', 'SAMPLED'])
+const USABLE = new Set(['OWNED', 'DECANT', 'SAMPLED'])
 
 /** Familias que tiene un perfume, según sus acordes. Ignora acordes sin familia y los de poca intensidad. */
 export function familiesOfAccords(accords: readonly { name: string; intensity: number }[]): Set<FamilyCode> {

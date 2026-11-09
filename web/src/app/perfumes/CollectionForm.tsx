@@ -40,6 +40,7 @@ export function CollectionForm({ perfumeId, initialData }: { perfumeId: string; 
             Elegí un estado
           </option>
           <option value="OWNED">Lo tengo</option>
+          <option value="DECANT">Tengo un decant</option>
           <option value="SAMPLED">Probé una muestra</option>
           <option value="WISHLIST">Lo quiero</option>
           <option value="DISLIKED">No me gustó</option>

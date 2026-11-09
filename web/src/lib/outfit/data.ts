@@ -12,7 +12,7 @@ export async function getOutfitCandidates(userId: string): Promise<OutfitCandida
   const rows = await prisma.userCollection.findMany({
     where: {
       userId,
-      status: { in: ['OWNED', 'SAMPLED'] },
+      status: { in: ['OWNED', 'DECANT', 'SAMPLED'] },
       perfume: { OR: [{ status: 'PUBLISHED' }, { status: 'PRIVATE', ownerId: userId, accords: { some: {} } }] },
     },
     select: {

@@ -16,7 +16,7 @@ export type WeatherProfile = {
   precipitationMm: number
 }
 
-export type OutfitStatus = 'OWNED' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
+export type OutfitStatus = 'OWNED' | 'DECANT' | 'SAMPLED' | 'WISHLIST' | 'DISLIKED'
 
 /** Perfume de la colección tal como lo necesita el motor (sin Prisma). */
 export type OutfitCandidate = {
@@ -51,7 +51,7 @@ export type OutfitPick = {
   name: string
   imageUrl: string | null
   slug: string | null
-  status: 'OWNED' | 'SAMPLED'
+  status: 'OWNED' | 'DECANT' | 'SAMPLED'
   score: number
   topAccords: string[]
   reasons: ReasonCode[]
