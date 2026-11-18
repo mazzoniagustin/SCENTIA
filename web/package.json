@@ -19,7 +19,7 @@
     "@supabase/supabase-js": "^2.114.0",
     "csv-parse": "^7.0.2",
     "dotenv": "^17.4.2",
-    "next": "16.4.3",
+    "next": "16.4.5",
     "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
