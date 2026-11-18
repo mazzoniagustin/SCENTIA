@@ -8,7 +8,7 @@ Supabase pueden variar un poco con el tiempo. **Nunca pegues contraseñas ni cla
 servidor de producción local; RLS activo en las 8 tablas; respaldo y restauración probados.
 
 ## 1. Preparar Supabase
-1. **Contraseña de la base**: Project Settings → Database → *Reset database password* (si aún no la rotaste). Usá una larga y generada.
+1. **Contraseña de la base**: Project Settings → Database → *Reset database password*. Usá una larga y generada.
 2. **Cadena de conexión**: botón **Connect** → pestaña *Transaction pooler* (puerto **6543**). Reemplazá `[YOUR-PASSWORD]` por la contraseña.
    Si tiene caracteres especiales (`@ : / ? # %`) hay que codificarlos en la URL (por ejemplo `@` → `%40`).
    - ⚠️ **No uses *Direct connection***: es solo IPv6, falla desde WSL/Windows sin IPv6 y desde Vercel (`ENETUNREACH`).
